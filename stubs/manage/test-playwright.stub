@@ -1,0 +1,62 @@
+import { test, expect } from '@playwright/test';
+import { seedUser } from './support/seed';
+
+async function login(page, email: string, password: string) {
+    await page.goto('/login');
+    await page.getByLabel('Email address').fill(email);
+    await page.getByLabel('Password', { exact: true }).fill(password);
+    await page.getByRole('button', { name: 'Log in' }).click();
+    await expect(page).toHaveURL('/dashboard');
+}
+
+test.describe('Manage __Title__', () => {
+    test('lists __pluralLabel__ and navigates to the create page (happy path)', async ({ page }) => {
+        const { email, password } = seedUser();
+
+        await login(page, email, password);
+        await page.getByRole('link', { name: 'Manage __Title__' }).click();
+
+        await expect(page).toHaveURL('/__slug__');
+        await expect(page.getByRole('heading', { name: 'Manage __Title__' })).toBeVisible();
+        await expect(page.getByRole('table')).toBeVisible();
+
+        await page.getByRole('link', { name: 'Add __label__' }).click();
+        await expect(page).toHaveURL('/__slug__/create');
+    });
+
+    test('creates, edits, and deletes a __label__ end-to-end', async ({ page }) => {
+        const { email, password } = seedUser();
+        const mainValue = `E2E ${Date.now()}`;
+
+        await login(page, email, password);
+        await page.goto('/__slug__/create');
+
+__e2eFill__
+        await page.getByRole('button', { name: 'Save' }).click();
+
+        await expect(page).toHaveURL('/__slug__');
+        await expect(page.getByText('__Label__ created successfully.')).toBeVisible();
+        const row = page.getByRole('row', { name: new RegExp(mainValue) });
+        await expect(row).toBeVisible();
+
+        await row.getByRole('link', { name: 'Edit' }).click();
+        await expect(page.getByLabel('__mainLabel__', { exact: true })).toHaveValue(mainValue);
+        await page.getByLabel('__mainLabel__', { exact: true }).fill(`${mainValue} Edited`);
+        await page.getByRole('button', { name: 'Save' }).click();
+
+        await expect(page).toHaveURL('/__slug__');
+        const editedRow = page.getByRole('row', { name: new RegExp(`${mainValue} Edited`) });
+        await expect(editedRow).toBeVisible();
+        await editedRow.getByRole('button', { name: 'Delete' }).click();
+        await expect(page.getByText('Are you sure you want to delete this __label__?')).toBeVisible();
+        await page.locator('#confirm-delete-__singular__').click();
+
+        await expect(page.getByRole('row', { name: new RegExp(mainValue) })).toHaveCount(0);
+    });
+
+    test('redirects a guest to login', async ({ page }) => {
+        await page.goto('/__slug__');
+
+        await expect(page).toHaveURL(/\/login$/);
+    });
+});

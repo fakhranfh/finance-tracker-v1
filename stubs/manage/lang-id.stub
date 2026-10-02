@@ -1,0 +1,48 @@
+<?php
+
+return [
+    'title' => 'Kelola __IdTitle__',
+    'subtitle' => 'Lihat, tambah, ubah, dan hapus __idLabel__.',
+    'create' => 'Tambah __idLabel__',
+    'edit' => 'Ubah __idLabel__',
+    'back' => 'Kembali ke daftar __idLabel__',
+
+    'table' => [
+__langTableId__
+        'created_at' => 'Dibuat',
+        'actions' => 'Aksi',
+        'empty' => 'Belum ada __idLabel__.',
+        'search' => 'Cari __searchFieldsId__...',
+        'per_page' => 'Item per halaman',
+        'selected' => 'dipilih',
+        'show_more' => 'Tampilkan lebih banyak',
+        'show_less' => 'Tampilkan lebih sedikit',
+        'select_all_matching' => 'Pilih semua :total __idLabel__',
+        'all_selected' => 'Semua :total __idLabel__ dipilih.',
+        'clear_selection' => 'Batalkan pilihan',
+    ],
+
+    'fields' => [
+__langFieldsId__
+    ],
+
+    'actions' => [
+        'edit' => 'Ubah',
+        'delete' => 'Hapus',
+        'save' => 'Simpan',
+        'cancel' => 'Batal',
+        'confirm_delete' => 'Yakin ingin menghapus __idLabel__ ini?',
+        'delete_selected' => 'Hapus yang dipilih',
+        'confirm_bulk_delete' => 'Yakin ingin menghapus __idLabel__ yang dipilih?',
+        'generate' => 'Generate',
+        'generate_count' => 'Jumlah __idLabel__ yang akan dibuat',
+        'autofill' => 'Isi otomatis',
+    ],
+
+    'flash' => [
+        'created' => '__IdLabel__ berhasil ditambahkan.',
+        'updated' => '__IdLabel__ berhasil diperbarui.',
+        'deleted' => '__IdLabel__ berhasil dihapus.',
+        'generated' => '__IdLabel__ palsu berhasil dibuat.',
+    ],
+];

@@ -1,0 +1,23 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\View\View;
+
+class __Model__PageController extends Controller
+{
+    public function index(): View
+    {
+        return view('__slug__.index');
+    }
+
+    public function create(): View
+    {
+        return view('__slug__.form', ['id' => null]);
+    }
+
+    public function edit(int $id): View
+    {
+        return view('__slug__.form', ['id' => $id]);
+    }
+}

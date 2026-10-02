@@ -1,0 +1,30 @@
+<?php
+
+namespace App\Http\Resources;
+
+use App\Models\__Model__;
+use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\JsonResource;
+
+/**
+ * @mixin __Model__
+ */
+class __Model__Resource extends JsonResource
+{
+    /**
+     * Transform the resource into an array.
+     *
+     * @return array<string, mixed>
+     */
+    public function toArray(Request $request): array
+    {
+        /** @var __Model__ $__modelVar__ */
+        $__modelVar__ = $this->resource;
+
+        return [
+            'id' => $__modelVar__->id,
+__resourceFields__
+            'created_at' => $__modelVar__->created_at?->toIso8601String(),
+        ];
+    }
+}

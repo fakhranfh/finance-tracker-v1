@@ -1,0 +1,84 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\__Model__;
+use App\Repositories\__Model__\__Model__RepositoryInterface;
+use Illuminate\Pagination\LengthAwarePaginator;
+
+class __Model__ManagementService
+{
+    public function __construct(
+        protected __Model__RepositoryInterface $__modelVar__Repository,
+    ) {}
+
+    /**
+     * List __pluralLabel__, paginated, optionally filtered and sorted.
+     */
+    public function paginate(int $perPage = 10, ?string $search = null, ?string $sort = null, string $direction = 'asc'): LengthAwarePaginator
+    {
+        return $this->__modelVar__Repository->paginate($perPage, $search, $sort, $direction);
+    }
+
+    /**
+     * Find a single __label__ by ID.
+     */
+    public function find(int $id): ?__Model__
+    {
+        return $this->__modelVar__Repository->find($id);
+    }
+
+    /**
+     * Create a new __label__.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public function create(array $data): __Model__
+    {
+        return $this->__modelVar__Repository->create($data);
+    }
+
+    /**
+     * Update an existing __label__.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public function update(__Model__ $__modelVar__, array $data): __Model__
+    {
+        return $this->__modelVar__Repository->update($__modelVar__, $data);
+    }
+
+    /**
+     * Delete a __label__.
+     */
+    public function delete(__Model__ $__modelVar__): void
+    {
+        $this->__modelVar__Repository->delete($__modelVar__);
+    }
+
+    /**
+     * Delete multiple __pluralLabel__ by ID.
+     *
+     * @param  array<int, int>  $ids
+     */
+    public function deleteMany(array $ids): void
+    {
+        $this->__modelVar__Repository->deleteMany($ids);
+    }
+
+    /**
+     * Delete every __label__ matching the search filter (all when null).
+     */
+    public function deleteMatching(?string $search = null): void
+    {
+        $this->__modelVar__Repository->deleteMatching($search);
+    }
+
+    /**
+     * Count __pluralLabel__ matching the search filter, optionally excluding one ID.
+     */
+    public function countMatching(?string $search = null, ?int $exceptId = null): int
+    {
+        return $this->__modelVar__Repository->countMatching($search, $exceptId);
+    }
+}

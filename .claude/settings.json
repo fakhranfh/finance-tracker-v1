@@ -1,0 +1,197 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "AskUserQuestion",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "php .claude/hooks/notify-ask-user-question.php",
+            "statusMessage": "Notifying question..."
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "php .claude/hooks/validate-users-timezone-column.php",
+            "if": "Edit(database/migrations/*_create_users_table.php)|Write(database/migrations/*_create_users_table.php)",
+            "statusMessage": "Validating users timezone column..."
+          },
+          {
+            "type": "command",
+            "command": "php .claude/hooks/validate-migration-enum-php.php",
+            "if": "Edit(database/migrations/**)|Write(database/migrations/**)",
+            "statusMessage": "Validating migration enum columns have matching PHP enums..."
+          },
+          {
+            "type": "command",
+            "command": "php .claude/hooks/validate-auth-timezone-detection.php",
+            "if": "Edit(app/Http/Controllers/Auth/**)|Write(app/Http/Controllers/Auth/**)",
+            "statusMessage": "Validating auth timezone detection..."
+          },
+          {
+            "type": "command",
+            "command": "php .claude/hooks/validate-model-timezone-trait.php",
+            "if": "Edit(app/Models/**)|Write(app/Models/**)",
+            "statusMessage": "Validating model timezone trait..."
+          },
+          {
+            "type": "command",
+            "command": "php .claude/hooks/validate-view-timezone-display.php",
+            "if": "Edit(resources/views/**)|Write(resources/views/**)",
+            "statusMessage": "Validating view timezone display..."
+          },
+          {
+            "type": "command",
+            "command": "php .claude/hooks/validate-blade-pattern.php",
+            "if": "Edit(resources/views/**)|Write(resources/views/**)",
+            "statusMessage": "Validating Blade pattern..."
+          },
+          {
+            "type": "command",
+            "command": "php .claude/hooks/validate-blade-no-inline-js.php",
+            "if": "Edit(resources/views/**)|Write(resources/views/**)",
+            "statusMessage": "Validating no inline JS in Blade..."
+          },
+          {
+            "type": "command",
+            "command": "php .claude/hooks/validate-blade-no-inline-css.php",
+            "if": "Edit(resources/views/**)|Write(resources/views/**)",
+            "statusMessage": "Validating no inline CSS in Blade..."
+          },
+          {
+            "type": "command",
+            "command": "php .claude/hooks/validate-design-system.php",
+            "if": "Edit(resources/views/**)|Write(resources/views/**)",
+            "statusMessage": "Validating design system compliance..."
+          },
+          {
+            "type": "command",
+            "command": "php .claude/hooks/validate-skeleton-loading.php",
+            "if": "Edit(resources/views/**)|Write(resources/views/**)",
+            "statusMessage": "Validating skeleton loading usage..."
+          },
+          {
+            "type": "command",
+            "command": "php .claude/hooks/validate-multilingual-view.php",
+            "if": "Edit(resources/views/**)|Write(resources/views/**)",
+            "statusMessage": "Validating multilingual (en/id) view support..."
+          },
+          {
+            "type": "command",
+            "command": "php .claude/hooks/validate-repository-pattern.php",
+            "if": "Edit(app/Http/Controllers/**|app/Repositories/**|app/Services/**|app/Livewire/**)|Write(app/Http/Controllers/**|app/Repositories/**|app/Services/**|app/Livewire/**)",
+            "statusMessage": "Validating repository pattern..."
+          },
+          {
+            "type": "command",
+            "command": "php .claude/hooks/validate-single-config-call.php",
+            "if": "Edit(resources/js/**|resources/views/**)|Write(resources/js/**|resources/views/**)",
+            "statusMessage": "Validating components use one config object..."
+          },
+          {
+            "type": "command",
+            "command": "php .claude/hooks/validate-api-routes.php",
+            "if": "Edit(resources/js/**)|Write(resources/js/**)",
+            "statusMessage": "Validating REST API endpoints go through routes.js..."
+          },
+          {
+            "type": "command",
+            "command": "php .claude/hooks/validate-page-routes.php",
+            "if": "Edit(resources/js/**)|Write(resources/js/**)",
+            "statusMessage": "Validating page paths go through routes.js..."
+          },
+          {
+            "type": "command",
+            "command": "php .claude/hooks/validate-dashboard-navigation.php",
+            "if": "Edit(resources/views/components/organisms/sidebar.blade.php|resources/views/components/organisms/topbar.blade.php|app/View/Components/Organisms/Sidebar.php|app/View/Components/Organisms/Topbar.php)|Write(resources/views/components/organisms/sidebar.blade.php|resources/views/components/organisms/topbar.blade.php|app/View/Components/Organisms/Sidebar.php|app/View/Components/Organisms/Topbar.php)",
+            "statusMessage": "Validating sidebar/topbar items come from config..."
+          },
+          {
+            "type": "command",
+            "command": "php .claude/hooks/validate-blade-no-computed-php.php",
+            "if": "Edit(resources/views/**)|Write(resources/views/**)",
+            "statusMessage": "Validating no computed PHP in Blade..."
+          },
+          {
+            "type": "command",
+            "command": "php .claude/hooks/remind-dev-autofill.php",
+            "if": "Edit(app/Http/Controllers/**|app/Services/**)|Write(app/Http/Controllers/**|app/Services/**)",
+            "statusMessage": "Checking dev-only autofill / generate-data traits..."
+          },
+          {
+            "type": "command",
+            "command": "php .claude/hooks/remind-form-validation-errors.php",
+            "if": "Edit(resources/js/**|resources/views/**)|Write(resources/js/**|resources/views/**)",
+            "statusMessage": "Checking form validation error display..."
+          },
+          {
+            "type": "command",
+            "command": "php .claude/hooks/remind-swagger-docs.php",
+            "if": "Edit(app/Http/Controllers/Api/**|routes/api.php)|Write(app/Http/Controllers/Api/**|routes/api.php)",
+            "statusMessage": "Checking Swagger/OpenAPI documentation for REST API..."
+          },
+          {
+            "type": "command",
+            "command": "php .claude/hooks/validate-page-only-controllers.php",
+            "if": "Edit(app/Http/Controllers/**)|Write(app/Http/Controllers/**)",
+            "statusMessage": "Validating page controllers only render views..."
+          },
+          {
+            "type": "command",
+            "command": "php .claude/hooks/validate-single-controller-per-entity.php",
+            "if": "Write(app/Http/Controllers/Api/**)",
+            "statusMessage": "Validating one controller file per API entity..."
+          },
+          {
+            "type": "command",
+            "command": "php .claude/hooks/validate-table-modal-components.php",
+            "if": "Edit(resources/views/**)|Write(resources/views/**)",
+            "statusMessage": "Validating tables/modals use shared components..."
+          },
+          {
+            "type": "command",
+            "command": "php .claude/hooks/validate-password-validation.php",
+            "if": "Edit(app/Http/Requests/**|app/Providers/AppServiceProvider.php)|Write(app/Http/Requests/**|app/Providers/AppServiceProvider.php)",
+            "statusMessage": "Validating strong password rule..."
+          },
+          {
+            "type": "command",
+            "command": "php .claude/hooks/run-larastan-on-edit.php",
+            "if": "Edit(app/**/*.php)|Write(app/**/*.php)",
+            "timeout": 120,
+            "statusMessage": "Running Larastan on edited file..."
+          },
+          {
+            "type": "command",
+            "command": "php .claude/hooks/remind-missing-tests.php",
+            "if": "Write(app/Http/Controllers/**|app/Services/**|resources/views/**)",
+            "statusMessage": "Checking for matching Pest/Playwright tests..."
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "php .claude/hooks/announce-stop-hooks.php",
+            "statusMessage": "Stop started..."
+          },
+          {
+            "type": "command",
+            "command": "php .claude/hooks/run-stop-hooks.php",
+            "timeout": 1200,
+            "statusMessage": "Running graphify, Larastan, Pest and Playwright..."
+          }
+        ]
+      }
+    ]
+  }
+}

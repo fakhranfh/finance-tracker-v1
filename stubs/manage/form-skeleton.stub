@@ -1,0 +1,6 @@
+@props(['class' => ''])
+
+<div {{ $attributes->merge(['class' => "space-y-5 {$class}"]) }}>
+__formSkeletonRows__
+    <x-atoms.skeleton class="h-11 w-32" />
+</div>

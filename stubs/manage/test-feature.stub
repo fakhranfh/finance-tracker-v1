@@ -1,0 +1,125 @@
+<?php
+
+use App\Models\__Model__;
+use App\Models\User;
+use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
+
+it('rejects a guest from listing __pluralLabel__', function () {
+    $this->getJson('/api/__slug__')->assertStatus(401);
+});
+
+it('lists __pluralLabel__ via the api', function () {
+    $actor = User::factory()->create();
+    __Model__::factory()->count(3)->create();
+
+    $response = $this->actingAs($actor)->getJson('/api/__slug__');
+
+    $response->assertOk();
+    $response->assertJsonStructure(['data' => [['id', __fieldKeys__, 'created_at']]]);
+    expect($response->json('data'))->toHaveCount(3);
+});
+
+it('searches __pluralLabel__ via the api', function () {
+    $actor = User::factory()->create();
+    __Model__::factory()->create(['__mainField__' => 'Findable entry']);
+    __Model__::factory()->create(['__mainField__' => 'Other']);
+
+    $response = $this->actingAs($actor)->getJson('/api/__slug__?search=Findable');
+
+    $response->assertOk();
+    expect($response->json('data'))->toHaveCount(1);
+});
+
+it('creates a __label__ via the api', function () {
+    $actor = User::factory()->create();
+
+    $response = $this->actingAs($actor)->postJson('/api/__slug__', [
+__testPayload__
+    ]);
+
+    $response->assertStatus(201);
+    $response->assertJsonPath('data.__mainField__', __mainValue__);
+    $this->assertDatabaseHas('__table__', ['__mainField__' => __mainValue__]);
+});
+
+it('rejects creating a __label__ with missing required fields', function () {
+    $actor = User::factory()->create();
+
+    $response = $this->actingAs($actor)->postJson('/api/__slug__', []);
+
+    $response->assertStatus(422);
+    $response->assertJsonValidationErrors([__requiredFields__]);
+});
+
+it('shows a __label__ via the api', function () {
+    $actor = User::factory()->create();
+    $target = __Model__::factory()->create();
+
+    $response = $this->actingAs($actor)->getJson("/api/__slug__/{$target->id}");
+
+    $response->assertOk();
+    $response->assertJsonPath('data.id', $target->id);
+});
+
+it('updates a __label__ via the api', function () {
+    $actor = User::factory()->create();
+    $target = __Model__::factory()->create();
+
+    $response = $this->actingAs($actor)->putJson("/api/__slug__/{$target->id}", [
+__testPayloadUpdated__
+    ]);
+
+    $response->assertOk();
+    $response->assertJsonPath('data.__mainField__', __mainUpdatedValue__);
+});
+
+it('deletes a __label__ via the api', function () {
+    $actor = User::factory()->create();
+    $target = __Model__::factory()->create();
+
+    $response = $this->actingAs($actor)->deleteJson("/api/__slug__/{$target->id}");
+
+    $response->assertNoContent();
+    $this->assertDatabaseMissing('__table__', ['id' => $target->id]);
+});
+
+it('bulk deletes __pluralLabel__ by id via the api', function () {
+    $actor = User::factory()->create();
+    $targets = __Model__::factory()->count(3)->create();
+
+    $response = $this->actingAs($actor)->deleteJson('/api/__slug__', ['ids' => $targets->take(2)->pluck('id')->all()]);
+
+    $response->assertNoContent();
+    expect(__Model__::query()->count())->toBe(1);
+});
+
+it('bulk deletes every __label__ when all is set', function () {
+    $actor = User::factory()->create();
+    __Model__::factory()->count(3)->create();
+
+    $this->actingAs($actor)->deleteJson('/api/__slug__', ['all' => true])->assertNoContent();
+
+    expect(__Model__::query()->count())->toBe(0);
+});
+
+it('generates sample __pluralLabel__ via the api in the local environment', function () {
+    $this->withoutMiddleware(PreventRequestForgery::class);
+    app()->detectEnvironment(fn () => 'local');
+
+    $actor = User::factory()->create();
+
+    $response = $this->actingAs($actor)->postJson('/api/__slug__/generate', ['count' => 5]);
+
+    $response->assertOk();
+    expect($response->json('data'))->toHaveCount(5);
+    expect(__Model__::query()->count())->toBe(5);
+});
+
+it('rejects generating sample __pluralLabel__ outside the local environment', function () {
+    $this->withoutMiddleware(PreventRequestForgery::class);
+    app()->detectEnvironment(fn () => 'production');
+
+    $actor = User::factory()->create();
+
+    $this->actingAs($actor)->postJson('/api/__slug__/generate', ['count' => 5])->assertNotFound();
+});

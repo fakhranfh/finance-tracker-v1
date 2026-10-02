@@ -1,0 +1,48 @@
+<?php
+
+return [
+    'title' => 'Manage __Title__',
+    'subtitle' => 'View, create, edit, and remove __pluralLabel__.',
+    'create' => 'Add __label__',
+    'edit' => 'Edit __label__',
+    'back' => 'Back to __pluralLabel__',
+
+    'table' => [
+__langTable__
+        'created_at' => 'Created',
+        'actions' => 'Actions',
+        'empty' => 'No __pluralLabel__ found.',
+        'search' => 'Search by __searchFields__...',
+        'per_page' => 'Items per page',
+        'selected' => 'selected',
+        'show_more' => 'Show more',
+        'show_less' => 'Show less',
+        'select_all_matching' => 'Select all :total __pluralLabel__',
+        'all_selected' => 'All :total __pluralLabel__ selected.',
+        'clear_selection' => 'Clear selection',
+    ],
+
+    'fields' => [
+__langFields__
+    ],
+
+    'actions' => [
+        'edit' => 'Edit',
+        'delete' => 'Delete',
+        'save' => 'Save',
+        'cancel' => 'Cancel',
+        'confirm_delete' => 'Are you sure you want to delete this __label__?',
+        'delete_selected' => 'Delete selected',
+        'confirm_bulk_delete' => 'Are you sure you want to delete the selected __pluralLabel__?',
+        'generate' => 'Generate',
+        'generate_count' => 'Number of __pluralLabel__ to generate',
+        'autofill' => 'Autofill',
+    ],
+
+    'flash' => [
+        'created' => '__Label__ created successfully.',
+        'updated' => '__Label__ updated successfully.',
+        'deleted' => '__Label__ deleted successfully.',
+        'generated' => 'Fake __pluralLabel__ generated successfully.',
+    ],
+];

@@ -1,0 +1,84 @@
+<?php
+
+namespace App\Repositories\__Model__;
+
+use App\Models\__Model__;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Pagination\LengthAwarePaginator;
+
+class __Model__Repository implements __Model__RepositoryInterface
+{
+    public function find(int $id): ?__Model__
+    {
+        return __Model__::query()->find($id);
+    }
+
+    public function paginate(int $perPage, ?string $search = null, ?string $sort = null, string $direction = 'asc'): LengthAwarePaginator
+    {
+        $query = __Model__::query();
+
+        $this->applySearch($query, $search);
+
+        $sortable = [__sortable__];
+        $direction = $direction === 'desc' ? 'desc' : 'asc';
+
+        if ($sort && in_array($sort, $sortable, true)) {
+            $query->orderBy($sort, $direction);
+        } else {
+            $query->latest();
+        }
+
+        return $query->paginate($perPage)->withQueryString();
+    }
+
+    public function deleteMany(array $ids): void
+    {
+        __Model__::query()->whereIn('id', $ids)->delete();
+    }
+
+    public function deleteMatching(?string $search = null): void
+    {
+        $query = __Model__::query();
+
+        $this->applySearch($query, $search);
+
+        $query->delete();
+    }
+
+    public function countMatching(?string $search = null, ?int $exceptId = null): int
+    {
+        $query = __Model__::query()->when($exceptId, fn ($q) => $q->whereKeyNot($exceptId));
+
+        $this->applySearch($query, $search);
+
+        return $query->count();
+    }
+
+    private function applySearch(Builder $query, ?string $search): void
+    {
+        if (! $search) {
+            return;
+        }
+
+        $query->where(function ($inner) use ($search): void {
+__searchClause__
+        });
+    }
+
+    public function create(array $data): __Model__
+    {
+        return __Model__::query()->create($data);
+    }
+
+    public function update(__Model__ $__modelVar__, array $data): __Model__
+    {
+        $__modelVar__->update($data);
+
+        return $__modelVar__;
+    }
+
+    public function delete(__Model__ $__modelVar__): void
+    {
+        $__modelVar__->delete();
+    }
+}

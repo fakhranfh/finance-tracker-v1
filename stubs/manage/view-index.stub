@@ -1,0 +1,116 @@
+@extends('layouts.dashboard')
+
+@section('title', __('__slug__.title') . ' - ' . config('app.name', 'Laravel'))
+
+@php
+    $tableHeaders = [
+__tableHeaders__
+        __('__slug__.table.actions'),
+    ];
+@endphp
+
+@section('content')
+    <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
+        <div>
+            <h1 class="font-heading text-headline-md font-bold text-on-surface">
+                {{ __('__slug__.title') }}
+            </h1>
+            <p class="mt-1 font-body text-body-md text-on-surface-variant">
+                {{ __('__slug__.subtitle') }}
+            </p>
+        </div>
+
+        <div class="grid w-full grid-cols-[6rem_1fr] items-center gap-3 sm:flex sm:w-auto">
+            @if (app()->isLocal())
+                <x-atoms.input
+                    type="number"
+                    name="generate-count"
+                    id="generate-count"
+                    value="10"
+                    min="1"
+                    max="50"
+                    class="!w-24"
+                    aria-label="{{ __('__slug__.actions.generate_count') }}"
+                    title="{{ __('__slug__.actions.generate_count') }}"
+                />
+                <x-atoms.button
+                    type="button"
+                    id="generate-__slug__"
+                    variant="secondary"
+                    data-success-message="{{ __('__slug__.flash.generated') }}"
+                >
+                    {{ __('__slug__.actions.generate') }}
+                </x-atoms.button>
+            @endif
+            <x-atoms.button href="{{ route('__slug__.create') }}" class="col-span-2 sm:col-auto">
+                {{ __('__slug__.create') }}
+            </x-atoms.button>
+        </div>
+    </div>
+
+    <div data-flash-success class="mb-6 hidden rounded-lg border border-success/20 bg-success/10 px-4 py-3 font-body text-sm text-success"></div>
+
+    <x-molecules.table-toolbar
+        id="__slug__-table-toolbar"
+        :search-placeholder="__('__slug__.table.search')"
+        :per-page-label="__('__slug__.table.per_page')"
+    />
+
+    <x-organisms.table-mobile-bar
+        id="__slug__-table-mobile-bar"
+        :headers="$tableHeaders"
+        :search-placeholder="__('__slug__.table.search')"
+        :per-page-label="__('__slug__.table.per_page')"
+    />
+
+    <x-organisms.__slug__-table-skeleton id="__slug__-table-skeleton" :headers="$tableHeaders" />
+
+    <div id="__slug__-table-wrapper" class="hidden max-sm:pb-20">
+        <x-organisms.table
+            id="__slug__-table"
+            :headers="$tableHeaders"
+            :config="[
+                'labels' => [
+                    'bulkDelete' => __('__slug__.actions.delete_selected'),
+                    'selected' => __('__slug__.table.selected'),
+                    'empty' => __('__slug__.table.empty'),
+                    'selectAllMatching' => __('__slug__.table.select_all_matching', ['total' => ':total']),
+                    'allSelected' => __('__slug__.table.all_selected', ['total' => ':total']),
+                    'clearSelection' => __('__slug__.table.clear_selection'),
+                    'expand' => __('__slug__.table.show_more'),
+                    'collapse' => __('__slug__.table.show_less'),
+                    'edit' => __('__slug__.actions.edit'),
+                    'delete' => __('__slug__.actions.delete'),
+                ],
+            ]"
+        />
+
+        <x-molecules.pagination data-pagination />
+    </div>
+
+    <x-organisms.modal id="delete-__singular__-modal" :title="__('__slug__.actions.confirm_delete')">
+        <div class="flex justify-end gap-3">
+            <x-atoms.button type="button" variant="secondary" data-modal-close>
+                {{ __('__slug__.actions.cancel') }}
+            </x-atoms.button>
+            <x-atoms.button type="button" id="confirm-delete-__singular__" variant="danger">
+                {{ __('__slug__.actions.delete') }}
+            </x-atoms.button>
+        </div>
+    </x-organisms.modal>
+
+    <x-organisms.modal id="bulk-delete-__slug__-modal" :title="__('__slug__.actions.confirm_bulk_delete')">
+        <div class="flex justify-end gap-3">
+            <x-atoms.button type="button" variant="secondary" data-modal-close>
+                {{ __('__slug__.actions.cancel') }}
+            </x-atoms.button>
+            <x-atoms.button type="button" id="confirm-bulk-delete-__slug__" variant="danger">
+                {{ __('__slug__.actions.delete') }}
+            </x-atoms.button>
+        </div>
+    </x-organisms.modal>
+@endsection
+
+@push('scripts')
+    @vite('resources/js/__slug__/index.js')
+@endpush

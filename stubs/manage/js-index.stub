@@ -1,0 +1,32 @@
+import { createTable } from '../shared/table.js';
+import { routes } from '../routes.js';
+
+createTable({
+    ids: {
+        table: '__slug__-table',
+        skeleton: '__slug__-table-skeleton',
+        wrapper: '__slug__-table-wrapper',
+        toolbar: '__slug__-table-toolbar',
+        generateButton: 'generate-__slug__',
+        generateCount: 'generate-count',
+        confirmDelete: 'confirm-delete-__singular__',
+        confirmBulkDelete: 'confirm-bulk-delete-__slug__',
+    },
+    flashKey: '__slug__-flash-success',
+    selectionKey: '__slug__-table-selection',
+    deleteModalId: 'delete-__singular__-modal',
+    bulkDeleteModalId: 'bulk-delete-__slug__-modal',
+    routes: {
+        index: routes.__pluralVar__.index,
+        destroy: routes.__pluralVar__.destroy,
+        bulkDestroy: routes.__pluralVar__.bulkDestroy,
+        generate: routes.__pluralVar__.generate,
+    },
+    row: (item) => ({
+        cells: [
+__rowCells__
+        ],
+        editUrl: routes.pages.__modelVar__Edit(item.id),
+        locked: false,
+    }),
+});

@@ -1,0 +1,68 @@
+import { hideSnackbar } from '../shared/error-snackbar.js';
+import { clearFieldErrors, showFieldErrors, showGenericError, validateForm } from '../shared/field-errors.js';
+import { setButtonLoading, hideSkeleton } from '../shared/loading-state.js';
+import { get, post, put } from '../shared/http.js';
+import { routes } from '../routes.js';
+import { wireDevTools } from './dev-tools.js';
+import { __modelVar__FormFixture } from './dev-fixtures/form.js';
+
+const form = document.getElementById('__singular__-form');
+const itemId = form?.dataset.itemId;
+
+wireDevTools(form, __modelVar__FormFixture);
+
+async function loadItem() {
+    const { ok, data } = await get(routes.__pluralVar__.show(itemId));
+
+    if (ok) {
+__formLoad__
+    }
+
+    hideSkeleton('__singular__-form', '__singular__-form-skeleton');
+}
+
+if (form) {
+    if (itemId) {
+        loadItem();
+    }
+
+    form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        clearFieldErrors(form);
+        hideSnackbar();
+
+        const clientErrors = validateForm(form);
+        if (Object.keys(clientErrors).length > 0) {
+            showFieldErrors(form, clientErrors);
+            return;
+        }
+
+        const submitButton = form.querySelector('button[type="submit"]');
+        setButtonLoading(submitButton, true);
+
+        const payload = {
+__formPayload__
+        };
+
+        try {
+            const { ok, status, data } = await (itemId ? put(routes.__pluralVar__.update(itemId), payload) : post(routes.__pluralVar__.store, payload));
+
+            if (ok) {
+                sessionStorage.setItem('__slug__-flash-success', form.dataset.successMessage);
+                window.location.href = routes.pages.__pluralVar__;
+                return;
+            }
+
+            if (status === 422 && data.errors) {
+                showFieldErrors(form, data.errors);
+            } else {
+                showGenericError(form, data.message ?? 'Something went wrong.', '__mainField__');
+            }
+        } catch {
+            showGenericError(form, 'Something went wrong.', '__mainField__');
+        } finally {
+            setButtonLoading(submitButton, false);
+        }
+    });
+}

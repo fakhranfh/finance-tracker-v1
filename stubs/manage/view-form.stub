@@ -1,0 +1,53 @@
+@extends('layouts.dashboard')
+
+@section('title', ($id ? __('__slug__.edit') : __('__slug__.create')) . ' - ' . config('app.name', 'Laravel'))
+
+@section('content')
+    <div class="mb-6 flex items-end justify-between gap-3">
+        <div>
+            <a href="{{ route('__slug__.index') }}" class="font-body text-body-sm text-on-surface-variant hover:underline">
+                &larr; {{ __('__slug__.back') }}
+            </a>
+            <h1 class="mt-2 font-heading text-headline-md font-bold text-on-surface">
+                {{ $id ? __('__slug__.edit') : __('__slug__.create') }}
+            </h1>
+        </div>
+
+        @if (app()->isLocal())
+            <x-atoms.button type="button" variant="secondary" data-dev-autofill>
+                {{ __('__slug__.actions.autofill') }}
+            </x-atoms.button>
+        @endif
+    </div>
+
+    <div class="w-full rounded-lg border border-outline-variant bg-surface p-6">
+        @if ($id)
+            <x-organisms.__singular__-form-skeleton id="__singular__-form-skeleton" />
+        @endif
+
+        <form
+            id="__singular__-form"
+            @class(['space-y-5', 'hidden' => $id])
+            novalidate
+            @if ($id) data-item-id="{{ $id }}" @endif
+            data-success-message="{{ $id ? __('__slug__.flash.updated') : __('__slug__.flash.created') }}"
+        >
+            @csrf
+
+__formFields__
+
+            <div class="flex items-center gap-3">
+                <x-atoms.button type="submit">
+                    {{ __('__slug__.actions.save') }}
+                </x-atoms.button>
+                <x-atoms.button href="{{ route('__slug__.index') }}" variant="secondary">
+                    {{ __('__slug__.actions.cancel') }}
+                </x-atoms.button>
+            </div>
+        </form>
+    </div>
+@endsection
+
+@push('scripts')
+    @vite('resources/js/__slug__/form.js')
+@endpush
