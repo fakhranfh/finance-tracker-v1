@@ -10,7 +10,10 @@ class RecordPageController extends Controller
 {
     public function index(): View
     {
-        return view('records.index', ['typeLabels' => $this->typeLabels()]);
+        return view('records.index', [
+            'typeLabels' => $this->typeLabels(),
+            'hasAccounts' => Account::query()->exists(),
+        ]);
     }
 
     public function create(): View

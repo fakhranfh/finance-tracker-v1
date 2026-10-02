@@ -22,10 +22,12 @@
 
     <div class="w-full rounded-lg border border-outline-variant bg-surface p-6">
         @if ($accounts->isEmpty())
-            <p class="font-body text-body-md text-on-surface-variant">
+            <p class="mb-4 font-body text-body-md text-on-surface-variant">
                 {{ __('records.no_accounts') }}
-                <a href="{{ route('accounts.create') }}" class="font-medium text-primary hover:underline">{{ __('accounts.create') }}</a>
             </p>
+            <x-atoms.button href="{{ route('accounts.create') }}">
+                {{ __('accounts.create') }}
+            </x-atoms.button>
         @else
         @if ($id)
             <x-organisms.record-form-skeleton id="record-form-skeleton" />

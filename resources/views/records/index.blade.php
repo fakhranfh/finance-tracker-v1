@@ -46,11 +46,22 @@
                     {{ __('records.actions.generate') }}
                 </x-atoms.button>
             @endif
-            <x-atoms.button href="{{ route('records.create') }}" class="col-span-2 sm:col-auto">
-                {{ __('records.create') }}
-            </x-atoms.button>
+            @if ($hasAccounts)
+                <x-atoms.button href="{{ route('records.create') }}" class="col-span-2 sm:col-auto">
+                    {{ __('records.create') }}
+                </x-atoms.button>
+            @endif
         </div>
     </div>
+
+    @unless ($hasAccounts)
+        <div class="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-warning/20 bg-warning/10 px-4 py-3 font-body text-sm text-on-surface">
+            <span>{{ __('records.no_accounts') }}</span>
+            <x-atoms.button href="{{ route('accounts.create') }}">
+                {{ __('accounts.create') }}
+            </x-atoms.button>
+        </div>
+    @endunless
 
     <div data-flash-success class="mb-6 hidden rounded-lg border border-success/20 bg-success/10 px-4 py-3 font-body text-sm text-success"></div>
 

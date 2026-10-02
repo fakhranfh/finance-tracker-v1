@@ -10,10 +10,31 @@ async function login(page, email: string, password: string) {
 }
 
 test.describe('Manage Records', () => {
+    test('prompts to create an account when none exists', async ({ page }) => {
+        const { email, password } = seedUser();
+
+        await login(page, email, password);
+        await page.getByRole('link', { name: 'Manage Records' }).click();
+
+        await expect(page).toHaveURL('/records');
+        await expect(page.getByText('You need at least one account before adding a record.')).toBeVisible();
+        await expect(page.getByRole('link', { name: 'Add record' })).toHaveCount(0);
+
+        await page.getByRole('link', { name: 'Add account' }).click();
+        await expect(page).toHaveURL('/accounts/create');
+    });
+
     test('lists records and navigates to the create page (happy path)', async ({ page }) => {
         const { email, password } = seedUser();
 
         await login(page, email, password);
+
+        await page.goto('/accounts/create');
+        await page.getByLabel('Name', { exact: true }).fill('E2E Cash');
+        await page.getByLabel('Initial Balance', { exact: true }).fill('100000');
+        await page.getByRole('button', { name: 'Save' }).click();
+        await expect(page).toHaveURL('/accounts');
+
         await page.getByRole('link', { name: 'Manage Records' }).click();
 
         await expect(page).toHaveURL('/records');
