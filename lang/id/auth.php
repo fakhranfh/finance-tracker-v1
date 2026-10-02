@@ -1,7 +1,6 @@
 <?php
 
 return [
-    'back_to_home' => 'Kembali ke beranda',
     'failed' => 'Kredensial ini tidak cocok dengan data kami.',
     'logged_out' => 'Anda telah keluar.',
     'password' => 'Kata sandi yang dimasukkan salah.',

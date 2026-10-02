@@ -23,23 +23,11 @@ export const routes = {
         show: endpoint('/profile'),
         update: endpoint('/profile'),
     },
-    users: {
-        index: endpoint('/users'),
-        show: (id) => endpoint(`/users/${id}`),
-        store: endpoint('/users'),
-        update: (id) => endpoint(`/users/${id}`),
-        destroy: (id) => endpoint(`/users/${id}`),
-        bulkDestroy: endpoint('/users'),
-        generate: endpoint('/users/generate'),
-    },
     pages: {
         home: '/',
         login: '/login',
         verifyEmail: '/email/verify',
         dashboard: '/dashboard',
         profile: '/profile',
-        users: '/users',
-        userCreate: '/users/create',
-        userEdit: (id) => `/users/${id}/edit`,
     },
 };

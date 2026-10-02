@@ -41,16 +41,15 @@ it('rejects registration with a mismatched password confirmation', function () {
     ]);
 });
 
-it('rejects registration with an email already in use', function () {
-    User::factory()->create(['email' => 'jane@example.com']);
+it('closes registration once a user exists', function () {
+    User::factory()->create();
 
-    $response = $this->postJson('/api/register', [
+    $this->postJson('/api/register', [
         'name' => 'Jane Doe',
         'email' => 'jane@example.com',
         'password' => 'Password123!',
         'password_confirmation' => 'Password123!',
-    ]);
+    ])->assertForbidden();
 
-    $response->assertStatus(422);
-    $response->assertJsonValidationErrors('email');
+    $this->get('/register')->assertRedirect(route('login'));
 });

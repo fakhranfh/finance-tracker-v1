@@ -8,8 +8,8 @@ use App\Http\Controllers\Api\Auth\RegisterController;
 use App\Http\Controllers\Api\Auth\VerificationNotificationController;
 use App\Http\Controllers\Api\Auth\ResetPasswordController;
 use App\Http\Controllers\Api\ProfileController;
-use App\Http\Controllers\Api\UserController;
 use App\Http\Middleware\EnsureLocalEnvironment;
+use App\Http\Middleware\EnsureNoUsersExist;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -25,7 +25,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::middleware('web')->name('api.')->group(function (): void {
-    Route::post('/register', RegisterController::class)->name('register');
+    Route::post('/register', RegisterController::class)->middleware(EnsureNoUsersExist::class)->name('register');
     Route::post('/login', LoginController::class)->name('login');
     Route::post('/dev/auto-login', DevAutoLoginController::class)
         ->middleware(EnsureLocalEnvironment::class)
@@ -42,12 +42,5 @@ Route::middleware('web')->name('api.')->group(function (): void {
     Route::middleware(['auth:sanctum', 'verified'])->group(function (): void {
         Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
         Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
-        Route::delete('/users', [UserController::class, 'bulkDestroy'])->name('users.bulk-destroy');
-        Route::post('/users/generate', [UserController::class, 'generate'])
-            ->middleware(EnsureLocalEnvironment::class)
-            ->name('users.generate');
-        Route::resource('users', UserController::class)
-            ->except('create', 'edit')
-            ->names('users');
     });
 });

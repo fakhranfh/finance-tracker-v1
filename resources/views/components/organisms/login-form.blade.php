@@ -28,12 +28,5 @@
                 <x-atoms.button type="button" variant="secondary" data-dev-auto-login>Auto login</x-atoms.button>
             </div>
         @endif
-
-        <p class="text-center font-body text-body-sm text-on-surface-variant">
-            {{ __('auth.login.no_account') }}
-            <a href="{{ route('register') }}" class="font-medium text-primary hover:underline">
-                {{ __('auth.login.register_link') }}
-            </a>
-        </p>
     </form>
 </div>

@@ -3,7 +3,6 @@
 return [
     'nav' => [
         ['label' => 'dashboard.nav.dashboard', 'route' => 'dashboard', 'icon' => 'home'],
-        ['label' => 'dashboard.nav.users', 'route' => 'users.index', 'active' => 'users.*', 'icon' => 'users'],
     ],
 
     'icons' => [

@@ -15,7 +15,6 @@ use OpenApi\Attributes as OA;
 )]
 #[OA\Tag(name: 'Auth', description: 'Authentication endpoints')]
 #[OA\Tag(name: 'Profile', description: 'Authenticated user profile endpoints')]
-#[OA\Tag(name: 'Users', description: 'User management endpoints')]
 abstract class Controller
 {
     //

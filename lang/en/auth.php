@@ -1,7 +1,6 @@
 <?php
 
 return [
-    'back_to_home' => 'Back to home',
     'failed' => 'These credentials do not match our records.',
     'logged_out' => 'You have been logged out.',
     'password' => 'The provided password is incorrect.',
