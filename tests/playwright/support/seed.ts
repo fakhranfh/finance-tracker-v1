@@ -20,3 +20,8 @@ export function seedUser(): { email: string; password: string } {
 export function seedResetToken(): { email: string; token: string } {
     return seed('reset-token') as { email: string; token: string };
 }
+
+/** Registration is only open while no users exist, so its specs start from an empty DB. */
+export function resetDatabase(): void {
+    execSync('php artisan migrate:fresh --force', { env: testEnv, stdio: 'ignore' });
+}

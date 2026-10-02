@@ -1,6 +1,9 @@
 import { test, expect } from '@playwright/test';
+import { resetDatabase } from './support/seed';
 
 test.describe('Register', () => {
+    test.beforeEach(() => resetDatabase());
+
     test('registers a new user with valid data (happy path)', async ({ page }) => {
         await page.goto('/register');
 
