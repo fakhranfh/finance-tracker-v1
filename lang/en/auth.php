@@ -48,6 +48,16 @@ return [
         'submit' => 'Reset password',
     ],
 
+    'mail' => [
+        'reset_subject' => 'Reset your password',
+        'reset_greeting' => 'Hello, :name!',
+        'reset_intro' => 'We received a request to reset the password for your account.',
+        'reset_action' => 'Reset password',
+        'reset_expire' => 'This link expires in :count minutes.',
+        'reset_outro' => 'If you did not request a password reset, you can safely ignore this email.',
+        'salutation' => 'Regards,',
+    ],
+
     'errors' => [
         'generic' => 'Something went wrong. Please try again.',
     ],

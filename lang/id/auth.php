@@ -48,6 +48,16 @@ return [
         'submit' => 'Atur ulang kata sandi',
     ],
 
+    'mail' => [
+        'reset_subject' => 'Atur ulang kata sandi Anda',
+        'reset_greeting' => 'Halo, :name!',
+        'reset_intro' => 'Kami menerima permintaan untuk mengatur ulang kata sandi akun Anda.',
+        'reset_action' => 'Atur ulang kata sandi',
+        'reset_expire' => 'Tautan ini berlaku selama :count menit.',
+        'reset_outro' => 'Jika Anda tidak meminta pengaturan ulang kata sandi, abaikan email ini.',
+        'salutation' => 'Salam,',
+    ],
+
     'errors' => [
         'generic' => 'Terjadi kesalahan. Silakan coba lagi.',
     ],

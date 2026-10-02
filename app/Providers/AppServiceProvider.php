@@ -4,6 +4,9 @@ namespace App\Providers;
 
 use App\Repositories\User\UserRepository;
 use App\Repositories\User\UserRepositoryInterface;
+use Illuminate\Auth\Notifications\ResetPassword;
+use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Support\HtmlString;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 
@@ -22,6 +25,22 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        ResetPassword::toMailUsing(function (object $notifiable, string $token): MailMessage {
+            $url = url(route('password.reset', [
+                'token' => $token,
+                'email' => $notifiable->getEmailForPasswordReset(),
+            ], false));
+
+            return (new MailMessage)
+                ->subject(__('auth.mail.reset_subject'))
+                ->greeting(__('auth.mail.reset_greeting', ['name' => $notifiable->name]))
+                ->line(__('auth.mail.reset_intro'))
+                ->action(__('auth.mail.reset_action'), $url)
+                ->line(__('auth.mail.reset_expire', ['count' => config('auth.passwords.users.expire')]))
+                ->line(__('auth.mail.reset_outro'))
+                ->salutation(new HtmlString(e(__('auth.mail.salutation')).'<br>'.e(config('app.name'))));
+        });
+
         Password::defaults(fn () => Password::min(8)
             ->letters()
             ->mixedCase()

@@ -115,4 +115,9 @@ return [
         'name' => env('MAIL_FROM_NAME', env('APP_NAME', 'Laravel')),
     ],
 
+    'markdown' => [
+        'theme' => 'feedloop',
+        'paths' => [resource_path('views/vendor/mail')],
+    ],
+
 ];
