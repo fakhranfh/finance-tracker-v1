@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Repositories\User\UserRepository;
 use App\Repositories\User\UserRepositoryInterface;
 use Illuminate\Auth\Notifications\ResetPassword;
+use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\ServiceProvider;
@@ -38,6 +39,16 @@ class AppServiceProvider extends ServiceProvider
                 ->action(__('auth.mail.reset_action'), $url)
                 ->line(__('auth.mail.reset_expire', ['count' => config('auth.passwords.users.expire')]))
                 ->line(__('auth.mail.reset_outro'))
+                ->salutation(new HtmlString(e(__('auth.mail.salutation')).'<br>'.e(config('app.name'))));
+        });
+
+        VerifyEmail::toMailUsing(function (object $notifiable, string $url): MailMessage {
+            return (new MailMessage)
+                ->subject(__('auth.mail.verify_subject'))
+                ->greeting(__('auth.mail.reset_greeting', ['name' => $notifiable->name]))
+                ->line(__('auth.mail.verify_intro'))
+                ->action(__('auth.mail.verify_action'), $url)
+                ->line(__('auth.mail.verify_outro'))
                 ->salutation(new HtmlString(e(__('auth.mail.salutation')).'<br>'.e(config('app.name'))));
         });
 

@@ -48,7 +48,22 @@ return [
         'submit' => 'Reset password',
     ],
 
+    'verify_email' => [
+        'title' => 'Verify your email',
+        'subtitle' => 'We sent a verification link to :email. Click it to activate your account.',
+        'send' => 'Send verification email',
+        'resend_in' => 'Resend in :seconds s',
+        'sent' => 'Verification email sent. Please check your inbox.',
+        'logout' => 'Log out',
+        'throttled' => 'Please wait :seconds seconds before requesting another email.',
+        'already_verified' => 'Your email is already verified.',
+    ],
+
     'mail' => [
+        'verify_subject' => 'Verify your email address',
+        'verify_intro' => 'Thanks for signing up! Please confirm your email address to activate your account.',
+        'verify_action' => 'Verify email address',
+        'verify_outro' => 'If you did not create an account, you can safely ignore this email.',
         'reset_subject' => 'Reset your password',
         'reset_greeting' => 'Hello, :name!',
         'reset_intro' => 'We received a request to reset the password for your account.',

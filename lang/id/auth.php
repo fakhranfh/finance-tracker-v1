@@ -48,7 +48,22 @@ return [
         'submit' => 'Atur ulang kata sandi',
     ],
 
+    'verify_email' => [
+        'title' => 'Verifikasi email Anda',
+        'subtitle' => 'Kami telah mengirim tautan verifikasi ke :email. Klik tautan tersebut untuk mengaktifkan akun Anda.',
+        'send' => 'Kirim email verifikasi',
+        'resend_in' => 'Kirim ulang dalam :seconds dtk',
+        'sent' => 'Email verifikasi terkirim. Silakan periksa kotak masuk Anda.',
+        'logout' => 'Keluar',
+        'throttled' => 'Mohon tunggu :seconds detik sebelum meminta email lagi.',
+        'already_verified' => 'Email Anda sudah terverifikasi.',
+    ],
+
     'mail' => [
+        'verify_subject' => 'Verifikasi alamat email Anda',
+        'verify_intro' => 'Terima kasih telah mendaftar! Mohon konfirmasi alamat email Anda untuk mengaktifkan akun.',
+        'verify_action' => 'Verifikasi alamat email',
+        'verify_outro' => 'Jika Anda tidak membuat akun, abaikan saja email ini.',
         'reset_subject' => 'Atur ulang kata sandi Anda',
         'reset_greeting' => 'Halo, :name!',
         'reset_intro' => 'Kami menerima permintaan untuk mengatur ulang kata sandi akun Anda.',

@@ -13,7 +13,7 @@ test.describe('Register', () => {
 
         await page.getByRole('button', { name: 'Create account' }).click();
 
-        await expect(page).toHaveURL(/\/login$/);
+        await expect(page).toHaveURL(/\/email\/verify$/);
     });
 
     test('shows a validation error when passwords do not match', async ({ page }) => {

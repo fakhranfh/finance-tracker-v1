@@ -17,6 +17,7 @@ export const routes = {
         devAutoLogin: endpoint('/dev/auto-login'),
         forgotPassword: endpoint('/forgot-password'),
         resetPassword: endpoint('/reset-password'),
+        sendVerification: endpoint('/email/verification-notification'),
     },
     profile: {
         show: endpoint('/profile'),
@@ -34,6 +35,7 @@ export const routes = {
     pages: {
         home: '/',
         login: '/login',
+        verifyEmail: '/email/verify',
         dashboard: '/dashboard',
         profile: '/profile',
         users: '/users',

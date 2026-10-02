@@ -8,6 +8,8 @@ use App\Http\Resources\UserResource;
 use App\Services\AuthService;
 use App\Traits\Register\DocumentsApi;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class RegisterController extends Controller
 {
@@ -20,6 +22,12 @@ class RegisterController extends Controller
     public function __invoke(RegisterRequest $request): JsonResponse
     {
         $user = $this->authService->register($request->validated());
+
+        Auth::login($user);
+        $request->session()->regenerate();
+
+        $this->authService->sendVerificationEmail($user);
+
         $token = $this->authService->issueToken($user);
 
         return (new UserResource($user))

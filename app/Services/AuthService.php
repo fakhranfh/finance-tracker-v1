@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Stevebauman\Location\Facades\Location;
 
@@ -29,6 +30,41 @@ class AuthService
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
         ]);
+    }
+
+    /**
+     * Seconds a user must wait between verification emails.
+     */
+    public const VERIFICATION_COOLDOWN = 60;
+
+    /**
+     * Send the verification email unless one was sent within the cooldown.
+     *
+     * @return int Seconds left on the cooldown (0 when the email was sent).
+     */
+    public function sendVerificationEmail(User $user): int
+    {
+        $sent = RateLimiter::attempt(
+            $this->verificationKey($user),
+            1,
+            fn () => $user->sendEmailVerificationNotification(),
+            self::VERIFICATION_COOLDOWN,
+        );
+
+        return $sent ? 0 : $this->verificationCooldown($user);
+    }
+
+    /**
+     * Seconds remaining before another verification email may be sent.
+     */
+    public function verificationCooldown(User $user): int
+    {
+        return RateLimiter::availableIn($this->verificationKey($user));
+    }
+
+    protected function verificationKey(User $user): string
+    {
+        return 'verification-email:'.$user->id;
     }
 
     /**
@@ -75,6 +111,10 @@ class AuthService
                 'email' => 'dev@example.com',
                 'password' => 'password',
             ]);
+
+        if (! $user->hasVerifiedEmail()) {
+            $user->markEmailAsVerified();
+        }
 
         Auth::login($user);
 

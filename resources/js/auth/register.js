@@ -39,7 +39,7 @@ if (form) {
 
             if (ok) {
                 storeApiToken(data.token);
-                window.location.href = routes.pages.login;
+                window.location.href = routes.pages.verifyEmail;
                 return;
             }
 

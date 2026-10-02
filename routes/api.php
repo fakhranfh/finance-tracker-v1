@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\Auth\ForgotPasswordController;
 use App\Http\Controllers\Api\Auth\LoginController;
 use App\Http\Controllers\Api\Auth\LogoutController;
 use App\Http\Controllers\Api\Auth\RegisterController;
+use App\Http\Controllers\Api\Auth\VerificationNotificationController;
 use App\Http\Controllers\Api\Auth\ResetPasswordController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\UserController;
@@ -33,6 +34,12 @@ Route::middleware('web')->name('api.')->group(function (): void {
     Route::post('/reset-password', ResetPasswordController::class)->name('reset-password');
     
     Route::middleware('auth:sanctum')->group(function (): void {
+        Route::post('/email/verification-notification', VerificationNotificationController::class)
+            ->name('verification.send');
+        Route::post('/logout', LogoutController::class)->name('logout');
+    });
+
+    Route::middleware(['auth:sanctum', 'verified'])->group(function (): void {
         Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
         Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
         Route::delete('/users', [UserController::class, 'bulkDestroy'])->name('users.bulk-destroy');
@@ -42,6 +49,5 @@ Route::middleware('web')->name('api.')->group(function (): void {
         Route::resource('users', UserController::class)
             ->except('create', 'edit')
             ->names('users');
-        Route::post('/logout', LogoutController::class)->name('logout');
     });
 });
