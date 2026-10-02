@@ -1,13 +1,15 @@
 <?php
 
+use App\Http\Controllers\Api\AccountController;
 use App\Http\Controllers\Api\Auth\DevAutoLoginController;
 use App\Http\Controllers\Api\Auth\ForgotPasswordController;
 use App\Http\Controllers\Api\Auth\LoginController;
 use App\Http\Controllers\Api\Auth\LogoutController;
 use App\Http\Controllers\Api\Auth\RegisterController;
-use App\Http\Controllers\Api\Auth\VerificationNotificationController;
 use App\Http\Controllers\Api\Auth\ResetPasswordController;
+use App\Http\Controllers\Api\Auth\VerificationNotificationController;
 use App\Http\Controllers\Api\ProfileController;
+use App\Http\Controllers\Api\RecordController;
 use App\Http\Middleware\EnsureLocalEnvironment;
 use App\Http\Middleware\EnsureNoUsersExist;
 use Illuminate\Support\Facades\Route;
@@ -32,10 +34,26 @@ Route::middleware('web')->name('api.')->group(function (): void {
         ->name('dev.auto-login');
     Route::post('/forgot-password', ForgotPasswordController::class)->name('forgot-password');
     Route::post('/reset-password', ResetPasswordController::class)->name('reset-password');
-    
+
     Route::middleware('auth:sanctum')->group(function (): void {
         Route::post('/email/verification-notification', VerificationNotificationController::class)
             ->name('verification.send');
+        Route::delete('/accounts', [AccountController::class, 'bulkDestroy'])->name('accounts.bulk-destroy');
+        Route::post('/accounts/generate', [AccountController::class, 'generate'])
+            ->middleware(EnsureLocalEnvironment::class)
+            ->name('accounts.generate');
+        Route::resource('accounts', AccountController::class)
+            ->parameters(['accounts' => 'account'])
+            ->except('create', 'edit')
+            ->names('accounts');
+        Route::delete('/records', [RecordController::class, 'bulkDestroy'])->name('records.bulk-destroy');
+        Route::post('/records/generate', [RecordController::class, 'generate'])
+            ->middleware(EnsureLocalEnvironment::class)
+            ->name('records.generate');
+        Route::resource('records', RecordController::class)
+            ->parameters(['records' => 'record'])
+            ->except('create', 'edit')
+            ->names('records');
         Route::post('/logout', LogoutController::class)->name('logout');
     });
 

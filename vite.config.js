@@ -16,6 +16,10 @@ export default defineConfig({
                 'resources/js/auth/verify-email.js',
                 'resources/js/dashboard.js',
                 'resources/js/profile/edit.js',
+                'resources/js/accounts/index.js',
+                'resources/js/accounts/form.js',
+                'resources/js/records/index.js',
+                'resources/js/records/form.js',
             ],
             refresh: true,
             fonts: [

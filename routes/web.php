@@ -1,12 +1,14 @@
 <?php
 
+use App\Http\Controllers\AccountPageController;
 use App\Http\Controllers\Auth\AuthPageController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\ProfilePageController;
+use App\Http\Controllers\RecordPageController;
+use App\Http\Middleware\EnsureNoUsersExist;
 use App\Models\User;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
-use App\Http\Middleware\EnsureNoUsersExist;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => redirect()->route(User::exists() ? 'login' : 'register'))->name('home');
@@ -48,4 +50,12 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
     })->name('dashboard');
 
     Route::get('/profile', [ProfilePageController::class, 'edit'])->name('profile.edit');
+
+    Route::get('/accounts', [AccountPageController::class, 'index'])->name('accounts.index');
+    Route::get('/accounts/create', [AccountPageController::class, 'create'])->name('accounts.create');
+    Route::get('/accounts/{id}/edit', [AccountPageController::class, 'edit'])->name('accounts.edit');
+
+    Route::get('/records', [RecordPageController::class, 'index'])->name('records.index');
+    Route::get('/records/create', [RecordPageController::class, 'create'])->name('records.create');
+    Route::get('/records/{id}/edit', [RecordPageController::class, 'edit'])->name('records.edit');
 });

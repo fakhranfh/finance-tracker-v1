@@ -2,6 +2,10 @@
 
 namespace App\Providers;
 
+use App\Repositories\Account\AccountRepository;
+use App\Repositories\Account\AccountRepositoryInterface;
+use App\Repositories\Record\RecordRepository;
+use App\Repositories\Record\RecordRepositoryInterface;
 use App\Repositories\User\UserRepository;
 use App\Repositories\User\UserRepositoryInterface;
 use Illuminate\Auth\Notifications\ResetPassword;
@@ -18,6 +22,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        $this->app->bind(RecordRepositoryInterface::class, RecordRepository::class);
+        $this->app->bind(AccountRepositoryInterface::class, AccountRepository::class);
         $this->app->bind(UserRepositoryInterface::class, UserRepository::class);
     }
 

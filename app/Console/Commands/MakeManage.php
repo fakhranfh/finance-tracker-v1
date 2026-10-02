@@ -211,7 +211,7 @@ class MakeManage extends Command
             $rowCells[] = "            {$this->jsDisplay($f)},";
         }
 
-        $rowCells[] = '            new Date(item.created_at).toLocaleDateString(),';
+        $rowCells[] = '            formatDateTime(item.created_at),';
 
         return [
             '__fillable__' => $quoted($names),
@@ -341,7 +341,7 @@ class MakeManage extends Command
     {
         return match ($f['type']) {
             'boolean' => "item.{$f['name']} ? '✓' : '—'",
-            'date' => "item.{$f['name']} ? new Date(item.{$f['name']}).toLocaleDateString() : ''",
+            'date' => "item.{$f['name']} ? formatDateTime(item.{$f['name']}) : ''",
             default => "item.{$f['name']} ?? ''",
         };
     }
