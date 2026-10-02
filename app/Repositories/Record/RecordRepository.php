@@ -3,11 +3,18 @@
 namespace App\Repositories\Record;
 
 use App\Models\Record;
+use App\Services\AccountBalanceSnapshotService;
+use App\Services\AccountLastBalanceService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class RecordRepository implements RecordRepositoryInterface
 {
+    public function __construct(
+        protected AccountBalanceSnapshotService $snapshots,
+        protected AccountLastBalanceService $lastBalance,
+    ) {}
+
     public function find(int $id): ?Record
     {
         return Record::query()->with(['account', 'toAccount'])->find($id);
@@ -33,7 +40,7 @@ class RecordRepository implements RecordRepositoryInterface
 
     public function deleteMany(array $ids): void
     {
-        Record::query()->whereIn('id', $ids)->delete();
+        $this->deleteInvalidating(Record::query()->whereIn('id', $ids));
     }
 
     public function deleteMatching(?string $search = null): void
@@ -42,7 +49,7 @@ class RecordRepository implements RecordRepositoryInterface
 
         $this->applySearch($query, $search);
 
-        $query->delete();
+        $this->deleteInvalidating($query);
     }
 
     public function countMatching(?string $search = null, ?int $exceptId = null): int
@@ -52,6 +59,35 @@ class RecordRepository implements RecordRepositoryInterface
         $this->applySearch($query, $search);
 
         return $query->count();
+    }
+
+    /**
+     * Bulk deletes skip model events, so invalidate snapshots by hand.
+     *
+     * @param  Builder<Record>  $query
+     */
+    private function deleteInvalidating(Builder $query): void
+    {
+        $accountIds = [
+            ...(clone $query)->distinct()->pluck('account_id'),
+            ...(clone $query)->distinct()->pluck('to_account_id'),
+        ];
+        $firstId = (clone $query)->min('id');
+
+        $effects = (clone $query)->toBase()->reorder()
+            ->selectRaw('type, account_id, to_account_id, sum(amount) as total')
+            ->groupBy('type', 'account_id', 'to_account_id')
+            ->get();
+
+        $query->delete();
+
+        foreach ($effects as $effect) {
+            $this->lastBalance->apply($effect->type, $effect->account_id, $effect->to_account_id, $effect->total, -1);
+        }
+
+        if ($firstId !== null) {
+            $this->snapshots->invalidate($accountIds, $firstId);
+        }
     }
 
     private function applySearch(Builder $query, ?string $search): void

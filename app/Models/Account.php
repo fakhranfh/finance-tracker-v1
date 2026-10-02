@@ -21,22 +21,15 @@ class Account extends Model
     use HasFactory, HasUserTimezone;
 
     /**
-     * Add a `balance` column: initial balance + income - expense
-     * + transfers in - transfers out.
+     * Add a `balance` column: the account's current balance, read from the
+     * `last_balance` column that is kept current as records change.
      *
      * @param  Builder<Account>  $query
      */
     #[Scope]
     protected function withBalance(Builder $query): void
     {
-        $query->selectRaw(<<<'SQL'
-            accounts.*,
-            accounts.initial_balance
-            + coalesce((select sum(case when r.type = 'income' then r.amount else -r.amount end)
-                from records r where r.account_id = accounts.id), 0)
-            + coalesce((select sum(r.amount)
-                from records r where r.type = 'transfer' and r.to_account_id = accounts.id), 0) as balance
-            SQL);
+        $query->selectRaw('accounts.*, coalesce(accounts.last_balance, accounts.initial_balance) as balance');
     }
 
     /**
@@ -48,6 +41,7 @@ class Account extends Model
     {
         return [
             'initial_balance' => 'decimal:2',
+            'last_balance' => 'decimal:2',
             'balance' => 'decimal:2',
         ];
     }

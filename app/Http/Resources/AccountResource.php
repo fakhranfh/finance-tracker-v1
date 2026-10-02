@@ -26,6 +26,7 @@ class AccountResource extends JsonResource
             'name' => $account->name,
             'initial_balance' => $account->initial_balance,
             'balance' => $account->balance,
+            'last_balance' => $account->last_balance,
             'created_at' => $account->created_at?->toIso8601String(),
         ];
     }

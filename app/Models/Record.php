@@ -3,8 +3,10 @@
 namespace App\Models;
 
 use App\Enums\RecordType;
+use App\Observers\RecordObserver;
 use Database\Factories\RecordFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,6 +16,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * and `to_account_id` the destination.
  * */
 #[Fillable(['type', 'account_id', 'to_account_id', 'amount', 'note', 'recorded_at'])]
+#[ObservedBy(RecordObserver::class)]
 class Record extends Model
 {
     /** @use HasFactory<RecordFactory> */
