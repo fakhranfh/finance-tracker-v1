@@ -39,8 +39,13 @@
             @endswitch
         @endforeach
 
-        <div class="flex items-end">
-            <x-atoms.button type="button" variant="secondary" data-table-filter-clear>{{ $clearFiltersLabel }}</x-atoms.button>
+        <div data-table-filter-clear-wrap class="flex items-end">
+            <x-atoms.button type="button" variant="secondary" data-table-filter-clear>
+                <svg class="h-5 w-5 sm:hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                    <path d="M6 18 18 6M6 6l12 12" />
+                </svg>
+                <span class="max-sm:sr-only">{{ $clearFiltersLabel }}</span>
+            </x-atoms.button>
         </div>
     </div>
 @endif
@@ -64,7 +69,7 @@
 <div class="overflow-x-auto rounded-lg border border-outline-variant bg-surface max-sm:overflow-visible max-sm:border-0 max-sm:bg-transparent">
     <table class="w-full text-left font-body text-body-md max-sm:block">
         @if ($totalLabel !== '')
-            <caption data-table-total data-label-total="{{ $totalLabel }}" class="border-b border-outline-variant bg-surface-container px-4 py-3 text-left font-body text-body-sm font-medium text-on-surface"></caption>
+            <caption data-table-total data-label-total="{{ $totalLabel }}" class="max-sm:block max-sm:w-full max-sm:bg-transparent border-b border-outline-variant bg-surface-container px-4 py-3 text-left font-body text-body-sm font-medium text-on-surface"></caption>
         @endif
         <thead class="max-sm:hidden border-b border-outline-variant bg-surface-container text-body-sm text-on-surface-variant">
             <tr>

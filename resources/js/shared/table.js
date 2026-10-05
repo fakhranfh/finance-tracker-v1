@@ -270,6 +270,35 @@ export function createTable(config) {
     });
 
     const filtersRoot = document.getElementById(config.filtersId);
+    const filtersSlot = document.querySelector('[data-table-filters-slot]');
+    const filtersFooterSlot = document.querySelector('[data-table-filters-footer-slot]');
+    // Grab the clear button before the placement below may move it out of filtersRoot.
+    const clearButton = filtersRoot?.querySelector('[data-table-filter-clear]');
+
+    // On mobile the filter fields live in the filter modal and the clear button moves to its sticky footer;
+    // on desktop both go back to their place in the table.
+    if (filtersRoot && filtersSlot && filtersFooterSlot) {
+        const mobileQuery = window.matchMedia('(max-width: 639px)');
+        const filtersAnchor = document.createComment('table-filters');
+        const clearWrap = filtersRoot.querySelector('[data-table-filter-clear-wrap]');
+        const clearAnchor = document.createComment('table-filter-clear');
+
+        filtersRoot.before(filtersAnchor);
+        clearWrap?.before(clearAnchor);
+
+        const placeFilters = () => {
+            if (mobileQuery.matches) {
+                filtersSlot.append(filtersRoot);
+                filtersFooterSlot.append(clearWrap);
+            } else {
+                filtersAnchor.after(filtersRoot);
+                clearAnchor.after(clearWrap);
+            }
+        };
+
+        placeFilters();
+        mobileQuery.addEventListener('change', placeFilters);
+    }
 
     filtersRoot?.addEventListener('change', (event) => {
         if (!event.target.matches('[data-table-filter]')) {
@@ -282,7 +311,7 @@ export function createTable(config) {
 
     filtersRoot?.querySelectorAll('[data-filter-multi]').forEach(createMultiSelectFilter);
 
-    filtersRoot?.querySelector('[data-table-filter-clear]')?.addEventListener('click', () => {
+    clearButton?.addEventListener('click', () => {
         const hadValue = filterInputs.some((input) => (input.type === 'checkbox' ? input.checked : input.value !== ''));
 
         filterInputs.forEach((input) => {

@@ -19,18 +19,30 @@
 </div>
 
 <x-organisms.modal id="{{ $id }}-filter" :title="__('common.table.filter')">
-    <div class="flex flex-col gap-4">
-        <x-atoms.input
-            type="search"
-            name="search"
-            data-modal-search
-            placeholder="{{ $searchPlaceholder }}"
-        />
+    <div class="flex max-h-[70dvh] flex-col">
+        <div class="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto pb-4 pr-1">
+            <x-atoms.input
+                type="search"
+                name="search"
+                data-modal-search
+                placeholder="{{ $searchPlaceholder }}"
+            />
 
-        <x-molecules.per-page-select :label="$perPageLabel" class="justify-between" />
+            <x-molecules.per-page-select :label="$perPageLabel" class="justify-between" />
 
-        <div class="flex justify-end">
-            <x-atoms.button type="button" data-modal-close>{{ __('common.table.done') }}</x-atoms.button>
+            {{-- Table filters are moved here on mobile by shared/table.js --}}
+            <div data-table-filters-slot class="flex flex-col"></div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 border-t border-outline-variant pt-4">
+            {{-- Clear-filters button is moved here on mobile by shared/table.js --}}
+            <div data-table-filters-footer-slot class="min-w-0 [&>*]:w-full [&_button]:w-full"></div>
+            <x-atoms.button type="button" class="w-full" data-modal-close>
+                <svg class="h-5 w-5 sm:hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="m4.5 12.75 6 6 9-13.5" />
+                </svg>
+                <span class="max-sm:sr-only">{{ __('common.table.done') }}</span>
+            </x-atoms.button>
         </div>
     </div>
 </x-organisms.modal>
