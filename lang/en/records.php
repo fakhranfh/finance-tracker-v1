@@ -38,6 +38,8 @@ return [
         'account' => 'Account',
         'all_accounts' => 'All accounts',
         'accounts_selected' => ':count accounts selected',
+        'types_selected' => ':count types selected',
+        'search_types' => 'Search types...',
         'search_accounts' => 'Search accounts...',
         'select_all' => 'Select all',
         'deselect_all' => 'Deselect all',

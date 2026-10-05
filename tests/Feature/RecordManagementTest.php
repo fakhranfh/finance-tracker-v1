@@ -69,7 +69,7 @@ it('filters records by type, account and date range via the api', function () {
 
     $ids = fn (array $query) => collect($this->actingAs($actor)->getJson('/api/records?'.http_build_query($query))->json('data'))->pluck('id')->sort()->values()->all();
 
-    expect($ids(['type' => 'expense', 'account_ids' => [$account->id], 'date_from' => '2026-03-01', 'date_to' => '2026-03-31']))
+    expect($ids(['type' => ['expense'], 'account_ids' => [$account->id], 'date_from' => '2026-03-01', 'date_to' => '2026-03-31']))
         ->toBe([$match->id]);
     expect($ids(['account_ids' => [$account->id], 'date_from' => '2026-03-01', 'date_to' => '2026-03-31']))
         ->toBe(collect([$match->id, $transfer->id, Record::where('type', 'income')->value('id')])->sort()->values()->all());
@@ -91,12 +91,24 @@ it('filters records by any of several accounts', function () {
         ->toBe(collect([$a->id, $b->id])->sort()->values()->all());
 });
 
+it('filters records by any of several types', function () {
+    $actor = User::factory()->create();
+    $income = Record::factory()->create(['type' => 'income']);
+    $expense = Record::factory()->create(['type' => 'expense']);
+    Record::factory()->create(['type' => 'transfer', 'to_account_id' => Account::factory()->create()->id]);
+
+    $response = $this->actingAs($actor)->getJson('/api/records?'.http_build_query(['type' => ['income', 'expense']]));
+
+    expect(collect($response->json('data'))->pluck('id')->sort()->values()->all())
+        ->toBe(collect([$income->id, $expense->id])->sort()->values()->all());
+});
+
 it('bulk deletes every record matching the filters', function () {
     $actor = User::factory()->create();
     $keep = Record::factory()->create(['type' => 'income']);
     Record::factory()->count(2)->create(['type' => 'expense']);
 
-    $this->actingAs($actor)->deleteJson('/api/records', ['all' => true, 'type' => 'expense'])->assertNoContent();
+    $this->actingAs($actor)->deleteJson('/api/records', ['all' => true, 'type' => ['expense']])->assertNoContent();
 
     expect(Record::query()->pluck('id')->all())->toBe([$keep->id]);
 });

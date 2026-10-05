@@ -16,7 +16,8 @@ final class RecordFilterRules
     public static function rules(): array
     {
         return [
-            'type' => ['sometimes', 'nullable', Rule::enum(RecordType::class)],
+            'type' => ['sometimes', 'array'],
+            'type.*' => [Rule::enum(RecordType::class)],
             'account_ids' => ['sometimes', 'array'],
             'account_ids.*' => ['integer', 'exists:accounts,id'],
             'date_from' => ['sometimes', 'nullable', 'date'],

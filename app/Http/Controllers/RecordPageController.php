@@ -79,10 +79,14 @@ class RecordPageController extends Controller
     {
         return [
             [
-                'type' => 'select',
+                'type' => 'multi',
                 'key' => 'type',
                 'label' => __('records.filters.type'),
                 'allLabel' => __('records.filters.all_types'),
+                'selectedTemplate' => __('records.filters.types_selected', ['count' => ':count']),
+                'searchPlaceholder' => __('records.filters.search_types'),
+                'selectAllLabel' => __('records.filters.select_all'),
+                'deselectAllLabel' => __('records.filters.deselect_all'),
                 'options' => collect($typeLabels)
                     ->map(fn (string $label, string $value) => ['value' => $value, 'label' => $label, 'searchText' => mb_strtolower($label)])
                     ->values()

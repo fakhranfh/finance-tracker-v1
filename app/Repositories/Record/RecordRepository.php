@@ -115,7 +115,7 @@ class RecordRepository implements RecordRepositoryInterface
     private function applyFilters(Builder $query, array $filters): void
     {
         $query
-            ->when($filters['type'] ?? null, fn (Builder $q, string $type) => $q->where('type', $type))
+            ->when($filters['type'] ?? [], fn (Builder $q, array $types) => $q->whereIn('type', $types))
             ->when($filters['account_ids'] ?? [], fn (Builder $q, array $accountIds) => $q->where(fn (Builder $inner) => $inner
                 ->whereIn('account_id', $accountIds)
                 ->orWhereIn('to_account_id', $accountIds)))

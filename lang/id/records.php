@@ -38,6 +38,8 @@ return [
         'account' => 'Akun',
         'all_accounts' => 'Semua akun',
         'accounts_selected' => ':count akun dipilih',
+        'types_selected' => ':count jenis dipilih',
+        'search_types' => 'Cari jenis...',
         'search_accounts' => 'Cari akun...',
         'select_all' => 'Pilih semua',
         'deselect_all' => 'Hapus semua pilihan',
