@@ -6,7 +6,7 @@ import { setButtonLoading } from './loading-state.js';
  * only when app()->isLocal() and the route is behind EnsureLocalEnvironment,
  * so with no button in the DOM this binds nothing.
  */
-export function createGenerateButton({ button, countInput, url, onGenerated, min = 1, max = 50 }) {
+export function createGenerateButton({ button, countInput, url, onGenerated, getPayload = () => ({}), min = 1, max = 50 }) {
     if (!button) {
         return;
     }
@@ -20,7 +20,7 @@ export function createGenerateButton({ button, countInput, url, onGenerated, min
 
         setButtonLoading(button, true);
 
-        const { ok } = await post(url, { count });
+        const { ok } = await post(url, { count, ...getPayload() });
 
         setButtonLoading(button, false);
 

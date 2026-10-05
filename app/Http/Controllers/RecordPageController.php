@@ -13,6 +13,7 @@ class RecordPageController extends Controller
         return view('records.index', [
             'typeLabels' => $this->typeLabels(),
             'hasAccounts' => Account::query()->exists(),
+            'accounts' => Account::query()->orderBy('name')->get(['id', 'name']),
         ]);
     }
 

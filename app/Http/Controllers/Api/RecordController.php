@@ -53,9 +53,14 @@ class RecordController extends Controller
     {
         $validated = $request->validate([
             'count' => ['required', 'integer', 'min:1', 'max:50'],
+            'account_ids' => ['sometimes', 'array'],
+            'account_ids.*' => ['integer', 'exists:accounts,id'],
         ]);
 
-        return RecordResource::collection($this->generateSampleRecords($validated['count']));
+        return RecordResource::collection($this->generateSampleRecords(
+            $validated['count'],
+            $validated['account_ids'] ?? [],
+        ));
     }
 
     public function show(Record $record): RecordResource

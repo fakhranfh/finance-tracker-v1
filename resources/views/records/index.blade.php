@@ -26,6 +26,23 @@
 
         <div class="grid w-full grid-cols-[6rem_1fr] items-center gap-3 sm:flex sm:w-auto">
             @if (app()->isLocal())
+                @if ($accounts->isNotEmpty())
+                    <details class="relative col-span-2 sm:col-auto" id="generate-accounts">
+                        <summary class="flex cursor-pointer list-none items-center justify-between gap-2 rounded-lg border border-outline-variant px-3 py-2 font-body text-sm text-on-surface">
+                            <span data-accounts-summary data-summary-template="{{ __('records.actions.generate_accounts_summary', ['count' => ':count']) }}">{{ __('records.actions.generate_accounts_summary', ['count' => $accounts->count()]) }}</span>
+                            <span aria-hidden="true">▾</span>
+                        </summary>
+                        <div class="absolute z-20 mt-2 max-h-64 w-64 overflow-y-auto rounded-lg border border-outline-variant bg-surface p-2 shadow-lg">
+                            <p class="px-2 pb-2 font-body text-xs text-on-surface-variant">{{ __('records.actions.generate_accounts') }}</p>
+                            @foreach ($accounts as $account)
+                                <label class="flex cursor-pointer items-center gap-3 rounded px-2 py-2 font-body text-sm text-on-surface hover:bg-surface-container">
+                                    <x-atoms.checkbox name="account_ids[]" id="generate-account-{{ $account->id }}" value="{{ $account->id }}" checked data-generate-account />
+                                    <span>{{ $account->name }}</span>
+                                </label>
+                            @endforeach
+                        </div>
+                    </details>
+                @endif
                 <x-atoms.input
                     type="number"
                     name="generate-count"

@@ -53,6 +53,8 @@ return [
         'confirm_bulk_delete' => 'Yakin ingin menghapus catatan yang dipilih?',
         'generate' => 'Generate',
         'generate_count' => 'Jumlah catatan yang akan dibuat',
+        'generate_accounts' => 'Akun yang akan dibuat catatannya',
+        'generate_accounts_summary' => 'Akun (:count dipilih)',
         'autofill' => 'Isi otomatis',
     ],
 

@@ -6,6 +6,16 @@ import { formatMoney } from '../shared/money.js';
 const typeLabels = JSON.parse(document.getElementById('records-table')?.dataset.typeLabels ?? '{}');
 const SIGNS = { income: '+', expense: '-', transfer: '' };
 
+const accountCheckboxes = [...document.querySelectorAll('[data-generate-account]')];
+const accountsSummary = document.querySelector('[data-accounts-summary]');
+
+function refreshAccountsSummary() {
+    const selected = accountCheckboxes.filter((checkbox) => checkbox.checked).length;
+    accountsSummary.textContent = accountsSummary.dataset.summaryTemplate.replace(':count', selected);
+}
+
+accountCheckboxes.forEach((checkbox) => checkbox.addEventListener('change', refreshAccountsSummary));
+
 createTable({
     ids: {
         table: 'records-table',
@@ -17,6 +27,9 @@ createTable({
         confirmDelete: 'confirm-delete-record',
         confirmBulkDelete: 'confirm-bulk-delete-records',
     },
+    generatePayload: () => ({
+        account_ids: [...document.querySelectorAll('[data-generate-account]:checked')].map((checkbox) => Number(checkbox.value)),
+    }),
     flashKey: 'records-flash-success',
     selectionKey: 'records-table-selection',
     deleteModalId: 'delete-record-modal',

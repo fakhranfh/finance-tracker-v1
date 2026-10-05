@@ -137,6 +137,7 @@ export function createTable(config) {
         button: document.getElementById(ids.generateButton),
         countInput: document.getElementById(ids.generateCount),
         url: routes.generate,
+        getPayload: config.generatePayload,
         onGenerated: async (message) => {
             flash.show(message);
             await load();

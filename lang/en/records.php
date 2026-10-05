@@ -53,6 +53,8 @@ return [
         'confirm_bulk_delete' => 'Are you sure you want to delete the selected records?',
         'generate' => 'Generate',
         'generate_count' => 'Number of records to generate',
+        'generate_accounts' => 'Accounts to generate records for',
+        'generate_accounts_summary' => 'Accounts (:count selected)',
         'autofill' => 'Autofill',
     ],
 
