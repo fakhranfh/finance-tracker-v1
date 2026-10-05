@@ -126,6 +126,7 @@ export function createTable(config) {
         },
     };
     const selection = new TableSelection(config.selectionKey);
+    const totalEls = [...document.querySelectorAll('[data-table-total]')];
 
     const filterInputs = [...(document.getElementById(config.filtersId)?.querySelectorAll('[data-table-filter]') ?? [])];
     const filterKey = (input) => input.name.replace(/\[\]$/, '');
@@ -209,6 +210,10 @@ export function createTable(config) {
 
         total = data.deletable_total ?? data.meta?.total ?? data.data.length;
 
+        totalEls.forEach((el) => {
+            el.textContent = el.dataset.labelTotal.replace(':total', total);
+        });
+
         renderPagination(paginations, data.meta, load);
         tableSort.updateIcons();
         selectAll.syncRowCheckboxes();
@@ -276,6 +281,33 @@ export function createTable(config) {
     });
 
     filtersRoot?.querySelectorAll('[data-filter-multi]').forEach(createMultiSelectFilter);
+
+    filtersRoot?.querySelector('[data-table-filter-clear]')?.addEventListener('click', () => {
+        const hadValue = filterInputs.some((input) => (input.type === 'checkbox' ? input.checked : input.value !== ''));
+
+        filterInputs.forEach((input) => {
+            if (input.type === 'checkbox') {
+                input.checked = false;
+            } else {
+                input.value = '';
+            }
+        });
+
+        filtersRoot.querySelectorAll('[data-filter-multi-search]').forEach((search) => {
+            search.value = '';
+            search.dispatchEvent(new Event('input'));
+        });
+
+        // Refresh each dropdown's summary label; the dropdown listens on itself, not on the bar.
+        filtersRoot.querySelectorAll('[data-filter-multi]').forEach((dropdown) => {
+            dropdown.dispatchEvent(new Event('change'));
+        });
+
+        if (hadValue) {
+            selectAll.resetAllMatching();
+            reset();
+        }
+    });
 
     document.querySelectorAll('[data-modal-open]').forEach((button) => {
         button.addEventListener('click', () => openModal(button.dataset.modalOpen));

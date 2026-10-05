@@ -13,6 +13,11 @@ class Table extends Component
 
     public string $emptyLabel;
 
+    /** Empty disables the total line. */
+    public string $totalLabel;
+
+    public string $clearFiltersLabel;
+
     public int $columnCount;
 
     /** @var array<string, mixed> */
@@ -43,6 +48,8 @@ class Table extends Component
         $this->bulkDeleteLabel = $labels['bulkDelete'] ?? 'Delete selected';
         $this->selectedLabel = $labels['selected'] ?? 'selected';
         $this->emptyLabel = $labels['empty'] ?? 'No data';
+        $this->totalLabel = $labels['total'] ?? '';
+        $this->clearFiltersLabel = $labels['clearFilters'] ?? 'Clear filters';
         $this->columnCount = count($headers) + ($selectable ? 1 : 0);
 
         $this->dataAttributes = [

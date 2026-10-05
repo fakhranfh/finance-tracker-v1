@@ -38,6 +38,10 @@
                     @break
             @endswitch
         @endforeach
+
+        <div class="flex items-end">
+            <x-atoms.button type="button" variant="secondary" data-table-filter-clear>{{ $clearFiltersLabel }}</x-atoms.button>
+        </div>
     </div>
 @endif
 
@@ -59,6 +63,9 @@
 
 <div class="overflow-x-auto rounded-lg border border-outline-variant bg-surface max-sm:overflow-visible max-sm:border-0 max-sm:bg-transparent">
     <table class="w-full text-left font-body text-body-md max-sm:block">
+        @if ($totalLabel !== '')
+            <caption data-table-total data-label-total="{{ $totalLabel }}" class="border-b border-outline-variant bg-surface-container px-4 py-3 text-left font-body text-body-sm font-medium text-on-surface"></caption>
+        @endif
         <thead class="max-sm:hidden border-b border-outline-variant bg-surface-container text-body-sm text-on-surface-variant">
             <tr>
                 @if ($selectable)

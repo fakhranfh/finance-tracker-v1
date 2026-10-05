@@ -10,8 +10,7 @@
             </h1>
             <p class="mt-1 font-body text-body-md text-on-surface-variant">
                 {{ __('records.subtitle') }}
-            </p>
-        </div>
+            </p>        </div>
 
         <div class="grid w-full grid-cols-[6rem_1fr] items-center gap-3 sm:flex sm:w-auto">
             @if (app()->isLocal())
@@ -96,6 +95,8 @@
                 'labels' => [
                     'bulkDelete' => __('records.actions.delete_selected'),
                     'selected' => __('records.table.selected'),
+                    'total' => __('records.table.total', ['total' => ':total']),
+                    'clearFilters' => __('records.filters.clear'),
                     'empty' => __('records.table.empty'),
                     'selectAllMatching' => __('records.table.select_all_matching', ['total' => ':total']),
                     'allSelected' => __('records.table.all_selected', ['total' => ':total']),
