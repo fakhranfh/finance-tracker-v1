@@ -16,9 +16,12 @@ class RecordManagementService
     /**
      * List records, paginated, optionally filtered and sorted.
      */
-    public function paginate(int $perPage = 10, ?string $search = null, ?string $sort = null, string $direction = 'asc'): LengthAwarePaginator
+    /**
+     * @param  array<string, mixed>  $filters
+     */
+    public function paginate(int $perPage = 10, ?string $search = null, ?string $sort = null, string $direction = 'asc', array $filters = []): LengthAwarePaginator
     {
-        return $this->recordRepository->paginate($perPage, $search, $sort, $direction);
+        return $this->recordRepository->paginate($perPage, $search, $sort, $direction, $filters);
     }
 
     /**
@@ -68,19 +71,23 @@ class RecordManagementService
     }
 
     /**
-     * Delete every record matching the search filter (all when null).
+     * Delete every record matching the search and filters (all when none apply).
+     *
+     * @param  array<string, mixed>  $filters
      */
-    public function deleteMatching(?string $search = null): void
+    public function deleteMatching(?string $search = null, array $filters = []): void
     {
-        $this->recordRepository->deleteMatching($search);
+        $this->recordRepository->deleteMatching($search, $filters);
     }
 
     /**
-     * Count records matching the search filter, optionally excluding one ID.
+     * Count records matching the search and filters, optionally excluding one ID.
+     *
+     * @param  array<string, mixed>  $filters
      */
-    public function countMatching(?string $search = null, ?int $exceptId = null): int
+    public function countMatching(?string $search = null, ?int $exceptId = null, array $filters = []): int
     {
-        return $this->recordRepository->countMatching($search, $exceptId);
+        return $this->recordRepository->countMatching($search, $exceptId, $filters);
     }
 
     /**

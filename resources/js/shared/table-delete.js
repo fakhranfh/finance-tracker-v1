@@ -42,7 +42,7 @@ export function createRowDelete({ modalId, confirmButton, destroyUrl, selection,
  * Bulk delete of the selected rows (or every row matching the search when
  * "select all matching" is active).
  */
-export function createBulkDelete({ modalId, confirmButton, triggerButton, bulkUrl, selection, selectAll, getSearch, onDeleted }) {
+export function createBulkDelete({ modalId, confirmButton, triggerButton, bulkUrl, selection, selectAll, getSearch, getFilters = () => ({}), onDeleted }) {
     triggerButton?.addEventListener('click', () => {
         if (selection.size > 0) {
             openModal(modalId);
@@ -57,7 +57,7 @@ export function createBulkDelete({ modalId, confirmButton, triggerButton, bulkUr
             return;
         }
 
-        const payload = selectAll.isAllMatching() ? { all: true, search: getSearch() || null } : { ids };
+        const payload = selectAll.isAllMatching() ? { all: true, search: getSearch() || null, ...getFilters() } : { ids };
         setButtonLoading(confirmButton, true);
 
         const { ok } = await del(bulkUrl, payload);

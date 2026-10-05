@@ -31,6 +31,7 @@ createTable({
         account_ids: [...document.querySelectorAll('[data-generate-account]:checked')].map((checkbox) => Number(checkbox.value)),
     }),
     defaultSort: { key: 'recorded_at', direction: 'desc' },
+    filtersId: 'records-filters',
     flashKey: 'records-flash-success',
     selectionKey: 'records-table-selection',
     deleteModalId: 'delete-record-modal',

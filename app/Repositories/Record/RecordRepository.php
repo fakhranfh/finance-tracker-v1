@@ -20,11 +20,12 @@ class RecordRepository implements RecordRepositoryInterface
         return Record::query()->with(['account', 'toAccount'])->find($id);
     }
 
-    public function paginate(int $perPage, ?string $search = null, ?string $sort = null, string $direction = 'asc'): LengthAwarePaginator
+    public function paginate(int $perPage, ?string $search = null, ?string $sort = null, string $direction = 'asc', array $filters = []): LengthAwarePaginator
     {
         $query = Record::query()->with(['account', 'toAccount']);
 
         $this->applySearch($query, $search);
+        $this->applyFilters($query, $filters);
 
         $sortable = ['type', 'amount', 'note', 'recorded_at', 'created_at'];
         $direction = $direction === 'desc' ? 'desc' : 'asc';
@@ -43,20 +44,22 @@ class RecordRepository implements RecordRepositoryInterface
         $this->deleteInvalidating(Record::query()->whereIn('id', $ids));
     }
 
-    public function deleteMatching(?string $search = null): void
+    public function deleteMatching(?string $search = null, array $filters = []): void
     {
         $query = Record::query();
 
         $this->applySearch($query, $search);
+        $this->applyFilters($query, $filters);
 
         $this->deleteInvalidating($query);
     }
 
-    public function countMatching(?string $search = null, ?int $exceptId = null): int
+    public function countMatching(?string $search = null, ?int $exceptId = null, array $filters = []): int
     {
         $query = Record::query()->when($exceptId, fn ($q) => $q->whereKeyNot($exceptId));
 
         $this->applySearch($query, $search);
+        $this->applyFilters($query, $filters);
 
         return $query->count();
     }
@@ -101,6 +104,23 @@ class RecordRepository implements RecordRepositoryInterface
                 ->orWhereHas('account', fn (Builder $q) => $q->where('name', 'like', "%{$search}%"))
                 ->orWhereHas('toAccount', fn (Builder $q) => $q->where('name', 'like', "%{$search}%"));
         });
+    }
+
+    /**
+     * An account filter matches both sides of a transfer.
+     *
+     * @param  Builder<Record>  $query
+     * @param  array<string, mixed>  $filters
+     */
+    private function applyFilters(Builder $query, array $filters): void
+    {
+        $query
+            ->when($filters['type'] ?? null, fn (Builder $q, string $type) => $q->where('type', $type))
+            ->when($filters['account_id'] ?? null, fn (Builder $q, int $accountId) => $q->where(fn (Builder $inner) => $inner
+                ->where('account_id', $accountId)
+                ->orWhere('to_account_id', $accountId)))
+            ->when($filters['date_from'] ?? null, fn (Builder $q, string $from) => $q->whereDate('recorded_at', '>=', $from))
+            ->when($filters['date_to'] ?? null, fn (Builder $q, string $to) => $q->whereDate('recorded_at', '<=', $to));
     }
 
     public function create(array $data): Record

@@ -32,6 +32,15 @@ return [
         'clear_selection' => 'Clear selection',
     ],
 
+    'filters' => [
+        'type' => 'Type',
+        'all_types' => 'All types',
+        'account' => 'Account',
+        'all_accounts' => 'All accounts',
+        'date_from' => 'From date',
+        'date_to' => 'To date',
+    ],
+
     'fields' => [
         'type' => 'Type',
         'account' => 'Account',

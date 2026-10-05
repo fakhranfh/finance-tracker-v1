@@ -55,6 +55,9 @@ export function createTable(config) {
     };
     const selection = new TableSelection(config.selectionKey);
 
+    const filterInputs = [...(document.getElementById(config.filtersId)?.querySelectorAll('[data-table-filter]') ?? [])];
+    const activeFilters = () => Object.fromEntries(filterInputs.filter((input) => input.value).map((input) => [input.name, input.value]));
+
     let currentUrl = routes.index;
     let total = 0;
 
@@ -81,6 +84,9 @@ export function createTable(config) {
         search.applyToUrl(requestUrl);
         perPage.applyToUrl(requestUrl);
         tableSort.applyToUrl(requestUrl);
+
+        filterInputs.forEach((input) => requestUrl.searchParams.delete(input.name));
+        Object.entries(activeFilters()).forEach(([name, value]) => requestUrl.searchParams.set(name, value));
 
         const { ok, data } = await get(requestUrl.toString());
 
@@ -131,6 +137,7 @@ export function createTable(config) {
         selection,
         selectAll,
         getSearch: () => search.value,
+        getFilters: activeFilters,
         onDeleted: reload,
     });
 
@@ -156,6 +163,13 @@ export function createTable(config) {
         input: toolbar?.querySelector('[data-table-search]'),
         onInput: () => selectAll.resetAllMatching(),
         onChange: reset,
+    });
+
+    filterInputs.forEach((input) => {
+        input.addEventListener('change', () => {
+            selectAll.resetAllMatching();
+            reset();
+        });
     });
 
     document.querySelectorAll('[data-modal-open]').forEach((button) => {

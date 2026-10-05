@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Record\BulkDeleteRecordRequest;
+use App\Http\Requests\Record\RecordFilterRules;
 use App\Http\Requests\Record\StoreRecordRequest;
 use App\Http\Requests\Record\UpdateRecordRequest;
 use App\Http\Resources\RecordResource;
@@ -27,21 +28,26 @@ class RecordController extends Controller
     public function index(Request $request): AnonymousResourceCollection
     {
         $search = $request->string('search')->value() ?: null;
+        $filters = $request->validate(RecordFilterRules::rules());
 
         return RecordResource::collection($this->recordManagementService->paginate(
             perPage: min(max($request->integer('per_page', 10), 1), 100),
             search: $search,
             sort: $request->string('sort')->value() ?: null,
             direction: $request->string('direction', 'asc')->value(),
+            filters: $filters,
         ))->additional([
-            'deletable_total' => $this->recordManagementService->countMatching($search),
+            'deletable_total' => $this->recordManagementService->countMatching($search, filters: $filters),
         ]);
     }
 
     public function bulkDestroy(BulkDeleteRecordRequest $request): Response
     {
         if ($request->boolean('all')) {
-            $this->recordManagementService->deleteMatching($request->validated('search'));
+            $this->recordManagementService->deleteMatching(
+                $request->validated('search'),
+                $request->safe()->only(array_keys(RecordFilterRules::rules())),
+            );
         } else {
             $this->recordManagementService->deleteMany($request->validated('ids'));
         }

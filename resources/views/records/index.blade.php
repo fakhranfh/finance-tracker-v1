@@ -82,6 +82,35 @@
 
     <div data-flash-success class="mb-6 hidden rounded-lg border border-success/20 bg-success/10 px-4 py-3 font-body text-sm text-success"></div>
 
+    <div id="records-filters" class="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div>
+            <label for="filter-type" class="mb-1 block font-body text-xs text-on-surface-variant">{{ __('records.filters.type') }}</label>
+            <x-atoms.select name="type" id="filter-type" data-table-filter>
+                <option value="">{{ __('records.filters.all_types') }}</option>
+                @foreach ($typeLabels as $value => $label)
+                    <option value="{{ $value }}">{{ $label }}</option>
+                @endforeach
+            </x-atoms.select>
+        </div>
+        <div>
+            <label for="filter-account" class="mb-1 block font-body text-xs text-on-surface-variant">{{ __('records.filters.account') }}</label>
+            <x-atoms.select name="account_id" id="filter-account" data-table-filter>
+                <option value="">{{ __('records.filters.all_accounts') }}</option>
+                @foreach ($accounts as $account)
+                    <option value="{{ $account->id }}">{{ $account->name }}</option>
+                @endforeach
+            </x-atoms.select>
+        </div>
+        <div>
+            <label for="filter-date-from" class="mb-1 block font-body text-xs text-on-surface-variant">{{ __('records.filters.date_from') }}</label>
+            <x-atoms.input type="date" name="date_from" id="filter-date-from" data-table-filter />
+        </div>
+        <div>
+            <label for="filter-date-to" class="mb-1 block font-body text-xs text-on-surface-variant">{{ __('records.filters.date_to') }}</label>
+            <x-atoms.input type="date" name="date_to" id="filter-date-to" data-table-filter />
+        </div>
+    </div>
+
     <x-molecules.table-toolbar
         id="records-table-toolbar"
         :search-placeholder="__('records.table.search')"

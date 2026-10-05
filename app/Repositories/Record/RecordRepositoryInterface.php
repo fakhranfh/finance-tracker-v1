@@ -13,9 +13,11 @@ interface RecordRepositoryInterface
     public function find(int $id): ?Record;
 
     /**
-     * Paginate records, optionally filtered by search and sorted by column.
+     * Paginate records, optionally filtered by search and filters, and sorted by column.
+     *
+     * @param  array<string, mixed>  $filters
      */
-    public function paginate(int $perPage, ?string $search = null, ?string $sort = null, string $direction = 'asc'): LengthAwarePaginator;
+    public function paginate(int $perPage, ?string $search = null, ?string $sort = null, string $direction = 'asc', array $filters = []): LengthAwarePaginator;
 
     /**
      * Delete records by ID.
@@ -25,14 +27,18 @@ interface RecordRepositoryInterface
     public function deleteMany(array $ids): void;
 
     /**
-     * Delete every record matching the search filter (all when null).
+     * Delete every record matching the search and filters (all when none apply).
+     *
+     * @param  array<string, mixed>  $filters
      */
-    public function deleteMatching(?string $search = null): void;
+    public function deleteMatching(?string $search = null, array $filters = []): void;
 
     /**
-     * Count records matching the search filter, optionally excluding one ID.
+     * Count records matching the search and filters, optionally excluding one ID.
+     *
+     * @param  array<string, mixed>  $filters
      */
-    public function countMatching(?string $search = null, ?int $exceptId = null): int;
+    public function countMatching(?string $search = null, ?int $exceptId = null, array $filters = []): int;
 
     /**
      * Create a new record.

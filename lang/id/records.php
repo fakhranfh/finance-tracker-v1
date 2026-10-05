@@ -32,6 +32,15 @@ return [
         'clear_selection' => 'Batalkan pilihan',
     ],
 
+    'filters' => [
+        'type' => 'Jenis',
+        'all_types' => 'Semua jenis',
+        'account' => 'Akun',
+        'all_accounts' => 'Semua akun',
+        'date_from' => 'Dari tanggal',
+        'date_to' => 'Sampai tanggal',
+    ],
+
     'fields' => [
         'type' => 'Jenis',
         'account' => 'Akun',

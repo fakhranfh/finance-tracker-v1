@@ -52,6 +52,39 @@ it('searches records by note or account name', function () {
     expect($response->json('data'))->toHaveCount(2);
 });
 
+it('filters records by type, account and date range via the api', function () {
+    $actor = User::factory()->create();
+    $account = Account::factory()->create();
+    $other = Account::factory()->create();
+
+    $match = Record::factory()->for($account)->create(['type' => 'expense', 'recorded_at' => '2026-03-15 10:00:00']);
+    Record::factory()->for($account)->create(['type' => 'income', 'recorded_at' => '2026-03-15 10:00:00']);
+    Record::factory()->for($other)->create(['type' => 'expense', 'recorded_at' => '2026-03-15 10:00:00']);
+    Record::factory()->for($account)->create(['type' => 'expense', 'recorded_at' => '2026-05-01 10:00:00']);
+    $transfer = Record::factory()->for($other)->create([
+        'type' => 'transfer',
+        'to_account_id' => $account->id,
+        'recorded_at' => '2026-03-20 10:00:00',
+    ]);
+
+    $ids = fn (array $query) => collect($this->actingAs($actor)->getJson('/api/records?'.http_build_query($query))->json('data'))->pluck('id')->sort()->values()->all();
+
+    expect($ids(['type' => 'expense', 'account_id' => $account->id, 'date_from' => '2026-03-01', 'date_to' => '2026-03-31']))
+        ->toBe([$match->id]);
+    expect($ids(['account_id' => $account->id, 'date_from' => '2026-03-01', 'date_to' => '2026-03-31']))
+        ->toBe(collect([$match->id, $transfer->id, Record::where('type', 'income')->value('id')])->sort()->values()->all());
+});
+
+it('bulk deletes every record matching the filters', function () {
+    $actor = User::factory()->create();
+    $keep = Record::factory()->create(['type' => 'income']);
+    Record::factory()->count(2)->create(['type' => 'expense']);
+
+    $this->actingAs($actor)->deleteJson('/api/records', ['all' => true, 'type' => 'expense'])->assertNoContent();
+
+    expect(Record::query()->pluck('id')->all())->toBe([$keep->id]);
+});
+
 it('creates an income, expense and transfer', function () {
     $actor = User::factory()->create();
     $to = Account::factory()->create();

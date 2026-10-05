@@ -25,6 +25,7 @@ class BulkDeleteRecordRequest extends FormRequest
         return [
             'all' => ['sometimes', 'boolean'],
             'search' => ['nullable', 'string'],
+            ...RecordFilterRules::rules(),
             'ids' => ['required_without:all', 'array', 'min:1'],
             'ids.*' => ['integer', 'exists:records,id'],
         ];
