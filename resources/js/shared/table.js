@@ -19,6 +19,7 @@ import { createTablePerPage } from './table-per-page.js';
  *  - ids:    { table, skeleton, wrapper, toolbar, generateButton, generateCount,
  *              confirmDelete, confirmBulkDelete }
  *  - flashKey, selectionKey, deleteModalId, bulkDeleteModalId
+ *  - defaultSort: { key, direction } (optional initial sort)
  *  - routes: { index, destroy, bulkDestroy, generate }
  *  - row(item, { lockedId }) => { cells, editUrl, locked }
  */
@@ -144,7 +145,7 @@ export function createTable(config) {
         },
     });
 
-    const tableSort = createTableSort({ root, onChange: reset });
+    const tableSort = createTableSort({ root, onChange: reset, defaultSort: config.defaultSort });
 
     const perPage = createTablePerPage({
         selects: document.querySelectorAll('[data-per-page-select]'),

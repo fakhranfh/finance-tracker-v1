@@ -2,11 +2,20 @@
  * Column sorting for tables: header buttons ([data-sort-key]) cycle
  * asc -> desc -> none, the mobile modal inputs ([data-modal-sort-key] /
  * [data-modal-sort-direction]) set it directly. `onChange()` fires after
- * every change so the caller can reload.
+ * every change so the caller can reload. `defaultSort` ({ key, direction })
+ * sets the initial sort and syncs the mobile modal inputs to it.
  */
-export function createTableSort({ root, onChange }) {
-    let sort = null;
-    let direction = 'asc';
+export function createTableSort({ root, onChange, defaultSort = null }) {
+    let sort = defaultSort?.key ?? null;
+    let direction = defaultSort?.direction ?? 'asc';
+
+    document
+        .querySelectorAll('[data-modal-sort-key]')
+        .forEach((input) => (input.checked = input.value === (sort ?? '')));
+
+    document
+        .querySelectorAll('[data-modal-sort-direction]')
+        .forEach((input) => (input.checked = input.value === direction));
 
     root?.addEventListener('click', (event) => {
         const button = event.target.closest('[data-sort-key]');
