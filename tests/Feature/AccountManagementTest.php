@@ -125,3 +125,55 @@ it('rejects generating sample accounts outside the local environment', function 
 
     $this->actingAs($actor)->postJson('/api/accounts/generate', ['count' => 5])->assertNotFound();
 });
+
+it('changes the initial balance when adjusting by initial balance', function () {
+    $actor = User::factory()->create();
+    $target = Account::factory()->create(['initial_balance' => 100]);
+
+    $this->actingAs($actor)->putJson("/api/accounts/{$target->id}", [
+        'name' => $target->name,
+        'adjust_by' => 'initial_balance',
+        'initial_balance' => 250,
+    ])->assertOk();
+
+    expect($target->fresh()->initial_balance)->toEqual('250.00');
+    $this->assertDatabaseCount('records', 0);
+});
+
+it('adds a record for the difference when adjusting by record', function () {
+    $actor = User::factory()->create();
+    $target = Account::factory()->create(['initial_balance' => 100]);
+
+    $this->actingAs($actor)->putJson("/api/accounts/{$target->id}", [
+        'name' => 'Renamed',
+        'adjust_by' => 'record',
+        'balance' => 60,
+    ])->assertOk()->assertJsonPath('data.name', 'Renamed');
+
+    expect($target->fresh()->initial_balance)->toEqual('100.00');
+    $this->assertDatabaseHas('records', ['account_id' => $target->id, 'type' => 'expense', 'amount' => 40, 'note' => 'Balance adjustment']);
+    expect($this->actingAs($actor)->getJson("/api/accounts/{$target->id}")->json('data.balance'))->toEqual('60.00');
+});
+
+it('adds an income record when adjusting upward by record', function () {
+    $actor = User::factory()->create();
+    $target = Account::factory()->create(['initial_balance' => 100]);
+
+    $this->actingAs($actor)->putJson("/api/accounts/{$target->id}", [
+        'name' => $target->name,
+        'adjust_by' => 'record',
+        'balance' => 130.5,
+    ])->assertOk();
+
+    $this->assertDatabaseHas('records', ['account_id' => $target->id, 'type' => 'income', 'amount' => 30.5]);
+});
+
+it('requires a balance when adjusting by record', function () {
+    $actor = User::factory()->create();
+    $target = Account::factory()->create();
+
+    $this->actingAs($actor)->putJson("/api/accounts/{$target->id}", [
+        'name' => $target->name,
+        'adjust_by' => 'record',
+    ])->assertStatus(422)->assertJsonValidationErrors(['balance']);
+});

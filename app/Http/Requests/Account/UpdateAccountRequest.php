@@ -4,6 +4,7 @@ namespace App\Http\Requests\Account;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateAccountRequest extends FormRequest
 {
@@ -24,7 +25,9 @@ class UpdateAccountRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
-            'initial_balance' => ['required', 'numeric', 'min:0'],
+            'adjust_by' => ['nullable', Rule::in(['initial_balance', 'record'])],
+            'initial_balance' => ['required_unless:adjust_by,record', 'numeric', 'min:0'],
+            'balance' => ['required_if:adjust_by,record', 'numeric'],
         ];
     }
 }

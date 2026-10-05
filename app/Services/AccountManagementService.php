@@ -2,14 +2,17 @@
 
 namespace App\Services;
 
+use App\Enums\RecordType;
 use App\Models\Account;
 use App\Repositories\Account\AccountRepositoryInterface;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Arr;
 
 class AccountManagementService
 {
     public function __construct(
         protected AccountRepositoryInterface $accountRepository,
+        protected RecordManagementService $recordManagementService,
     ) {}
 
     /**
@@ -45,7 +48,25 @@ class AccountManagementService
      */
     public function update(Account $account, array $data): Account
     {
-        return $this->accountRepository->update($account, $data);
+        if (($data['adjust_by'] ?? null) !== 'record') {
+            return $this->accountRepository->update($account, Arr::only($data, ['name', 'initial_balance']));
+        }
+
+        $account = $this->accountRepository->update($account, Arr::only($data, ['name']));
+
+        $difference = round((float) $data['balance'] - (float) $this->accountRepository->find($account->id)->balance, 2);
+
+        if ($difference != 0) {
+            $this->recordManagementService->create([
+                'type' => $difference > 0 ? RecordType::Income->value : RecordType::Expense->value,
+                'account_id' => $account->id,
+                'amount' => abs($difference),
+                'note' => __('accounts.adjustment_note'),
+                'recorded_at' => now(),
+            ]);
+        }
+
+        return $account;
     }
 
     /**

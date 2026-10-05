@@ -29,12 +29,32 @@
             id="account-form"
             @class(['space-y-5', 'hidden' => $id])
             novalidate
-            @if ($id) data-item-id="{{ $id }}" @endif
+            @if ($id) data-item-id="{{ $id }}" data-balance-label="{{ __('accounts.fields.balance') }}" @endif
             data-success-message="{{ $id ? __('accounts.flash.updated') : __('accounts.flash.created') }}"
         >
             @csrf
 
             <x-molecules.form-group name="name" type="text" :label="__('accounts.fields.name')" required autofocus />
+            @if ($id)
+                <fieldset class="space-y-2">
+                    <legend class="font-body text-body-sm font-medium text-on-surface">{{ __('accounts.adjust_by.label') }}</legend>
+                    <label class="flex items-start gap-2 font-body text-body-sm text-on-surface">
+                        <input type="radio" name="adjust_by" value="initial_balance" class="mt-1" checked>
+                        <span>
+                            <span class="block font-medium">{{ __('accounts.adjust_by.initial_balance') }}</span>
+                            <span class="block text-on-surface-variant">{{ __('accounts.adjust_by.initial_balance_help') }}</span>
+                        </span>
+                    </label>
+                    <label class="flex items-start gap-2 font-body text-body-sm text-on-surface">
+                        <input type="radio" name="adjust_by" value="record" class="mt-1">
+                        <span>
+                            <span class="block font-medium">{{ __('accounts.adjust_by.record') }}</span>
+                            <span class="block text-on-surface-variant">{{ __('accounts.adjust_by.record_help') }}</span>
+                        </span>
+                    </label>
+                </fieldset>
+            @endif
+
             <x-molecules.form-group name="initial_balance" type="number" :label="__('accounts.fields.initial_balance')" step="1" min="0" required />
 
             <div class="flex items-center gap-3">

@@ -27,7 +27,18 @@ return [
     'fields' => [
         'name' => 'Nama',
         'initial_balance' => 'Saldo awal',
+        'balance' => 'Saldo saat ini',
     ],
+
+    'adjust_by' => [
+        'label' => 'Cara mengubah saldo',
+        'initial_balance' => 'Ubah saldo awal',
+        'record' => 'Sesuaikan lewat catatan',
+        'initial_balance_help' => 'Mengubah saldo awal. Catatan yang ada tetap, jadi saldo saat ini ikut bergeser sebesar selisih yang sama.',
+        'record_help' => 'Saldo awal tetap. Sistem menambah catatan pemasukan atau pengeluaran sebesar selisihnya, sehingga riwayat menunjukkan penyesuaian ini.',
+    ],
+
+    'adjustment_note' => 'Penyesuaian saldo',
 
     'actions' => [
         'edit' => 'Ubah',
