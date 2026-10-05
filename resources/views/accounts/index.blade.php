@@ -65,8 +65,6 @@
         :per-page-label="__('accounts.table.per_page')"
     />
 
-    <x-organisms.accounts-table-skeleton id="accounts-table-skeleton" :headers="$tableHeaders" />
-
     <div id="accounts-table-wrapper" class="hidden max-sm:pb-20">
         <x-organisms.table
             id="accounts-table"

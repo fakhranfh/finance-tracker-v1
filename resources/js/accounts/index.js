@@ -6,7 +6,6 @@ import { formatMoney } from '../shared/money.js';
 createTable({
     ids: {
         table: 'accounts-table',
-        skeleton: 'accounts-table-skeleton',
         wrapper: 'accounts-table-wrapper',
         toolbar: 'accounts-table-toolbar',
         generateButton: 'generate-accounts',

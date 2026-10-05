@@ -82,8 +82,6 @@
         :per-page-label="__('records.table.per_page')"
     />
 
-    <x-organisms.records-table-skeleton id="records-table-skeleton" :headers="$tableHeaders" />
-
     <div id="records-table-wrapper" class="hidden max-sm:pb-20">
         <x-organisms.table
             id="records-table"

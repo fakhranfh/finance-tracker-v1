@@ -63,8 +63,6 @@ __tableHeaders__
         :per-page-label="__('__slug__.table.per_page')"
     />
 
-    <x-organisms.__slug__-table-skeleton id="__slug__-table-skeleton" :headers="$tableHeaders" />
-
     <div id="__slug__-table-wrapper" class="hidden max-sm:pb-20">
         <x-organisms.table
             id="__slug__-table"

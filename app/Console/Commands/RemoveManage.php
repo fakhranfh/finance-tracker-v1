@@ -111,7 +111,6 @@ class RemoveManage extends Command
             "app/Http/Controllers/{$model}PageController.php",
             "app/Traits/{$model}",
             "resources/views/{$slug}",
-            "resources/views/components/organisms/{$slug}-table-skeleton.blade.php",
             "resources/views/components/organisms/{$singular}-form-skeleton.blade.php",
             "resources/js/{$slug}",
             "lang/en/{$slug}.php",

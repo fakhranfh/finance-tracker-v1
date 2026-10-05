@@ -5,7 +5,6 @@ import { routes } from '../routes.js';
 createTable({
     ids: {
         table: '__slug__-table',
-        skeleton: '__slug__-table-skeleton',
         wrapper: '__slug__-table-wrapper',
         toolbar: '__slug__-table-toolbar',
         generateButton: 'generate-__slug__',

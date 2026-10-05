@@ -77,7 +77,7 @@ export function createMultiSelectFilter(dropdown) {
  * pagination, selection, row/bulk delete, generate) from one config object.
  *
  * config:
- *  - ids:    { table, skeleton, wrapper, toolbar, generateButton, generateCount,
+ *  - ids:    { table, wrapper, toolbar, generateButton, generateCount,
  *              confirmDelete, confirmBulkDelete }
  *  - flashKey, selectionKey, deleteModalId, bulkDeleteModalId
  *  - defaultSort: { key, direction } (optional initial sort)
@@ -101,15 +101,9 @@ export function createTable(config) {
     const lockedId = Number(tbody.dataset.lockedId);
 
     const flash = createTableFlash({ storageKey: config.flashKey });
-    const skeleton = document.getElementById(ids.skeleton);
     const wrapper = document.getElementById(ids.wrapper);
-    // Filters live inside the wrapper and stay visible while the table reloads.
-    // The skeleton is moved right after them so loading shows below the filters.
-    const filtersEl = wrapper?.querySelector('[data-table-filters]');
-
-    if (filtersEl && skeleton) {
-        filtersEl.after(skeleton);
-    }
+    // Rendered by the table component, right after the filters that stay visible while loading.
+    const skeleton = wrapper?.querySelector('[data-table-skeleton]');
 
     const wrapperContent = () => [...(wrapper?.children ?? [])]
         .filter((el) => el !== skeleton && !el.matches('[data-table-filters]'));

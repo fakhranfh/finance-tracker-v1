@@ -31,6 +31,14 @@ class Table extends Component
 
     public string $filterLabelClass = 'mb-1 block font-body text-xs text-on-surface-variant';
 
+    public int $skeletonRows = 5;
+
+    /** Width class per body cell, actions column last. @var array<int, string> */
+    public array $skeletonCells = [];
+
+    /** Value width per mobile card row, the actions column has no row. @var array<int, string> */
+    public array $skeletonCards = [];
+
     /**
      * @param  array<int, string|array{label: string, sort?: string}>  $headers
      * @param  array<string, mixed>  $config
@@ -68,6 +76,14 @@ class Table extends Component
             : ['label' => $header, 'sort' => null], $headers);
 
         $this->filterFields = array_map(fn ($filter) => $filter + ['id' => 'filter-'.$filter['key']], $filters);
+
+        $widths = ['w-32', 'w-20', 'w-48', 'w-28', 'w-24'];
+
+        if ($this->headerCells !== []) {
+            $this->skeletonCells = array_map(fn ($i) => $widths[$i % count($widths)], array_keys($this->headerCells));
+            $this->skeletonCells[array_key_last($this->skeletonCells)] = 'w-16';
+            $this->skeletonCards = array_slice($this->skeletonCells, 0, -1);
+        }
     }
 
     public function render(): View

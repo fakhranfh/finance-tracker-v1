@@ -196,15 +196,6 @@ class MakeManage extends Command
         $headers = $lines(fn ($f) => "['label' => __('{$slug}.table.{$f['name']}'), 'sort' => '{$f['name']}'],", '        ')
             ."\n        ['label' => __('{$slug}.table.created_at'), 'sort' => 'created_at'],";
 
-        $skeletonWidths = fn ($f) => match ($f['type']) {
-            'text' => 'w-48', 'string' => 'w-32', default => 'w-20',
-        };
-
-        $cardRows = implode(', ', [
-            ...array_map(fn ($f) => "['w-12', '{$skeletonWidths($f)}']", $this->fields),
-            "['w-12', 'w-24']",
-        ]);
-
         $rowCells = [];
 
         foreach ($this->fields as $f) {
@@ -226,10 +217,6 @@ class MakeManage extends Command
             '__openApiProps__' => $lines(fn ($f) => "new OA\\Property(property: '{$f['name']}', {$this->openApiType($f)}),", '                    '),
             '__tableHeaders__' => $headers,
             '__colspan__' => (string) (count($this->fields) + 3),
-            '__skeletonBodyCells__' => $lines(fn ($f) => "<td class=\"px-4 py-3\"><x-atoms.skeleton class=\"h-4 {$skeletonWidths($f)}\" /></td>", '                    ')
-                ."\n                    ".'<td class="px-4 py-3"><x-atoms.skeleton class="h-4 w-28" /></td>'
-                ."\n                    ".'<td class="px-4 py-3"><x-atoms.skeleton class="h-4 w-16" /></td>',
-            '__skeletonCardRows__' => $cardRows,
             '__formSkeletonRows__' => implode("\n", array_map(fn () => '    <x-atoms.skeleton class="h-10 w-full" />', $this->fields)),
             '__rowCells__' => implode("\n", $rowCells),
             '__formFields__' => implode("\n", array_map(fn ($f, $i) => $this->formField($f, $slug, $i === 0), $this->fields, array_keys($this->fields))),
@@ -438,7 +425,6 @@ class MakeManage extends Command
             'documents-api-trait' => "app/Traits/{$m}/DocumentsApi.php",
             'view-index' => "resources/views/{$slug}/index.blade.php",
             'view-form' => "resources/views/{$slug}/form.blade.php",
-            'table-skeleton' => "resources/views/components/organisms/{$slug}-table-skeleton.blade.php",
             'form-skeleton' => "resources/views/components/organisms/{$singular}-form-skeleton.blade.php",
             'js-index' => "resources/js/{$slug}/index.js",
             'js-form' => "resources/js/{$slug}/form.js",

@@ -57,6 +57,59 @@
     </div>
 @endif
 
+<div data-table-skeleton>
+    <div class="space-y-3 pb-20 sm:hidden">
+        @for ($i = 0; $i < $skeletonRows; $i++)
+            <div class="rounded-lg border border-outline-variant bg-surface py-1">
+                <div class="flex items-center justify-between px-4 py-3">
+                    @if ($selectable)
+                        <x-atoms.skeleton class="h-4 w-4" />
+                    @endif
+                    <div class="flex gap-3">
+                        <x-atoms.skeleton class="h-5 w-5" />
+                        <x-atoms.skeleton class="h-5 w-5" />
+                    </div>
+                </div>
+                @foreach ($skeletonCards as $valueWidth)
+                    <div class="flex items-center justify-between gap-4 px-4 py-2.5">
+                        <x-atoms.skeleton class="h-3.5 w-12" />
+                        <x-atoms.skeleton class="h-4 {{ $valueWidth }}" />
+                    </div>
+                @endforeach
+            </div>
+        @endfor
+    </div>
+
+    <div class="overflow-hidden rounded-lg border border-outline-variant bg-surface max-sm:hidden">
+        <table class="w-full text-left font-body text-body-md">
+            <thead class="border-b border-outline-variant bg-surface-container text-body-sm text-on-surface-variant">
+                <tr>
+                    @if ($selectable)
+                        <th class="w-10 px-4 py-3">
+                            <x-atoms.skeleton class="h-4 w-4" />
+                        </th>
+                    @endif
+                    @foreach ($headerCells as $header)
+                        <th class="px-4 py-3 font-medium">{{ $header['label'] }}</th>
+                    @endforeach
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-outline-variant">
+                @for ($i = 0; $i < $skeletonRows; $i++)
+                    <tr>
+                        @if ($selectable)
+                            <td class="w-10 px-4 py-3"><x-atoms.skeleton class="h-4 w-4" /></td>
+                        @endif
+                        @foreach ($skeletonCells as $cellWidth)
+                            <td class="px-4 py-3"><x-atoms.skeleton class="h-4 {{ $cellWidth }}" /></td>
+                        @endforeach
+                    </tr>
+                @endfor
+            </tbody>
+        </table>
+    </div>
+</div>
+
 @if ($selectable)
     <div data-table-select-all-mobile-wrap class="sticky top-16 z-20 bg-background py-3 sm:hidden">
         <x-atoms.button

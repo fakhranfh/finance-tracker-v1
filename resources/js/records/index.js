@@ -15,7 +15,6 @@ if (generateAccounts) {
 createTable({
     ids: {
         table: 'records-table',
-        skeleton: 'records-table-skeleton',
         wrapper: 'records-table-wrapper',
         toolbar: 'records-table-toolbar',
         generateButton: 'generate-records',
