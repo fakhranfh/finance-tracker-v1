@@ -31,7 +31,7 @@ test.describe('Manage Records', () => {
 
         await page.goto('/accounts/create');
         await page.getByLabel('Name', { exact: true }).fill('E2E Cash');
-        await page.getByLabel('Initial Balance', { exact: true }).fill('100000');
+        await page.getByLabel('Balance', { exact: true }).fill('100000');
         await page.getByRole('button', { name: 'Save' }).click();
         await expect(page).toHaveURL('/accounts');
 
@@ -53,7 +53,7 @@ test.describe('Manage Records', () => {
 
         await page.goto('/accounts/create');
         await page.getByLabel('Name', { exact: true }).fill('E2E Cash');
-        await page.getByLabel('Initial Balance', { exact: true }).fill('100000');
+        await page.getByLabel('Balance', { exact: true }).fill('100000');
         await page.getByRole('button', { name: 'Save' }).click();
         await expect(page).toHaveURL('/accounts');
 

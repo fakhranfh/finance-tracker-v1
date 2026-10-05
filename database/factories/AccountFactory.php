@@ -19,7 +19,7 @@ class AccountFactory extends Factory
     {
         return [
             'name' => fake()->randomElement(['Tunai', 'BCA', 'BRI', 'BNI', 'Mandiri', 'Jago', 'GoPay', 'OVO', 'DANA', 'ShopeePay', 'Tabungan', 'Dana Darurat']).' '.fake()->unique()->numberBetween(1, 9999),
-            'initial_balance' => fake()->numberBetween(10, 1000) * 1000,
+            'last_balance' => fake()->numberBetween(10, 1000) * 1000,
         ];
     }
 }

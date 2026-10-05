@@ -10,7 +10,8 @@ use Symfony\Component\Console\Attribute\AsCommand;
 /**
  * `accounts.last_balance` is kept current incrementally, so a change that
  * bypasses the repositories and model events (raw SQL, seeders) leaves it
- * stale. This recomputes every balance from the records and reports drift.
+ * stale. This checks each balance against its newest snapshot plus the records
+ * after it, and reports drift. Accounts without a snapshot are not checked.
  */
 #[AsCommand(name: 'accounts:reconcile-balances')]
 class ReconcileAccountBalances extends Command

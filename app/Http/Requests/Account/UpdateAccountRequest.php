@@ -25,9 +25,8 @@ class UpdateAccountRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
-            'adjust_by' => ['nullable', Rule::in(['initial_balance', 'record'])],
-            'initial_balance' => ['required_unless:adjust_by,record', 'numeric', 'min:0'],
-            'balance' => ['required_if:adjust_by,record', 'numeric'],
+            'adjust_by' => ['nullable', Rule::in(['record', 'balance'])],
+            'balance' => ['required', 'numeric'],
         ];
     }
 }

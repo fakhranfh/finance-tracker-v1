@@ -15,7 +15,7 @@ it('lists accounts via the api', function () {
     $response = $this->actingAs($actor)->getJson('/api/accounts');
 
     $response->assertOk();
-    $response->assertJsonStructure(['data' => [['id', 'name', 'initial_balance', 'created_at']]]);
+    $response->assertJsonStructure(['data' => [['id', 'name', 'balance', 'created_at']]]);
     expect($response->json('data'))->toHaveCount(3);
 });
 
@@ -35,7 +35,7 @@ it('creates a account via the api', function () {
 
     $response = $this->actingAs($actor)->postJson('/api/accounts', [
         'name' => 'Sample name',
-        'initial_balance' => 9.99,
+        'balance' => 9.99,
     ]);
 
     $response->assertStatus(201);
@@ -49,7 +49,7 @@ it('rejects creating a account with missing required fields', function () {
     $response = $this->actingAs($actor)->postJson('/api/accounts', []);
 
     $response->assertStatus(422);
-    $response->assertJsonValidationErrors(['name', 'initial_balance']);
+    $response->assertJsonValidationErrors(['name', 'balance']);
 });
 
 it('shows a account via the api', function () {
@@ -68,7 +68,7 @@ it('updates a account via the api', function () {
 
     $response = $this->actingAs($actor)->putJson("/api/accounts/{$target->id}", [
         'name' => 'Updated name',
-        'initial_balance' => 19.5,
+        'balance' => 19.5,
     ]);
 
     $response->assertOk();
@@ -126,54 +126,60 @@ it('rejects generating sample accounts outside the local environment', function 
     $this->actingAs($actor)->postJson('/api/accounts/generate', ['count' => 5])->assertNotFound();
 });
 
-it('changes the initial balance when adjusting by initial balance', function () {
+it('sets the opening balance when creating an account', function () {
     $actor = User::factory()->create();
-    $target = Account::factory()->create(['initial_balance' => 100]);
 
-    $this->actingAs($actor)->putJson("/api/accounts/{$target->id}", [
-        'name' => $target->name,
-        'adjust_by' => 'initial_balance',
-        'initial_balance' => 250,
-    ])->assertOk();
+    $this->actingAs($actor)->postJson('/api/accounts', ['name' => 'Cash', 'balance' => 500])->assertStatus(201);
 
-    expect($target->fresh()->initial_balance)->toEqual('250.00');
-    $this->assertDatabaseCount('records', 0);
+    expect(Account::where('name', 'Cash')->first()->last_balance)->toEqual('500.00');
 });
 
-it('adds a record for the difference when adjusting by record', function () {
+it('adds an expense record for the difference when the balance goes down', function () {
     $actor = User::factory()->create();
-    $target = Account::factory()->create(['initial_balance' => 100]);
+    $target = Account::factory()->create(['last_balance' => 100]);
 
     $this->actingAs($actor)->putJson("/api/accounts/{$target->id}", [
         'name' => 'Renamed',
-        'adjust_by' => 'record',
         'balance' => 60,
-    ])->assertOk()->assertJsonPath('data.name', 'Renamed');
+    ])->assertOk()->assertJsonPath('data.name', 'Renamed')->assertJsonPath('data.balance', '60.00');
 
-    expect($target->fresh()->initial_balance)->toEqual('100.00');
     $this->assertDatabaseHas('records', ['account_id' => $target->id, 'type' => 'expense', 'amount' => 40, 'note' => 'Balance adjustment']);
-    expect($this->actingAs($actor)->getJson("/api/accounts/{$target->id}")->json('data.balance'))->toEqual('60.00');
 });
 
-it('adds an income record when adjusting upward by record', function () {
+it('adds an income record for the difference when the balance goes up', function () {
     $actor = User::factory()->create();
-    $target = Account::factory()->create(['initial_balance' => 100]);
+    $target = Account::factory()->create(['last_balance' => 100]);
 
     $this->actingAs($actor)->putJson("/api/accounts/{$target->id}", [
         'name' => $target->name,
-        'adjust_by' => 'record',
         'balance' => 130.5,
     ])->assertOk();
 
     $this->assertDatabaseHas('records', ['account_id' => $target->id, 'type' => 'income', 'amount' => 30.5]);
 });
 
-it('requires a balance when adjusting by record', function () {
+it('adds no record when the balance is unchanged', function () {
     $actor = User::factory()->create();
-    $target = Account::factory()->create();
+    $target = Account::factory()->create(['last_balance' => 100]);
 
     $this->actingAs($actor)->putJson("/api/accounts/{$target->id}", [
         'name' => $target->name,
-        'adjust_by' => 'record',
-    ])->assertStatus(422)->assertJsonValidationErrors(['balance']);
+        'balance' => 100,
+    ])->assertOk();
+
+    $this->assertDatabaseCount('records', 0);
+});
+
+it('sets the balance directly without adding a record when adjusting by balance', function () {
+    $actor = User::factory()->create();
+    $target = Account::factory()->create(['last_balance' => 100]);
+
+    $this->actingAs($actor)->putJson("/api/accounts/{$target->id}", [
+        'name' => $target->name,
+        'adjust_by' => 'balance',
+        'balance' => 250,
+    ])->assertOk();
+
+    expect($target->fresh()->last_balance)->toEqual('250.00');
+    $this->assertDatabaseCount('records', 0);
 });

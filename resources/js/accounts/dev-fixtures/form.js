@@ -18,6 +18,6 @@ function randomInt(min, max) {
 export function accountFormFixture() {
     return {
         name: randomItem(ACCOUNT_NAMES),
-        initial_balance: randomInt(10, 1000) * 1000,
+        balance: randomInt(10, 1000) * 1000,
     };
 }

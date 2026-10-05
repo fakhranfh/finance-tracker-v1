@@ -33,7 +33,7 @@ trait DocumentsApi
             content: new OA\JsonContent(
                 properties: [
                     new OA\Property(property: 'name', type: 'string', example: 'Sample name'),
-                    new OA\Property(property: 'initial_balance', type: 'number', format: 'float', example: 9.99),
+                    new OA\Property(property: 'balance', type: 'number', format: 'float', example: 9.99),
                 ]
             )
         ),
@@ -66,7 +66,7 @@ trait DocumentsApi
             content: new OA\JsonContent(
                 properties: [
                     new OA\Property(property: 'name', type: 'string', example: 'Sample name'),
-                    new OA\Property(property: 'initial_balance', type: 'number', format: 'float', example: 9.99),
+                    new OA\Property(property: 'balance', type: 'number', format: 'float', example: 9.99),
                 ]
             )
         ),

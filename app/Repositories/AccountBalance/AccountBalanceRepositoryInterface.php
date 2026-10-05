@@ -41,7 +41,7 @@ interface AccountBalanceRepositoryInterface
     /**
      * Initial balance of the account, or null when it does not exist.
      */
-    public function initialBalance(int $accountId): ?string;
+    public function lastBalance(int $accountId): ?string;
 
     /**
      * ID of the latest record touching the account (as source or destination).

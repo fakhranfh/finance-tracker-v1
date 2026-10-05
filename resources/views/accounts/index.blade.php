@@ -5,7 +5,6 @@
 @php
     $tableHeaders = [
         ['label' => __('accounts.table.name'), 'sort' => 'name'],
-        ['label' => __('accounts.table.initial_balance'), 'sort' => 'initial_balance'],
         ['label' => __('accounts.table.balance'), 'sort' => 'balance'],
         ['label' => __('accounts.table.created_at'), 'sort' => 'created_at'],
         __('accounts.table.actions'),

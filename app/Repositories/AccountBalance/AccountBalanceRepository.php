@@ -12,22 +12,33 @@ class AccountBalanceRepository implements AccountBalanceRepositoryInterface
     public function adjustLastBalance(int $accountId, string $signedAmount): void
     {
         DB::update(
-            'update accounts set last_balance = coalesce(last_balance, initial_balance) + cast(? as decimal(14,2)) where id = ?',
+            'update accounts set last_balance = coalesce(last_balance, 0) + cast(? as decimal(14,2)) where id = ?',
             [$signedAmount, $accountId],
         );
     }
 
+    /**
+     * Accounts whose last_balance disagrees with their newest snapshot plus
+     * the records after it. Accounts without a snapshot cannot be checked.
+     */
     public function driftedAccounts(): Collection
     {
         return collect(DB::select(<<<'SQL'
             select * from (
                 select a.id, a.name, a.last_balance,
-                    a.initial_balance
-                    + coalesce((select sum(case when r.type = 'income' then r.amount else -r.amount end)
-                        from records r where r.account_id = a.id), 0)
-                    + coalesce((select sum(r.amount)
-                        from records r where r.type = 'transfer' and r.to_account_id = a.id), 0) as actual_balance
+                    (select s.balance from account_balance_snapshots s
+                        where s.account_id = a.id order by s.last_record_id desc limit 1)
+                    + coalesce((select sum(case
+                            when r.type = 'income' and r.account_id = a.id then r.amount
+                            when r.type = 'expense' and r.account_id = a.id then -r.amount
+                            when r.type = 'transfer' and r.account_id = a.id then -r.amount
+                            when r.type = 'transfer' and r.to_account_id = a.id then r.amount
+                            else 0 end)
+                        from records r
+                        where (r.account_id = a.id or r.to_account_id = a.id)
+                            and r.id > (select max(s.last_record_id) from account_balance_snapshots s where s.account_id = a.id)), 0) as actual_balance
                 from accounts a
+                where exists (select 1 from account_balance_snapshots s where s.account_id = a.id)
             ) t
             where t.last_balance is null or t.last_balance <> t.actual_balance
             order by t.id
@@ -64,9 +75,9 @@ class AccountBalanceRepository implements AccountBalanceRepositoryInterface
             ->count();
     }
 
-    public function initialBalance(int $accountId): ?string
+    public function lastBalance(int $accountId): ?string
     {
-        return Account::query()->whereKey($accountId)->toBase()->value('initial_balance');
+        return Account::query()->whereKey($accountId)->toBase()->value('last_balance');
     }
 
     public function latestRecordId(int $accountId): ?int

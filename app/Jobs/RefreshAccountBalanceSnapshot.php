@@ -24,10 +24,9 @@ class RefreshAccountBalanceSnapshot implements ShouldBeUniqueUntilProcessing, Sh
 
     public function handle(AccountBalanceRepositoryInterface $balances): void
     {
-        $initialBalance = $balances->initialBalance($this->accountId);
         $lastRecordId = $balances->latestRecordId($this->accountId);
 
-        if ($initialBalance === null || $lastRecordId === null) {
+        if ($lastRecordId === null) {
             return;
         }
 
@@ -38,8 +37,15 @@ class RefreshAccountBalanceSnapshot implements ShouldBeUniqueUntilProcessing, Sh
             return;
         }
 
-        $balances->storeSnapshot($this->accountId, $lastRecordId, $balances->balanceAfterRecords(
-            $this->accountId, $base['balance'] ?? $initialBalance, $baseRecordId, $lastRecordId,
-        ));
+        // Without a snapshot, last_balance already reflects every record.
+        $balance = $base === null
+            ? $balances->lastBalance($this->accountId)
+            : $balances->balanceAfterRecords($this->accountId, $base['balance'], $baseRecordId, $lastRecordId);
+
+        if ($balance === null) {
+            return;
+        }
+
+        $balances->storeSnapshot($this->accountId, $lastRecordId, $balance);
     }
 }

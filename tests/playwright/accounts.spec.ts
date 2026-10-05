@@ -32,7 +32,7 @@ test.describe('Manage Accounts', () => {
         await page.goto('/accounts/create');
 
         await page.getByLabel('Name', { exact: true }).fill(`${mainValue}`);
-        await page.getByLabel('Initial Balance', { exact: true }).fill('12500');
+        await page.getByLabel('Balance', { exact: true }).fill('12500');
         await page.getByRole('button', { name: 'Save' }).click();
 
         await expect(page).toHaveURL('/accounts');

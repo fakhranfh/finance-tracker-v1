@@ -202,8 +202,8 @@ it('bulk deletes records by id and by all', function () {
 
 it('computes account balances from income, expense and transfers', function () {
     $actor = User::factory()->create();
-    $cash = Account::factory()->create(['name' => 'Cash', 'initial_balance' => 100]);
-    $bank = Account::factory()->create(['name' => 'Bank', 'initial_balance' => 0]);
+    $cash = Account::factory()->create(['name' => 'Cash', 'last_balance' => 100]);
+    $bank = Account::factory()->create(['name' => 'Bank', 'last_balance' => 0]);
 
     $this->actingAs($actor);
     $this->postJson('/api/records', recordPayload(['type' => 'income', 'account_id' => $cash->id, 'amount' => 50]))->assertCreated();

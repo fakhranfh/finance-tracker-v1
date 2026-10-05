@@ -27,7 +27,7 @@ class AccountRepository implements AccountRepositoryInterface
 
         $this->applySearch($query, $search);
 
-        $sortable = ['name', 'initial_balance', 'balance', 'created_at'];
+        $sortable = ['name', 'balance', 'created_at'];
         $direction = $direction === 'desc' ? 'desc' : 'asc';
 
         if ($sort && in_array($sort, $sortable, true)) {
@@ -107,21 +107,14 @@ class AccountRepository implements AccountRepositoryInterface
 
     public function create(array $data): Account
     {
-        $account = Account::query()->make($data);
-        $account->last_balance = $account->initial_balance;
-        $account->save();
-
-        return $account;
+        return Account::query()->create($data);
     }
 
     public function update(Account $account, array $data): Account
     {
-        $previousInitialBalance = $account->initial_balance;
-
         $account->update($data);
 
-        if ($account->wasChanged('initial_balance')) {
-            $this->lastBalance->adjust($account->id, $account->initial_balance - $previousInitialBalance);
+        if ($account->wasChanged('last_balance')) {
             $this->snapshots->invalidate([$account->id]);
         }
 

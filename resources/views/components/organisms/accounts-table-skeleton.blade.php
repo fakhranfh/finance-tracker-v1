@@ -48,7 +48,6 @@
                     <td class="w-10 px-4 py-3"><x-atoms.skeleton class="h-4 w-4" /></td>
                     <td class="px-4 py-3"><x-atoms.skeleton class="h-4 w-32" /></td>
                     <td class="px-4 py-3"><x-atoms.skeleton class="h-4 w-20" /></td>
-                    <td class="px-4 py-3"><x-atoms.skeleton class="h-4 w-20" /></td>
                     <td class="px-4 py-3"><x-atoms.skeleton class="h-4 w-28" /></td>
                     <td class="px-4 py-3"><x-atoms.skeleton class="h-4 w-16" /></td>
                 </tr>

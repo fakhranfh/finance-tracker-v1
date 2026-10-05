@@ -27,7 +27,6 @@ createTable({
     row: (item) => ({
         cells: [
             item.name ?? '',
-            formatMoney(item.initial_balance),
             formatMoney(item.balance),
             formatDateTime(item.created_at),
         ],

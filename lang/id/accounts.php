@@ -9,7 +9,6 @@ return [
 
     'table' => [
         'name' => 'Nama',
-        'initial_balance' => 'Saldo awal',
         'balance' => 'Saldo',
         'created_at' => 'Dibuat',
         'actions' => 'Aksi',
@@ -26,16 +25,15 @@ return [
 
     'fields' => [
         'name' => 'Nama',
-        'initial_balance' => 'Saldo awal',
-        'balance' => 'Saldo saat ini',
+        'balance' => 'Saldo',
     ],
 
     'adjust_by' => [
         'label' => 'Cara mengubah saldo',
-        'initial_balance' => 'Ubah saldo awal',
         'record' => 'Sesuaikan lewat catatan',
-        'initial_balance_help' => 'Mengubah saldo awal. Catatan yang ada tetap, jadi saldo saat ini ikut bergeser sebesar selisih yang sama.',
-        'record_help' => 'Saldo awal tetap. Sistem menambah catatan pemasukan atau pengeluaran sebesar selisihnya, sehingga riwayat menunjukkan penyesuaian ini.',
+        'record_help' => 'Menambah catatan pemasukan atau pengeluaran sebesar selisihnya, sehingga perubahan muncul di daftar catatan dan riwayat.',
+        'balance' => 'Ubah saldo',
+        'balance_help' => 'Mengatur saldo langsung tanpa menambah catatan. Cocok untuk memperbaiki saldo yang salah sejak awal; riwayat tidak akan menampilkan perubahan ini.',
     ],
 
     'adjustment_note' => 'Penyesuaian saldo',

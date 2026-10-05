@@ -38,18 +38,26 @@ class AccountManagementService
      */
     public function create(array $data): Account
     {
-        return $this->accountRepository->create($data);
+        return $this->accountRepository->create([
+            'name' => $data['name'],
+            'last_balance' => $data['balance'],
+        ]);
     }
 
     /**
-     * Update an existing account.
+     * Update an existing account. With `adjust_by` = `balance` the balance is
+     * set directly; otherwise (`record`, the default) a changed balance is
+     * recorded as an income or expense, so the history explains the difference.
      *
      * @param  array<string, mixed>  $data
      */
     public function update(Account $account, array $data): Account
     {
-        if (($data['adjust_by'] ?? null) !== 'record') {
-            return $this->accountRepository->update($account, Arr::only($data, ['name', 'initial_balance']));
+        if (($data['adjust_by'] ?? 'record') === 'balance') {
+            return $this->accountRepository->update($account, [
+                'name' => $data['name'],
+                'last_balance' => $data['balance'],
+            ]);
         }
 
         $account = $this->accountRepository->update($account, Arr::only($data, ['name']));

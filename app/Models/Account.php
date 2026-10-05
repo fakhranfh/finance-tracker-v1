@@ -14,7 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /**
  * @property-read string|null $balance Only present when loaded through the withBalance() scope.
  */
-#[Fillable(['name', 'initial_balance'])]
+#[Fillable(['name', 'last_balance'])]
 class Account extends Model
 {
     /** @use HasFactory<AccountFactory> */
@@ -29,7 +29,7 @@ class Account extends Model
     #[Scope]
     protected function withBalance(Builder $query): void
     {
-        $query->selectRaw('accounts.*, coalesce(accounts.last_balance, accounts.initial_balance) as balance');
+        $query->selectRaw('accounts.*, accounts.last_balance as balance');
     }
 
     /**
@@ -40,7 +40,6 @@ class Account extends Model
     protected function casts(): array
     {
         return [
-            'initial_balance' => 'decimal:2',
             'last_balance' => 'decimal:2',
             'balance' => 'decimal:2',
         ];

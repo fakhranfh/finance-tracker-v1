@@ -9,7 +9,6 @@ return [
 
     'table' => [
         'name' => 'Name',
-        'initial_balance' => 'Initial Balance',
         'balance' => 'Balance',
         'created_at' => 'Created',
         'actions' => 'Actions',
@@ -26,16 +25,15 @@ return [
 
     'fields' => [
         'name' => 'Name',
-        'initial_balance' => 'Initial Balance',
-        'balance' => 'Current Balance',
+        'balance' => 'Balance',
     ],
 
     'adjust_by' => [
         'label' => 'How to change the balance',
-        'initial_balance' => 'Change initial balance',
         'record' => 'Adjust by record',
-        'initial_balance_help' => 'Changes the starting balance. Existing records stay the same, so the current balance shifts by the same amount.',
-        'record_help' => 'Keeps the initial balance. Adds an income or expense record for the difference, so the history shows the adjustment.',
+        'record_help' => 'Adds an income or expense record for the difference, so the change appears in the record list and history.',
+        'balance' => 'Change balance',
+        'balance_help' => 'Sets the balance directly without adding a record. Use it to correct a balance that was wrong from the start; the history will not show this change.',
     ],
 
     'adjustment_note' => 'Balance adjustment',
