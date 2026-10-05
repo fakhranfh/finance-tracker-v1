@@ -1,4 +1,4 @@
-import { createTable } from '../shared/table.js';
+import { createMultiSelectFilter, createTable } from '../shared/table.js';
 import { routes } from '../routes.js';
 import { formatDateTime } from '../shared/datetime.js';
 import { formatMoney } from '../shared/money.js';
@@ -6,15 +6,11 @@ import { formatMoney } from '../shared/money.js';
 const typeLabels = JSON.parse(document.getElementById('records-table')?.dataset.typeLabels ?? '{}');
 const SIGNS = { income: '+', expense: '-', transfer: '' };
 
-const accountCheckboxes = [...document.querySelectorAll('[data-generate-account]')];
-const accountsSummary = document.querySelector('[data-accounts-summary]');
+const generateAccounts = document.getElementById('generate-accounts');
 
-function refreshAccountsSummary() {
-    const selected = accountCheckboxes.filter((checkbox) => checkbox.checked).length;
-    accountsSummary.textContent = accountsSummary.dataset.summaryTemplate.replace(':count', selected);
+if (generateAccounts) {
+    createMultiSelectFilter(generateAccounts);
 }
-
-accountCheckboxes.forEach((checkbox) => checkbox.addEventListener('change', refreshAccountsSummary));
 
 createTable({
     ids: {
@@ -28,7 +24,7 @@ createTable({
         confirmBulkDelete: 'confirm-bulk-delete-records',
     },
     generatePayload: () => ({
-        account_ids: [...document.querySelectorAll('[data-generate-account]:checked')].map((checkbox) => Number(checkbox.value)),
+        account_ids: [...document.querySelectorAll('#generate-accounts input[type="checkbox"]:checked')].map((checkbox) => Number(checkbox.value)),
     }),
     defaultSort: { key: 'recorded_at', direction: 'desc' },
     filtersId: 'records-filters',

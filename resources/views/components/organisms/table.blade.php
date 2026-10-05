@@ -17,29 +17,16 @@
                 @case('multi')
                     <div class="relative">
                         <span class="{{ $filterLabelClass }}">{{ $filter['label'] }}</span>
-                        <details class="relative" id="{{ $filter['id'] }}" data-filter-multi>
-                            <summary class="flex cursor-pointer list-none items-center justify-between gap-2 rounded-md border border-outline-variant bg-surface px-4 py-2.5 font-body text-body-md text-on-surface">
-                                <span data-filter-multi-summary data-all-label="{{ $filter['allLabel'] }}" data-selected-template="{{ $filter['selectedTemplate'] }}">{{ $filter['allLabel'] }}</span>
-                                <span aria-hidden="true">▾</span>
-                            </summary>
-                            <div class="absolute z-20 mt-2 w-full rounded-lg border border-outline-variant bg-surface p-2 shadow-lg">
-                                <div class="mb-2 flex flex-col gap-2">
-                                    <x-atoms.input type="search" name="{{ $filter['key'] }}_search" id="{{ $filter['id'] }}-search" placeholder="{{ $filter['searchPlaceholder'] }}" data-filter-multi-search />
-                                    <div class="flex gap-2 font-body text-xs">
-                                        <button type="button" class="rounded border border-outline-variant px-2 py-1 text-on-surface hover:bg-surface-container" data-filter-multi-select-all>{{ $filter['selectAllLabel'] }}</button>
-                                        <button type="button" class="rounded border border-outline-variant px-2 py-1 text-on-surface hover:bg-surface-container" data-filter-multi-deselect-all>{{ $filter['deselectAllLabel'] }}</button>
-                                    </div>
-                                </div>
-                                <div class="max-h-48 overflow-y-auto">
-                                    @foreach ($filter['options'] as $option)
-                                        <label class="flex cursor-pointer items-center gap-3 rounded px-2 py-2 font-body text-sm text-on-surface hover:bg-surface-container" data-filter-multi-row data-search-text="{{ $option['searchText'] }}">
-                                            <x-atoms.checkbox name="{{ $filter['key'] }}[]" id="{{ $filter['id'] }}-{{ $option['value'] }}" value="{{ $option['value'] }}" data-table-filter />
-                                            <span>{{ $option['label'] }}</span>
-                                        </label>
-                                    @endforeach
-                                </div>
-                            </div>
-                        </details>
+                        <x-molecules.multi-select
+                            :id="$filter['id']"
+                            :name="$filter['key']"
+                            :options="$filter['options']"
+                            :all-label="$filter['allLabel']"
+                            :selected-template="$filter['selectedTemplate']"
+                            :search-placeholder="$filter['searchPlaceholder']"
+                            :select-all-label="$filter['selectAllLabel']"
+                            :deselect-all-label="$filter['deselectAllLabel']"
+                        />
                     </div>
                     @break
 

@@ -21,7 +21,7 @@ import { createTablePerPage } from './table-per-page.js';
  *  - data-filter-multi-row             one per option, with data-search-text (lowercase)
  *  - checkboxes inside the rows        carry data-table-filter and name="<key>[]"
  */
-function createMultiSelectFilter(dropdown) {
+export function createMultiSelectFilter(dropdown) {
     const summary = dropdown.querySelector('[data-filter-multi-summary]');
     const search = dropdown.querySelector('[data-filter-multi-search]');
     const selectAllButton = dropdown.querySelector('[data-filter-multi-select-all]');
@@ -68,6 +68,8 @@ function createMultiSelectFilter(dropdown) {
     deselectAllButton?.addEventListener('click', () => {
         setChecked(checkboxes(), false);
     });
+
+    refreshSummary();
 }
 
 /**

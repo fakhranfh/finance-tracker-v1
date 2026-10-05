@@ -18,6 +18,7 @@ class RecordPageController extends Controller
             'typeLabels' => $typeLabels,
             'hasAccounts' => Account::query()->exists(),
             'accounts' => $accounts,
+            'accountOptions' => $this->accountOptions($accounts),
             'tableHeaders' => $this->tableHeaders(),
             'filterConfig' => $this->filterConfig($typeLabels, $accounts),
         ]);
@@ -69,6 +70,18 @@ class RecordPageController extends Controller
     }
 
     /**
+     * @param  Collection<int, Account>  $accounts
+     * @return array<int, array{value: int, label: string, searchText: string}>
+     */
+    private function accountOptions(Collection $accounts): array
+    {
+        return $accounts
+            ->map(fn (Account $account) => ['value' => $account->id, 'label' => $account->name, 'searchText' => mb_strtolower($account->name)])
+            ->values()
+            ->all();
+    }
+
+    /**
      * Filter bar definition consumed by the table organism.
      *
      * @param  array<string, string>  $typeLabels
@@ -101,10 +114,7 @@ class RecordPageController extends Controller
                 'searchPlaceholder' => __('records.filters.search_accounts'),
                 'selectAllLabel' => __('records.filters.select_all'),
                 'deselectAllLabel' => __('records.filters.deselect_all'),
-                'options' => $accounts
-                    ->map(fn (Account $account) => ['value' => $account->id, 'label' => $account->name, 'searchText' => mb_strtolower($account->name)])
-                    ->values()
-                    ->all(),
+                'options' => $this->accountOptions($accounts),
             ],
             ['type' => 'date', 'key' => 'date_from', 'label' => __('records.filters.date_from')],
             ['type' => 'date', 'key' => 'date_to', 'label' => __('records.filters.date_to')],
