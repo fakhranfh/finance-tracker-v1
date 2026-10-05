@@ -22,6 +22,8 @@ final class RecordFilterRules
             'account_ids.*' => ['integer', 'exists:accounts,id'],
             'date_from' => ['sometimes', 'nullable', 'date'],
             'date_to' => ['sometimes', 'nullable', 'date', 'after_or_equal:date_from'],
+            'amount_min' => ['sometimes', 'nullable', 'numeric', 'min:0'],
+            'amount_max' => ['sometimes', 'nullable', 'numeric', 'min:0'],
         ];
     }
 }

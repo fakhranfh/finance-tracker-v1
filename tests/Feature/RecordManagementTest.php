@@ -75,6 +75,19 @@ it('filters records by type, account and date range via the api', function () {
         ->toBe(collect([$match->id, $transfer->id, Record::where('type', 'income')->value('id')])->sort()->values()->all());
 });
 
+it('filters records by an amount range via the api', function () {
+    $actor = User::factory()->create();
+    $small = Record::factory()->create(['type' => 'expense', 'amount' => 10]);
+    $middle = Record::factory()->create(['type' => 'expense', 'amount' => 50]);
+    Record::factory()->create(['type' => 'expense', 'amount' => 500]);
+
+    $ids = fn (array $query) => collect($this->actingAs($actor)->getJson('/api/records?'.http_build_query($query))->json('data'))->pluck('id')->sort()->values()->all();
+
+    expect($ids(['amount_min' => '20', 'amount_max' => '100']))->toBe([$middle->id]);
+    expect($ids(['amount_min' => '10']))->toHaveCount(3);
+    expect($ids(['amount_max' => '10']))->toBe([$small->id]);
+});
+
 it('filters records by any of several accounts', function () {
     $actor = User::factory()->create();
     $first = Account::factory()->create();

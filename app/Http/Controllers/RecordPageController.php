@@ -118,6 +118,8 @@ class RecordPageController extends Controller
             ],
             ['type' => 'date', 'key' => 'date_from', 'label' => __('records.filters.date_from')],
             ['type' => 'date', 'key' => 'date_to', 'label' => __('records.filters.date_to')],
+            ['type' => 'number', 'key' => 'amount_min', 'label' => __('records.filters.amount_min')],
+            ['type' => 'number', 'key' => 'amount_max', 'label' => __('records.filters.amount_max')],
         ];
     }
 }

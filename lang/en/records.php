@@ -47,6 +47,8 @@ return [
         'clear' => 'Clear filters',
         'date_from' => 'From date',
         'date_to' => 'To date',
+        'amount_min' => 'Min amount',
+        'amount_max' => 'Max amount',
     ],
 
     'fields' => [

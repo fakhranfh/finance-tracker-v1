@@ -120,7 +120,9 @@ class RecordRepository implements RecordRepositoryInterface
                 ->whereIn('account_id', $accountIds)
                 ->orWhereIn('to_account_id', $accountIds)))
             ->when($filters['date_from'] ?? null, fn (Builder $q, string $from) => $q->whereDate('recorded_at', '>=', $from))
-            ->when($filters['date_to'] ?? null, fn (Builder $q, string $to) => $q->whereDate('recorded_at', '<=', $to));
+            ->when($filters['date_to'] ?? null, fn (Builder $q, string $to) => $q->whereDate('recorded_at', '<=', $to))
+            ->when($filters['amount_min'] ?? null, fn (Builder $q, string $min) => $q->where('amount', '>=', $min))
+            ->when($filters['amount_max'] ?? null, fn (Builder $q, string $max) => $q->where('amount', '<=', $max));
     }
 
     public function create(array $data): Record

@@ -47,6 +47,8 @@ return [
         'clear' => 'Hapus semua filter',
         'date_from' => 'Dari tanggal',
         'date_to' => 'Sampai tanggal',
+        'amount_min' => 'Nominal minimum',
+        'amount_max' => 'Nominal maksimum',
     ],
 
     'fields' => [
