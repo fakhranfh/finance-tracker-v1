@@ -1,0 +1,70 @@
+<?php
+
+namespace App\View\Components\Organisms;
+
+use Illuminate\View\Component;
+use Illuminate\View\View;
+
+class Table extends Component
+{
+    public string $bulkDeleteLabel;
+
+    public string $selectedLabel;
+
+    public string $emptyLabel;
+
+    public int $columnCount;
+
+    /** @var array<string, mixed> */
+    public array $dataAttributes;
+
+    /** @var array<int, array{label: string, sort: ?string}> */
+    public array $headerCells;
+
+    /** @var array<int, array<string, mixed>> */
+    public array $filterFields;
+
+    public string $filterLabelClass = 'mb-1 block font-body text-xs text-on-surface-variant';
+
+    /**
+     * @param  array<int, string|array{label: string, sort?: string}>  $headers
+     * @param  array<string, mixed>  $config
+     * @param  array<int, array<string, mixed>>  $filters
+     */
+    public function __construct(
+        array $headers = [],
+        public bool $selectable = true,
+        array $config = [],
+        array $filters = [],
+        public string $filtersId = 'table-filters',
+    ) {
+        $labels = $config['labels'] ?? [];
+
+        $this->bulkDeleteLabel = $labels['bulkDelete'] ?? 'Delete selected';
+        $this->selectedLabel = $labels['selected'] ?? 'selected';
+        $this->emptyLabel = $labels['empty'] ?? 'No data';
+        $this->columnCount = count($headers) + ($selectable ? 1 : 0);
+
+        $this->dataAttributes = [
+            'data-label-select-all-matching' => $labels['selectAllMatching'] ?? '',
+            'data-label-all-selected' => $labels['allSelected'] ?? '',
+            'data-label-clear-selection' => $labels['clearSelection'] ?? '',
+            'data-label-expand' => $labels['expand'] ?? '',
+            'data-label-collapse' => $labels['collapse'] ?? '',
+            'data-label-edit' => $labels['edit'] ?? '',
+            'data-label-delete' => $labels['delete'] ?? '',
+            'data-locked-id' => $config['lockedId'] ?? '',
+        ];
+
+        $this->headerCells = array_map(fn ($header) => is_array($header)
+            ? ['label' => $header['label'], 'sort' => $header['sort'] ?? null]
+            : ['label' => $header, 'sort' => null], $headers);
+
+        $this->filterFields = array_map(fn ($filter) => $filter + ['id' => 'filter-'.$filter['key']], $filters);
+    }
+
+    public function render(): View
+    {
+        return view('components.organisms.table');
+    }
+}

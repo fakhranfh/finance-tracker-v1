@@ -69,10 +69,26 @@ it('filters records by type, account and date range via the api', function () {
 
     $ids = fn (array $query) => collect($this->actingAs($actor)->getJson('/api/records?'.http_build_query($query))->json('data'))->pluck('id')->sort()->values()->all();
 
-    expect($ids(['type' => 'expense', 'account_id' => $account->id, 'date_from' => '2026-03-01', 'date_to' => '2026-03-31']))
+    expect($ids(['type' => 'expense', 'account_ids' => [$account->id], 'date_from' => '2026-03-01', 'date_to' => '2026-03-31']))
         ->toBe([$match->id]);
-    expect($ids(['account_id' => $account->id, 'date_from' => '2026-03-01', 'date_to' => '2026-03-31']))
+    expect($ids(['account_ids' => [$account->id], 'date_from' => '2026-03-01', 'date_to' => '2026-03-31']))
         ->toBe(collect([$match->id, $transfer->id, Record::where('type', 'income')->value('id')])->sort()->values()->all());
+});
+
+it('filters records by any of several accounts', function () {
+    $actor = User::factory()->create();
+    $first = Account::factory()->create();
+    $second = Account::factory()->create();
+    $third = Account::factory()->create();
+
+    $a = Record::factory()->for($first)->create();
+    $b = Record::factory()->for($second)->create();
+    Record::factory()->for($third)->create();
+
+    $response = $this->actingAs($actor)->getJson('/api/records?'.http_build_query(['account_ids' => [$first->id, $second->id]]));
+
+    expect(collect($response->json('data'))->pluck('id')->sort()->values()->all())
+        ->toBe(collect([$a->id, $b->id])->sort()->values()->all());
 });
 
 it('bulk deletes every record matching the filters', function () {

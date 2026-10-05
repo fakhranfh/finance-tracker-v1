@@ -17,7 +17,8 @@ final class RecordFilterRules
     {
         return [
             'type' => ['sometimes', 'nullable', Rule::enum(RecordType::class)],
-            'account_id' => ['sometimes', 'nullable', 'integer', 'exists:accounts,id'],
+            'account_ids' => ['sometimes', 'array'],
+            'account_ids.*' => ['integer', 'exists:accounts,id'],
             'date_from' => ['sometimes', 'nullable', 'date'],
             'date_to' => ['sometimes', 'nullable', 'date', 'after_or_equal:date_from'],
         ];

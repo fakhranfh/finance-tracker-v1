@@ -46,7 +46,7 @@ class RecordController extends Controller
         if ($request->boolean('all')) {
             $this->recordManagementService->deleteMatching(
                 $request->validated('search'),
-                $request->safe()->only(array_keys(RecordFilterRules::rules())),
+                $request->safe()->except(['all', 'search', 'ids']),
             );
         } else {
             $this->recordManagementService->deleteMany($request->validated('ids'));

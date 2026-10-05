@@ -116,9 +116,9 @@ class RecordRepository implements RecordRepositoryInterface
     {
         $query
             ->when($filters['type'] ?? null, fn (Builder $q, string $type) => $q->where('type', $type))
-            ->when($filters['account_id'] ?? null, fn (Builder $q, int $accountId) => $q->where(fn (Builder $inner) => $inner
-                ->where('account_id', $accountId)
-                ->orWhere('to_account_id', $accountId)))
+            ->when($filters['account_ids'] ?? [], fn (Builder $q, array $accountIds) => $q->where(fn (Builder $inner) => $inner
+                ->whereIn('account_id', $accountIds)
+                ->orWhereIn('to_account_id', $accountIds)))
             ->when($filters['date_from'] ?? null, fn (Builder $q, string $from) => $q->whereDate('recorded_at', '>=', $from))
             ->when($filters['date_to'] ?? null, fn (Builder $q, string $to) => $q->whereDate('recorded_at', '<=', $to));
     }

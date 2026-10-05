@@ -4,16 +4,22 @@ namespace App\Http\Controllers;
 
 use App\Enums\RecordType;
 use App\Models\Account;
+use Illuminate\Support\Collection;
 use Illuminate\View\View;
 
 class RecordPageController extends Controller
 {
     public function index(): View
     {
+        $typeLabels = $this->typeLabels();
+        $accounts = Account::query()->orderBy('name')->get(['id', 'name']);
+
         return view('records.index', [
-            'typeLabels' => $this->typeLabels(),
+            'typeLabels' => $typeLabels,
             'hasAccounts' => Account::query()->exists(),
-            'accounts' => Account::query()->orderBy('name')->get(['id', 'name']),
+            'accounts' => $accounts,
+            'tableHeaders' => $this->tableHeaders(),
+            'filterConfig' => $this->filterConfig($typeLabels, $accounts),
         ]);
     }
 
@@ -45,5 +51,59 @@ class RecordPageController extends Controller
     private function typeLabels(): array
     {
         return collect(RecordType::cases())->mapWithKeys(fn (RecordType $type) => [$type->value => $type->label()])->all();
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function tableHeaders(): array
+    {
+        return [
+            ['label' => __('records.table.recorded_at'), 'sort' => 'recorded_at'],
+            ['label' => __('records.table.type'), 'sort' => 'type'],
+            __('records.table.account'),
+            ['label' => __('records.table.amount'), 'sort' => 'amount'],
+            ['label' => __('records.table.note'), 'sort' => 'note'],
+            __('records.table.actions'),
+        ];
+    }
+
+    /**
+     * Filter bar definition consumed by the table organism.
+     *
+     * @param  array<string, string>  $typeLabels
+     * @param  Collection<int, Account>  $accounts
+     * @return array<int, array<string, mixed>>
+     */
+    private function filterConfig(array $typeLabels, Collection $accounts): array
+    {
+        return [
+            [
+                'type' => 'select',
+                'key' => 'type',
+                'label' => __('records.filters.type'),
+                'allLabel' => __('records.filters.all_types'),
+                'options' => collect($typeLabels)
+                    ->map(fn (string $label, string $value) => ['value' => $value, 'label' => $label, 'searchText' => mb_strtolower($label)])
+                    ->values()
+                    ->all(),
+            ],
+            [
+                'type' => 'multi',
+                'key' => 'account_ids',
+                'label' => __('records.filters.account'),
+                'allLabel' => __('records.filters.all_accounts'),
+                'selectedTemplate' => __('records.filters.accounts_selected', ['count' => ':count']),
+                'searchPlaceholder' => __('records.filters.search_accounts'),
+                'selectAllLabel' => __('records.filters.select_all'),
+                'deselectAllLabel' => __('records.filters.deselect_all'),
+                'options' => $accounts
+                    ->map(fn (Account $account) => ['value' => $account->id, 'label' => $account->name, 'searchText' => mb_strtolower($account->name)])
+                    ->values()
+                    ->all(),
+            ],
+            ['type' => 'date', 'key' => 'date_from', 'label' => __('records.filters.date_from')],
+            ['type' => 'date', 'key' => 'date_to', 'label' => __('records.filters.date_to')],
+        ];
     }
 }

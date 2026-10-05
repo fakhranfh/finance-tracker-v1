@@ -1,26 +1,58 @@
-@props([
-    'headers' => [],
-    'selectable' => true,
-    'config' => [],
-])
+@if (count($filterFields) > 0)
+    <div id="{{ $filtersId }}" data-table-filters class="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        @foreach ($filterFields as $filter)
+            @switch($filter['type'])
+                @case('select')
+                    <div>
+                        <label for="{{ $filter['id'] }}" class="{{ $filterLabelClass }}">{{ $filter['label'] }}</label>
+                        <x-atoms.select name="{{ $filter['key'] }}" id="{{ $filter['id'] }}" data-table-filter>
+                            <option value="">{{ $filter['allLabel'] }}</option>
+                            @foreach ($filter['options'] as $option)
+                                <option value="{{ $option['value'] }}">{{ $option['label'] }}</option>
+                            @endforeach
+                        </x-atoms.select>
+                    </div>
+                    @break
 
-@php
-    $labels = $config['labels'] ?? [];
-    $bulkDeleteLabel = $labels['bulkDelete'] ?? 'Delete selected';
-    $selectedLabel = $labels['selected'] ?? 'selected';
-    $emptyLabel = $labels['empty'] ?? 'No data';
-    $dataAttributes = [
-        'data-label-select-all-matching' => $labels['selectAllMatching'] ?? '',
-        'data-label-all-selected' => $labels['allSelected'] ?? '',
-        'data-label-clear-selection' => $labels['clearSelection'] ?? '',
-        'data-label-expand' => $labels['expand'] ?? '',
-        'data-label-collapse' => $labels['collapse'] ?? '',
-        'data-label-edit' => $labels['edit'] ?? '',
-        'data-label-delete' => $labels['delete'] ?? '',
-        'data-locked-id' => $config['lockedId'] ?? '',
-    ];
-    $columnCount = count($headers) + ($selectable ? 1 : 0);
-@endphp
+                @case('multi')
+                    <div class="relative">
+                        <span class="{{ $filterLabelClass }}">{{ $filter['label'] }}</span>
+                        <details class="relative" id="{{ $filter['id'] }}" data-filter-multi>
+                            <summary class="flex cursor-pointer list-none items-center justify-between gap-2 rounded-md border border-outline-variant bg-surface px-4 py-2.5 font-body text-body-md text-on-surface">
+                                <span data-filter-multi-summary data-all-label="{{ $filter['allLabel'] }}" data-selected-template="{{ $filter['selectedTemplate'] }}">{{ $filter['allLabel'] }}</span>
+                                <span aria-hidden="true">▾</span>
+                            </summary>
+                            <div class="absolute z-20 mt-2 w-full rounded-lg border border-outline-variant bg-surface p-2 shadow-lg">
+                                <div class="mb-2 flex flex-col gap-2">
+                                    <x-atoms.input type="search" name="{{ $filter['key'] }}_search" id="{{ $filter['id'] }}-search" placeholder="{{ $filter['searchPlaceholder'] }}" data-filter-multi-search />
+                                    <div class="flex gap-2 font-body text-xs">
+                                        <button type="button" class="rounded border border-outline-variant px-2 py-1 text-on-surface hover:bg-surface-container" data-filter-multi-select-all>{{ $filter['selectAllLabel'] }}</button>
+                                        <button type="button" class="rounded border border-outline-variant px-2 py-1 text-on-surface hover:bg-surface-container" data-filter-multi-deselect-all>{{ $filter['deselectAllLabel'] }}</button>
+                                    </div>
+                                </div>
+                                <div class="max-h-48 overflow-y-auto">
+                                    @foreach ($filter['options'] as $option)
+                                        <label class="flex cursor-pointer items-center gap-3 rounded px-2 py-2 font-body text-sm text-on-surface hover:bg-surface-container" data-filter-multi-row data-search-text="{{ $option['searchText'] }}">
+                                            <x-atoms.checkbox name="{{ $filter['key'] }}[]" id="{{ $filter['id'] }}-{{ $option['value'] }}" value="{{ $option['value'] }}" data-table-filter />
+                                            <span>{{ $option['label'] }}</span>
+                                        </label>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </details>
+                    </div>
+                    @break
+
+                @case('date')
+                    <div>
+                        <label for="{{ $filter['id'] }}" class="{{ $filterLabelClass }}">{{ $filter['label'] }}</label>
+                        <x-atoms.input type="date" name="{{ $filter['key'] }}" id="{{ $filter['id'] }}" data-table-filter />
+                    </div>
+                    @break
+            @endswitch
+        @endforeach
+    </div>
+@endif
 
 @if ($selectable)
     <div data-table-select-all-mobile-wrap class="sticky top-16 z-20 bg-background py-3 sm:hidden">
@@ -48,26 +80,21 @@
                     </th>
                 @endif
 
-                @foreach ($headers as $header)
-                    @php
-                        $isSortable = is_array($header) && isset($header['sort']);
-                        $label = is_array($header) ? $header['label'] : $header;
-                    @endphp
-
+                @foreach ($headerCells as $header)
                     <th class="px-4 py-3 font-medium">
-                        @if ($isSortable)
+                        @if ($header['sort'])
                             <button
                                 type="button"
                                 data-sort-key="{{ $header['sort'] }}"
                                 class="inline-flex cursor-pointer items-center gap-1 font-medium text-on-surface-variant hover:text-on-surface"
                             >
-                                {{ $label }}
+                                {{ $header['label'] }}
                                 <svg data-sort-icon="{{ $header['sort'] }}" class="invisible h-3.5 w-3.5 text-primary" data-direction="" viewBox="0 0 20 20" fill="currentColor">
                                     <path fill-rule="evenodd" d="M10 3a.75.75 0 01.75.75v10.638l3.96-4.158a.75.75 0 111.08 1.04l-5.25 5.5a.75.75 0 01-1.08 0l-5.25-5.5a.75.75 0 111.08-1.04l3.96 4.158V3.75A.75.75 0 0110 3z" clip-rule="evenodd" />
                                 </svg>
                             </button>
                         @else
-                            {{ $label }}
+                            {{ $header['label'] }}
                         @endif
                     </th>
                 @endforeach

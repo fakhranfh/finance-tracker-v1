@@ -12,6 +12,65 @@ import { createBulkDelete, createRowDelete } from './table-delete.js';
 import { createTablePerPage } from './table-per-page.js';
 
 /**
+ * Multi-select dropdown inside the filter bar. Markup is marked up with:
+ *  - data-filter-multi                 on the dropdown root (<details>)
+ *  - data-filter-multi-summary         label; data-all-label and data-selected-template (":count")
+ *  - data-filter-multi-search          optional live text search input
+ *  - data-filter-multi-select-all      optional; checks the rows still visible after search
+ *  - data-filter-multi-deselect-all    optional; clears every option
+ *  - data-filter-multi-row             one per option, with data-search-text (lowercase)
+ *  - checkboxes inside the rows        carry data-table-filter and name="<key>[]"
+ */
+function createMultiSelectFilter(dropdown) {
+    const summary = dropdown.querySelector('[data-filter-multi-summary]');
+    const search = dropdown.querySelector('[data-filter-multi-search]');
+    const selectAllButton = dropdown.querySelector('[data-filter-multi-select-all]');
+    const deselectAllButton = dropdown.querySelector('[data-filter-multi-deselect-all]');
+
+    const checkboxes = () => [...dropdown.querySelectorAll('input[type="checkbox"]')];
+    const rows = () => [...dropdown.querySelectorAll('[data-filter-multi-row]')];
+
+    function refreshSummary() {
+        const selected = checkboxes().filter((checkbox) => checkbox.checked).length;
+
+        summary.textContent = selected === 0
+            ? summary.dataset.allLabel
+            : summary.dataset.selectedTemplate.replace(':count', selected);
+    }
+
+    /** Sets checked state for the given boxes and fires one change event, so the table reloads once. */
+    function setChecked(targets, checked) {
+        const changed = targets.filter((checkbox) => checkbox.checked !== checked);
+
+        changed.forEach((checkbox) => {
+            checkbox.checked = checked;
+        });
+
+        changed[0]?.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    dropdown.addEventListener('change', refreshSummary);
+
+    search?.addEventListener('input', () => {
+        const query = search.value.trim().toLowerCase();
+
+        rows().forEach((row) => {
+            row.classList.toggle('hidden', query !== '' && !row.dataset.searchText.includes(query));
+        });
+    });
+
+    selectAllButton?.addEventListener('click', () => {
+        const visible = checkboxes().filter((checkbox) => !checkbox.closest('[data-filter-multi-row]').classList.contains('hidden'));
+
+        setChecked(visible, true);
+    });
+
+    deselectAllButton?.addEventListener('click', () => {
+        setChecked(checkboxes(), false);
+    });
+}
+
+/**
  * Wires up a full server-driven table (load, search, sort, per-page,
  * pagination, selection, row/bulk delete, generate) from one config object.
  *
@@ -42,21 +101,50 @@ export function createTable(config) {
     const flash = createTableFlash({ storageKey: config.flashKey });
     const skeleton = document.getElementById(ids.skeleton);
     const wrapper = document.getElementById(ids.wrapper);
+    // Filters live inside the wrapper and stay visible while the table reloads.
+    // The skeleton is moved right after them so loading shows below the filters.
+    const filtersEl = wrapper?.querySelector('[data-table-filters]');
+
+    if (filtersEl && skeleton) {
+        filtersEl.after(skeleton);
+    }
+
+    const wrapperContent = () => [...(wrapper?.children ?? [])]
+        .filter((el) => el !== skeleton && !el.matches('[data-table-filters]'));
     const tableSkeleton = {
         show() {
             flash.hide();
             skeleton?.classList.remove('hidden');
-            wrapper?.classList.add('hidden');
+            wrapper?.classList.remove('hidden');
+            wrapperContent().forEach((el) => el.classList.add('hidden'));
         },
         hide() {
             skeleton?.classList.add('hidden');
-            wrapper?.classList.remove('hidden');
+            wrapperContent().forEach((el) => el.classList.remove('hidden'));
         },
     };
     const selection = new TableSelection(config.selectionKey);
 
     const filterInputs = [...(document.getElementById(config.filtersId)?.querySelectorAll('[data-table-filter]') ?? [])];
-    const activeFilters = () => Object.fromEntries(filterInputs.filter((input) => input.value).map((input) => [input.name, input.value]));
+    const filterKey = (input) => input.name.replace(/\[\]$/, '');
+
+    const activeFilters = () => {
+        const filters = {};
+
+        filterInputs.forEach((input) => {
+            const key = filterKey(input);
+
+            if (input.type === 'checkbox') {
+                if (input.checked) {
+                    filters[key] = [...(filters[key] ?? []), input.value];
+                }
+            } else if (input.value) {
+                filters[key] = input.value;
+            }
+        });
+
+        return filters;
+    };
 
     let currentUrl = routes.index;
     let total = 0;
@@ -85,8 +173,17 @@ export function createTable(config) {
         perPage.applyToUrl(requestUrl);
         tableSort.applyToUrl(requestUrl);
 
-        filterInputs.forEach((input) => requestUrl.searchParams.delete(input.name));
-        Object.entries(activeFilters()).forEach(([name, value]) => requestUrl.searchParams.set(name, value));
+        filterInputs.forEach((input) => {
+            requestUrl.searchParams.delete(filterKey(input));
+            requestUrl.searchParams.delete(`${filterKey(input)}[]`);
+        });
+        Object.entries(activeFilters()).forEach(([key, value]) => {
+            if (Array.isArray(value)) {
+                value.forEach((item) => requestUrl.searchParams.append(`${key}[]`, item));
+            } else {
+                requestUrl.searchParams.set(key, value);
+            }
+        });
 
         const { ok, data } = await get(requestUrl.toString());
 
@@ -165,12 +262,18 @@ export function createTable(config) {
         onChange: reset,
     });
 
-    filterInputs.forEach((input) => {
-        input.addEventListener('change', () => {
-            selectAll.resetAllMatching();
-            reset();
-        });
+    const filtersRoot = document.getElementById(config.filtersId);
+
+    filtersRoot?.addEventListener('change', (event) => {
+        if (!event.target.matches('[data-table-filter]')) {
+            return;
+        }
+
+        selectAll.resetAllMatching();
+        reset();
     });
+
+    filtersRoot?.querySelectorAll('[data-filter-multi]').forEach(createMultiSelectFilter);
 
     document.querySelectorAll('[data-modal-open]').forEach((button) => {
         button.addEventListener('click', () => openModal(button.dataset.modalOpen));
