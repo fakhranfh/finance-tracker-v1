@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\RecordType;
 use App\Models\Account;
 use App\Services\AccountSummaryService;
 use Illuminate\Http\Request;
@@ -29,6 +30,8 @@ class AccountPageController extends Controller
         return view('accounts.summary', [
             'account' => Account::query()->findOrFail($id),
             'presets' => $this->presetOptions(),
+            'typeLabels' => $this->typeLabels(),
+            'tableHeaders' => $this->recordTableHeaders(),
             'range' => [
                 'preset' => in_array((string) $request->query('range'), AccountSummaryService::PRESETS, true)
                     ? (string) $request->query('range')
@@ -51,6 +54,29 @@ class AccountPageController extends Controller
             'this_year' => __('accounts.summary.presets.this_year'),
             'all' => __('accounts.summary.presets.all'),
             'custom' => __('accounts.summary.presets.custom'),
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function typeLabels(): array
+    {
+        return collect(RecordType::cases())->mapWithKeys(fn (RecordType $type) => [$type->value => $type->label()])->all();
+    }
+
+    /**
+     * @return array<int, array<string, mixed>|string>
+     */
+    private function recordTableHeaders(): array
+    {
+        return [
+            ['label' => __('records.table.recorded_at'), 'sort' => 'recorded_at'],
+            ['label' => __('records.table.type'), 'sort' => 'type'],
+            __('records.table.account'),
+            ['label' => __('records.table.amount'), 'sort' => 'amount'],
+            ['label' => __('records.table.note'), 'sort' => 'note'],
+            __('records.table.actions'),
         ];
     }
 }

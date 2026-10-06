@@ -167,6 +167,17 @@ export function createTable(config) {
 
         const requestUrl = new URL(url, window.location.origin);
 
+        Object.entries(config.params?.() ?? {}).forEach(([key, value]) => {
+            requestUrl.searchParams.delete(key);
+            requestUrl.searchParams.delete(`${key}[]`);
+
+            if (Array.isArray(value)) {
+                value.forEach((item) => requestUrl.searchParams.append(`${key}[]`, item));
+            } else if (value) {
+                requestUrl.searchParams.set(key, value);
+            }
+        });
+
         search.applyToUrl(requestUrl);
         perPage.applyToUrl(requestUrl);
         tableSort.applyToUrl(requestUrl);
@@ -338,4 +349,6 @@ export function createTable(config) {
     });
 
     load().then(() => flash.showStored());
+
+    return { reload };
 }

@@ -92,6 +92,7 @@ return [
         'transfer_out' => 'Keluar',
         'net' => 'Selisih',
         'records' => ':count catatan',
+        'records_title' => 'Catatan',
     ],
 
     'flash' => [

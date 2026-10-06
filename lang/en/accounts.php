@@ -92,6 +92,7 @@ return [
         'transfer_out' => 'Out',
         'net' => 'Net',
         'records' => ':count records',
+        'records_title' => 'Records',
     ],
 
     'flash' => [

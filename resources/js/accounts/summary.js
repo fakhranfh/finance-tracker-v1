@@ -1,12 +1,15 @@
 import { closeModal, openModal } from '../shared/modal.js';
 import { hideSkeleton, showSkeleton } from '../shared/loading-state.js';
+import { createTable } from '../shared/table/table.js';
 import { get } from '../shared/http.js';
+import { formatDateTime } from '../shared/datetime.js';
 import { formatMoney } from '../shared/money.js';
 import { routes } from '../routes.js';
 
 const MODAL_ID = 'account-summary-filter-modal';
 const RESULTS_ID = 'account-summary-results';
 const SKELETON_ID = 'account-summary-skeleton';
+const SIGNS = { income: '+', expense: '-', transfer: '' };
 
 const root = document.getElementById('account-summary');
 const form = document.getElementById('account-summary-filter');
@@ -16,6 +19,10 @@ const mobileQuery = window.matchMedia('(max-width: 639px)');
 
 const accountId = root.dataset.accountId;
 const recordsLabel = root.dataset.recordsLabel;
+const typeLabels = JSON.parse(root.dataset.typeLabels);
+
+// Period sent by the last summary response; the record list follows it.
+let period = { date_from: null, date_to: null };
 
 /**
  * Filter form lives inline on desktop and inside the filter modal on mobile,
@@ -38,6 +45,33 @@ function render({ totals }) {
     setValue('record_count', recordsLabel.replace(':count', totals.record_count));
 }
 
+const recordsTable = createTable({
+    ids: {
+        table: 'account-records-table',
+        wrapper: 'account-records-wrapper',
+        toolbar: 'account-records-toolbar',
+    },
+    flashKey: 'account-records-flash',
+    selectionKey: 'account-records-selection',
+    defaultSort: { key: 'recorded_at', direction: 'desc' },
+    params: () => ({ account_ids: [accountId], ...period }),
+    routes: {
+        index: routes.records.index,
+    },
+    row: (item) => ({
+        cells: [
+            formatDateTime(item.recorded_at),
+            typeLabels[item.type] ?? item.type,
+            item.to_account ? `${item.account} → ${item.to_account}` : item.account,
+            `${SIGNS[item.type]}${formatMoney(item.amount)}`,
+            item.note ?? '',
+        ],
+        editUrl: routes.pages.recordEdit(item.id),
+        // Read-only list: rows are not selectable or deletable from this page.
+        locked: true,
+    }),
+});
+
 async function load() {
     const params = new URLSearchParams(new FormData(form));
 
@@ -55,6 +89,8 @@ async function load() {
 
         if (ok) {
             render(data.data);
+            period = { date_from: data.data.range.from || null, date_to: data.data.range.to || null };
+            await recordsTable.reload();
         }
     } finally {
         hideSkeleton(RESULTS_ID, SKELETON_ID);
