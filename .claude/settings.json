@@ -181,9 +181,9 @@
         "hooks": [
           {
             "type": "prompt",
-            "prompt": "Check the work done in this turn. If app/, routes/, config/, lang/, database/, resources/views/, resources/js/, or tests/ files changed, block the stop (\"ok\": false) and state that the Larastan, Pest, and Playwright checks have not been run yet. Otherwise return \"ok\": true.",
+            "prompt": "Check only the work done in this turn. If none of app/, routes/, config/, lang/, database/, resources/views/, resources/js/, or tests/ files were changed in this turn, return \"ok\": true. If they were changed, look in this turn's transcript for runs of Larastan (phpstan), Pest (php artisan test), and Playwright (npx playwright test) that happened AFTER the last such change. If all three ran after the last change and passed, return \"ok\": true. If any of them did not run after the last change, return \"ok\": false and state which of Larastan, Pest, and Playwright have not been run yet. Do not block when the transcript shows the checks ran and passed.",
             "timeout": 120,
-            "statusMessage": "Checking whether Larastan and Pest need to run..."
+            "statusMessage": "Checking whether Larastan, Pest and Playwright ran after the last change..."
           }
         ]
       }
