@@ -15,7 +15,7 @@ test.describe('Manage Records', () => {
         const { email, password } = seedUser();
 
         await login(page, email, password);
-        await page.getByRole('link', { name: 'Manage Records' }).click();
+        await page.getByRole('main').getByRole('link', { name: 'Manage Records' }).click();
 
         await expect(page).toHaveURL('/records');
         await expect(page.getByText('You need at least one account before adding a record.')).toBeVisible();

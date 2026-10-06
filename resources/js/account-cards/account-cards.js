@@ -3,6 +3,7 @@ import { clearFieldErrors, showFieldErrors, showGenericError } from '../shared/f
 import { hideSkeleton, setButtonLoading } from '../shared/loading-state.js';
 import { get, put } from '../shared/http.js';
 import { formatMoney } from '../shared/money.js';
+import { renderPagination } from '../shared/table/table-pagination.js';
 
 const ACCOUNTS_PER_PAGE = 15;
 
@@ -19,11 +20,10 @@ export function createAccountCards({ ids, routes }) {
     const cardTemplate = root.querySelector('[data-account-card-template]');
     const addTemplate = root.querySelector('[data-account-card-add]');
 
-    const moreWrapper = root.querySelector('[data-account-cards-more]');
+    const paginationContainers = [...root.querySelectorAll('[data-account-cards-pagination]')];
 
     let currentAccount = null;
     let allAccounts = [];
-    let totalAccounts = 0;
 
     function iconMarkup(icon) {
         return root.querySelector(`[data-icon-template="${icon}"]`)?.innerHTML ?? '';
@@ -48,9 +48,6 @@ export function createAccountCards({ ids, routes }) {
             ...allAccounts.map((account) => buildCard(account)),
             addTemplate.content.cloneNode(true),
         );
-
-        moreWrapper.classList.toggle('hidden', totalAccounts <= ACCOUNTS_PER_PAGE);
-        moreWrapper.classList.toggle('flex', totalAccounts > ACCOUNTS_PER_PAGE);
     }
 
     function openAppearance(account) {
@@ -61,13 +58,13 @@ export function createAccountCards({ ids, routes }) {
         openModal(ids.modal);
     }
 
-    async function loadAccounts() {
-        const { ok, data } = await get(`${routes.index}?per_page=${ACCOUNTS_PER_PAGE}`);
+    async function loadAccounts(url = `${routes.index}?per_page=${ACCOUNTS_PER_PAGE}`) {
+        const { ok, data } = await get(url);
 
         if (ok) {
             allAccounts = data.data;
-            totalAccounts = data.meta?.total ?? allAccounts.length;
             renderAccounts();
+            renderPagination(paginationContainers, data.meta, loadAccounts);
         }
 
         hideSkeleton(ids.list, ids.skeleton);

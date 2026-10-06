@@ -1,24 +1,20 @@
 <div id="account-cards" data-account-cards>
     <x-organisms.account-cards-skeleton id="account-cards-skeleton" />
 
-    <div id="account-cards-list" class="hidden grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5"></div>
+    <div id="account-cards-list" class="hidden grid grid-cols-3 gap-3 sm:grid-cols-2 lg:grid-cols-5"></div>
 
-    <div class="mt-4 hidden justify-center" data-account-cards-more>
-        <x-atoms.button href="{{ route('accounts.index') }}" variant="secondary">
-            {{ __('accounts.table.show_more') }}
-        </x-atoms.button>
-    </div>
+    <x-molecules.pagination data-account-cards-pagination />
 
     <template data-account-card-template>
-        <div class="group relative flex h-16 items-center gap-3 rounded-lg px-4 text-white" data-account-card>
-            <svg class="h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true" data-account-card-icon></svg>
-            <div class="min-w-0 flex-1">
-                <p class="truncate font-body text-body-sm font-semibold" data-account-card-name></p>
-                <p class="font-body text-body-sm" data-account-card-balance></p>
+        <div class="group relative flex h-16 min-w-0 items-center gap-2 rounded-lg px-2 text-white sm:gap-3 sm:px-4" data-account-card>
+            <svg class="hidden h-6 w-6 shrink-0 sm:block" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true" data-account-card-icon></svg>
+            <div class="min-w-0 flex-1 overflow-hidden">
+                <p class="truncate font-body text-[11px] font-semibold sm:text-body-sm" data-account-card-name></p>
+                <p class="truncate font-body text-[11px] sm:text-body-sm" data-account-card-balance></p>
             </div>
             <button
                 type="button"
-                class="cursor-pointer rounded-md p-1.5 opacity-100 transition-opacity hover:bg-white/20 focus-visible:opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
+                class="hidden shrink-0 cursor-pointer rounded-md p-1 opacity-100 sm:block sm:p-1.5 transition-opacity hover:bg-white/20 focus-visible:opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
                 data-account-card-edit
             >
                 <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
