@@ -14,6 +14,63 @@ class AccountSummaryRepository implements AccountSummaryRepositoryInterface
         return $this->bucketFlows($accountId, null, null);
     }
 
+    public function totalsByYear(int $accountId): array
+    {
+        $years = [];
+
+        $rows = DB::table('account_yearly_totals')
+            ->where('account_id', $accountId)
+            ->orderBy('year')
+            ->get(['year', 'income', 'expense', 'transfer_in', 'transfer_out', 'record_count']);
+
+        foreach ($rows as $row) {
+            $years[(int) $row->year] = $this->flows($row);
+        }
+
+        return $years;
+    }
+
+    /**
+     * Sums the monthly totals of each account into its yearly totals.
+     */
+    public function rebuildYears(array $accountIds): void
+    {
+        foreach (array_unique($accountIds) as $accountId) {
+            $years = [];
+
+            $rows = DB::table('account_monthly_totals')
+                ->where('account_id', $accountId)
+                ->get(['month', 'income', 'expense', 'transfer_in', 'transfer_out', 'record_count']);
+
+            foreach ($rows as $row) {
+                $year = (int) substr((string) $row->month, 0, 4);
+                $years[$year] ??= ['income' => 0.0, 'expense' => 0.0, 'transfer_in' => 0.0, 'transfer_out' => 0.0, 'record_count' => 0];
+                $years[$year] = $this->sum($years[$year], $this->flows($row));
+            }
+
+            DB::transaction(function () use ($accountId, $years): void {
+                DB::table('account_yearly_totals')->where('account_id', $accountId)->delete();
+
+                $rows = [];
+                foreach ($years as $year => $totals) {
+                    $rows[] = [
+                        'account_id' => $accountId,
+                        'year' => $year,
+                        'income' => $totals['income'],
+                        'expense' => $totals['expense'],
+                        'transfer_in' => $totals['transfer_in'],
+                        'transfer_out' => $totals['transfer_out'],
+                        'record_count' => $totals['record_count'],
+                    ];
+                }
+
+                if ($rows !== []) {
+                    DB::table('account_yearly_totals')->insert($rows);
+                }
+            });
+        }
+    }
+
     public function totalsInRange(int $accountId, CarbonImmutable $start, CarbonImmutable $end): array
     {
         $start = $start->utc();
