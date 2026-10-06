@@ -17,6 +17,7 @@ createTable({
     selectionKey: 'accounts-table-selection',
     deleteModalId: 'delete-account-modal',
     bulkDeleteModalId: 'bulk-delete-accounts-modal',
+    defaultSort: { key: 'name', direction: 'asc' },
     routes: {
         index: routes.accounts.index,
         destroy: routes.accounts.destroy,
