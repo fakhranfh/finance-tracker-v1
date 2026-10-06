@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AccountController;
+use App\Http\Controllers\Api\AccountRecordGenerateController;
 use App\Http\Controllers\Api\AccountSummaryController;
 use App\Http\Controllers\Api\Auth\DevAutoLoginController;
 use App\Http\Controllers\Api\Auth\ForgotPasswordController;
@@ -42,6 +43,9 @@ Route::middleware('web')->name('api.')->group(function (): void {
         Route::put('/accounts/order', [AccountController::class, 'reorder'])->name('accounts.reorder');
         Route::delete('/accounts', [AccountController::class, 'bulkDestroy'])->name('accounts.bulk-destroy');
         Route::get('/accounts/{account}/summary', [AccountSummaryController::class, 'show'])->name('accounts.summary');
+        Route::post('/accounts/{account}/records/generate', AccountRecordGenerateController::class)
+            ->middleware(EnsureLocalEnvironment::class)
+            ->name('accounts.records.generate');
         Route::post('/accounts/generate', [AccountController::class, 'generate'])
             ->middleware(EnsureLocalEnvironment::class)
             ->name('accounts.generate');

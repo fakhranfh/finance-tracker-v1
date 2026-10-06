@@ -259,6 +259,7 @@ export function createTable(config) {
         onGenerated: async (message) => {
             flash.show(message);
             await load();
+            config.onDataChanged?.();
         },
     });
 

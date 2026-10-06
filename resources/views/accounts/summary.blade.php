@@ -26,7 +26,8 @@
 
         {{-- Shown in place of the summary cards and the record list while the filter loads. --}}
         <div id="account-summary-skeleton" class="hidden space-y-8">
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <x-atoms.skeleton class="h-28 rounded-lg" />
                 <x-atoms.skeleton class="h-28 rounded-lg" />
                 <x-atoms.skeleton class="h-28 rounded-lg" />
                 <x-atoms.skeleton class="h-28 rounded-lg" />
@@ -62,7 +63,7 @@
         </div>
 
         <div id="account-summary-results">
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div class="rounded-lg border border-outline-variant bg-surface p-5">
                 <p class="font-body text-body-sm text-on-surface-variant">{{ __('accounts.summary.income') }}</p>
                 <p class="mt-2 font-heading text-headline-sm font-bold text-success" data-summary-value="income">…</p>
@@ -78,18 +79,45 @@
                 <p class="mt-2 font-heading text-headline-sm font-bold text-on-surface">
                     {{ __('accounts.summary.transfer_in') }}: <span data-summary-value="transfer_in">…</span>
                 </p>
-                <p class="mt-1 font-body text-body-sm text-on-surface-variant">
+                <p class="mt-2 font-heading text-headline-sm font-bold text-on-surface">
                     {{ __('accounts.summary.transfer_out') }}: <span data-summary-value="transfer_out">…</span>
                 </p>
             </div>
+
+            <div class="rounded-lg border border-outline-variant bg-surface p-5">
+                <p class="font-body text-body-sm text-on-surface-variant">{{ __('accounts.summary.net') }}</p>
+                <p class="mt-2 font-heading text-headline-sm font-bold text-on-surface" data-summary-value="net">…</p>
+                <p class="mt-1 font-body text-body-sm text-on-surface-variant" data-summary-value="record_count">…</p>
+            </div>
         </div>
 
-        <p class="mt-4 font-body text-body-sm text-on-surface-variant">
-            {{ __('accounts.summary.net') }}: <span data-summary-value="net">…</span>
-            &middot; <span data-summary-value="record_count">…</span>
-        </p>
-
         <h2 class="mb-3 mt-8 font-heading text-title-md font-bold text-on-surface">{{ __('accounts.summary.records_title') }}</h2>
+
+        @if (app()->isLocal())
+            <div class="mb-4 flex items-center gap-3">
+                <x-atoms.input
+                    type="number"
+                    name="generate-count"
+                    id="account-generate-count"
+                    value="10"
+                    min="1"
+                    max="50"
+                    class="!w-24"
+                    aria-label="{{ __('accounts.actions.generate_count') }}"
+                    title="{{ __('accounts.actions.generate_count') }}"
+                />
+                <x-atoms.button
+                    type="button"
+                    id="account-generate-records"
+                    variant="secondary"
+                    data-success-message="{{ __('records.flash.generated') }}"
+                >
+                    {{ __('records.actions.generate') }}
+                </x-atoms.button>
+            </div>
+        @endif
+
+        <div data-flash-success class="mb-4 hidden rounded-lg border border-success/20 bg-success/10 px-4 py-3 font-body text-sm text-success"></div>
 
         <x-molecules.table-toolbar
             id="account-records-toolbar"

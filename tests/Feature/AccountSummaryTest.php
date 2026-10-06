@@ -5,6 +5,7 @@ use App\Models\Account;
 use App\Models\Record;
 use App\Models\User;
 use Carbon\CarbonImmutable;
+use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 
 it('totals income, expense and transfers of the account within the range', function () {
     $actor = User::factory()->create(['timezone' => 'UTC']);
@@ -53,4 +54,38 @@ it('falls back to this month when the custom range is invalid', function () {
     $response->assertOk();
     $response->assertJsonPath('data.range.preset', 'custom');
     $response->assertJsonPath('data.range.from', CarbonImmutable::now('UTC')->startOfMonth()->toDateString());
+});
+
+it('generates exactly the requested number of records dated inside the period', function () {
+    $this->withoutMiddleware(PreventRequestForgery::class);
+    app()->detectEnvironment(fn () => 'local');
+
+    $actor = User::factory()->create(['timezone' => 'UTC']);
+    $account = Account::factory()->create(['last_balance' => 0]);
+    Account::factory()->create(['last_balance' => 0]);
+
+    $from = CarbonImmutable::now('UTC')->startOfMonth();
+    $to = CarbonImmutable::now('UTC')->endOfMonth()->startOfDay();
+
+    $response = $this->actingAs($actor)->postJson("/api/accounts/{$account->id}/records/generate", [
+        'count' => 7,
+        'date_from' => $from->toDateString(),
+        'date_to' => $to->toDateString(),
+    ]);
+
+    $response->assertOk();
+    expect($response->json('data'))->toHaveCount(7);
+    expect(Record::query()->where('account_id', $account->id)->count())->toBe(7);
+    expect(Record::query()->where('recorded_at', '<', $from->utc())->count())->toBe(0);
+    expect(Record::query()->where('recorded_at', '>', $to->endOfDay()->utc())->count())->toBe(0);
+});
+
+it('rejects generating account records outside the local environment', function () {
+    $this->withoutMiddleware(PreventRequestForgery::class);
+    app()->detectEnvironment(fn () => 'production');
+
+    $actor = User::factory()->create();
+    $account = Account::factory()->create(['last_balance' => 0]);
+
+    $this->actingAs($actor)->postJson("/api/accounts/{$account->id}/records/generate", ['count' => 3])->assertNotFound();
 });

@@ -50,13 +50,20 @@ const recordsTable = createTable({
         table: 'account-records-table',
         wrapper: 'account-records-wrapper',
         toolbar: 'account-records-toolbar',
+        generateButton: 'account-generate-records',
+        generateCount: 'account-generate-count',
     },
     flashKey: 'account-records-flash',
     selectionKey: 'account-records-selection',
     defaultSort: { key: 'recorded_at', direction: 'desc' },
     params: () => ({ account_ids: [accountId], ...period }),
+    // Generated records change the totals too, so refresh the summary.
+    onDataChanged: () => load(),
+    // Records are dated inside the period on screen, so they show up in its totals and list.
+    generatePayload: () => ({ date_from: period.date_from, date_to: period.date_to }),
     routes: {
         index: routes.records.index,
+        generate: routes.accounts.generateRecords(accountId),
     },
     row: (item) => ({
         cells: [

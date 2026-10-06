@@ -33,6 +33,7 @@ export const routes = {
         generate: endpoint('/accounts/generate'),
         reorder: endpoint('/accounts/order'),
         summary: (id) => endpoint(`/accounts/${id}/summary`),
+        generateRecords: (id) => endpoint(`/accounts/${id}/records/generate`),
     },
     records: {
         index: endpoint('/records'),
