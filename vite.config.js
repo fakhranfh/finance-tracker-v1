@@ -15,6 +15,7 @@ export default defineConfig({
                 'resources/js/auth/reset-password.js',
                 'resources/js/auth/verify-email.js',
                 'resources/js/dashboard.js',
+                'resources/js/account-cards/index.js',
                 'resources/js/profile/edit.js',
                 'resources/js/accounts/index.js',
                 'resources/js/accounts/form.js',
