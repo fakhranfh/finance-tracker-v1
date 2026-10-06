@@ -100,6 +100,7 @@
         <div id="account-records-wrapper" class="hidden max-sm:pb-20">
             <x-organisms.table
                 id="account-records-table"
+                :selectable="false"
                 :headers="$tableHeaders"
                 :config="[
                     'labels' => [

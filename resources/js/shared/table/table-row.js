@@ -22,8 +22,12 @@ export function createTableRow({ tbody, selection, selectAll }) {
         render({ id, cells, viewUrl = null, editUrl, onDelete, locked = false }) {
             const row = document.createElement('tr');
 
+            // Without a checkbox column (table selectable="false") the leading cell is left out.
+            const selectable = tbody.dataset.selectable !== 'false';
+            const offset = selectable ? 1 : 0;
+
             row.innerHTML = [
-                '<td class="w-10 px-4 py-3"></td>',
+                selectable ? '<td class="w-10 px-4 py-3"></td>' : '',
                 ...cells.map(
                     (_, index) =>
                         `<td class="px-4 py-3 ${index === 0 ? 'text-on-surface' : 'text-on-surface-variant'}"></td>`,
@@ -36,30 +40,36 @@ export function createTableRow({ tbody, selection, selectAll }) {
             );
 
             cells.forEach((value, index) => {
-                const cell = row.children[index + 1];
-                cell.dataset.label = headerLabels[index + 1] ?? '';
+                const cell = row.children[index + offset];
+                cell.dataset.label = headerLabels[index + offset] ?? '';
                 cell.textContent = value;
+                // Mobile: the action icons sit in a band above the first value, so push that value below them.
+                // Margin, not padding: the table's mobile styles already set the cell's padding.
+                if (index === 0) {
+                    cell.classList.add('max-sm:mt-10');
+                }
             });
 
-            const checkbox = document.createElement('input');
-            checkbox.type = 'checkbox';
-            checkbox.value = id;
-            checkbox.className =
-                'h-4 w-4 cursor-pointer rounded border-outline-variant text-primary focus:outline-none focus:ring-2 focus:ring-primary/20';
+            if (selectable) {
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.value = id;
+                checkbox.className =
+                    'h-4 w-4 cursor-pointer rounded border-outline-variant text-primary focus:outline-none focus:ring-2 focus:ring-primary/20';
 
-            if (locked) {
-                checkbox.disabled = true;
-                checkbox.className += ' cursor-not-allowed opacity-40';
-            } else {
-                checkbox.dataset.rowSelect = '';
-                checkbox.checked = selection.has(id);
-                checkbox.addEventListener('change', () => {
-                    selection.toggle(id, checkbox.checked);
-                    selectAll.onRowToggle();
-                });
+                if (locked) {
+                    checkbox.disabled = true;
+                    checkbox.className += ' cursor-not-allowed opacity-40';
+                } else {
+                    checkbox.dataset.rowSelect = '';
+                    checkbox.checked = selection.has(id);
+                    checkbox.addEventListener('change', () => {
+                        selection.toggle(id, checkbox.checked);
+                        selectAll.onRowToggle();
+                    });
+                }
+                row.children[0].appendChild(checkbox);
             }
-
-            row.children[0].appendChild(checkbox);
 
             const actions = document.createElement('div');
             actions.className = 'flex items-center justify-end gap-3';
