@@ -51,7 +51,7 @@ interface AccountBalanceRepositoryInterface
     /**
      * Latest snapshot of the account, if any.
      *
-     * @return array{last_record_id: int, balance: string, totals: array{income: float, expense: float, transfer_in: float, transfer_out: float, record_count: int}}|null
+     * @return array{last_record_id: int, balance: string}|null
      */
     public function latestSnapshot(int $accountId): ?array;
 
@@ -61,25 +61,7 @@ interface AccountBalanceRepositoryInterface
     public function balanceAfterRecords(int $accountId, string $startBalance, int $afterRecordId, int $uptoRecordId): string;
 
     /**
-     * Start totals plus the flows of the records after afterRecordId (up to uptoRecordId when given).
-     * A null start means zero, which is what applies when no snapshot exists yet.
-     *
-     * @param  array{income: float, expense: float, transfer_in: float, transfer_out: float, record_count: int}|null  $startTotals
-     * @return array{income: float, expense: float, transfer_in: float, transfer_out: float, record_count: int}
+     * Store a snapshot, ignoring one that already exists for the same record.
      */
-    public function totalsAfterRecords(int $accountId, ?array $startTotals, int $afterRecordId, ?int $uptoRecordId = null): array;
-
-    /**
-     * Flow totals of the account over all its records, read from the latest snapshot plus the records after it.
-     *
-     * @return array{income: float, expense: float, transfer_in: float, transfer_out: float, record_count: int}
-     */
-    public function currentTotals(int $accountId): array;
-
-    /**
-     * Store a snapshot with its balance and flow totals, ignoring one that already exists for the same record.
-     *
-     * @param  array{income: float, expense: float, transfer_in: float, transfer_out: float, record_count: int}  $totals
-     */
-    public function storeSnapshot(int $accountId, int $lastRecordId, string $balance, array $totals): void;
+    public function storeSnapshot(int $accountId, int $lastRecordId, string $balance): void;
 }

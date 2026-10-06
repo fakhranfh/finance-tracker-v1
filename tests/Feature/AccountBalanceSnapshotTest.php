@@ -5,8 +5,8 @@ use App\Jobs\RefreshAccountBalanceSnapshot;
 use App\Models\Account;
 use App\Models\Record;
 use App\Repositories\Account\AccountRepositoryInterface;
-use App\Repositories\AccountSummary\AccountSummaryRepositoryInterface;
-use App\Repositories\Record\RecordRepositoryInterface;
+use App\Services\AccountManagementService;
+use App\Services\RecordManagementService;
 use Illuminate\Support\Facades\DB;
 
 function balanceOf(Account $account): string
@@ -89,12 +89,12 @@ it('rebuilds snapshots after bulk record deletes', function () {
     $account = Account::factory()->create(['last_balance' => 0]);
     $records = Record::factory()->count(3)->create(['account_id' => $account->id, 'type' => RecordType::Income, 'amount' => 100]);
 
-    app(RecordRepositoryInterface::class)->deleteMany([$records[0]->id, $records[2]->id]);
+    app(RecordManagementService::class)->deleteMany([$records[0]->id, $records[2]->id]);
 
     expect(snapshotOf($account)->balance)->toEqual(100)
         ->and(balanceOf($account))->toEqual(100);
 
-    app(RecordRepositoryInterface::class)->deleteMatching();
+    app(RecordManagementService::class)->deleteMatching();
     expect(snapshotOf($account))->toBeNull()
         ->and(balanceOf($account))->toEqual(0);
 });
@@ -107,7 +107,7 @@ it('rebuilds the other side of a transfer when an account is deleted', function 
     ]);
     expect(balanceOf($from))->toEqual(200);
 
-    app(AccountRepositoryInterface::class)->delete($to);
+    app(AccountManagementService::class)->delete($to);
 
     expect(balanceOf($from))->toEqual(500);
 });
@@ -144,7 +144,7 @@ it('keeps accounts.last_balance in step with the newest snapshot', function () {
     $records[0]->update(['amount' => 400]);
     expect($account->fresh()->last_balance)->toEqual(1600);
 
-    app(RecordRepositoryInterface::class)->deleteMatching();
+    app(RecordManagementService::class)->deleteMatching();
     expect($account->fresh()->last_balance)->toEqual(1000);
 });
 
@@ -170,7 +170,7 @@ it('adjusts last_balance when a counterpart account is deleted', function () {
     Record::factory()->create(['account_id' => $from->id, 'to_account_id' => $to->id, 'type' => RecordType::Transfer, 'amount' => 100]);
     expect($from->fresh()->last_balance)->toEqual(400);
 
-    app(AccountRepositoryInterface::class)->delete($to);
+    app(AccountManagementService::class)->delete($to);
     expect($from->fresh()->last_balance)->toEqual(500);
 });
 
@@ -188,25 +188,4 @@ it('reports and fixes drifted last balances with the reconcile command', functio
 
     $this->artisan('accounts:reconcile-balances', ['--fix' => true])->assertSuccessful();
     expect($account->fresh()->last_balance)->toEqual(1100);
-});
-
-it('stores flow totals in the snapshot and serves the all-time summary from it', function () {
-    $from = Account::factory()->create(['last_balance' => 500]);
-    $to = Account::factory()->create(['last_balance' => 0]);
-    Record::factory()->count(3)->create(['account_id' => $from->id, 'type' => RecordType::Income, 'amount' => 100]);
-    Record::factory()->create(['account_id' => $from->id, 'type' => RecordType::Expense, 'amount' => 40]);
-    Record::factory()->create(['account_id' => $from->id, 'to_account_id' => $to->id, 'type' => RecordType::Transfer, 'amount' => 25]);
-
-    $snapshot = snapshotOf($from);
-    // Snapshot taken at the third record, so it covers only the three incomes.
-    expect((float) $snapshot->income)->toEqual(300)
-        ->and((float) $snapshot->expense)->toEqual(0)
-        ->and((float) $snapshot->transfer_out)->toEqual(0)
-        ->and((float) $snapshot->transfer_in)->toEqual(0)
-        ->and($snapshot->record_count)->toBe(3);
-
-    Record::factory()->create(['account_id' => $from->id, 'type' => RecordType::Income, 'amount' => 10]);
-
-    $totals = app(AccountSummaryRepositoryInterface::class)->totalsAll($from->id);
-    expect($totals)->toMatchArray(['income' => 310.0, 'expense' => 40.0, 'transfer_out' => 25.0, 'transfer_in' => 0.0, 'record_count' => 6]);
 });

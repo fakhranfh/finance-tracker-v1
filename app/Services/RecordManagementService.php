@@ -6,11 +6,15 @@ use App\Enums\RecordType;
 use App\Models\Record;
 use App\Repositories\Record\RecordRepositoryInterface;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 
 class RecordManagementService
 {
     public function __construct(
         protected RecordRepositoryInterface $recordRepository,
+        protected AccountLastBalanceService $lastBalance,
+        protected AccountBalanceSnapshotService $snapshots,
+        protected AccountMonthlyTotalsService $monthlyTotals,
     ) {}
 
     /**
@@ -67,7 +71,7 @@ class RecordManagementService
      */
     public function deleteMany(array $ids): void
     {
-        $this->recordRepository->deleteMany($ids);
+        $this->applyDeletion($this->recordRepository->deleteMany($ids));
     }
 
     /**
@@ -77,7 +81,7 @@ class RecordManagementService
      */
     public function deleteMatching(?string $search = null, array $filters = []): void
     {
-        $this->recordRepository->deleteMatching($search, $filters);
+        $this->applyDeletion($this->recordRepository->deleteMatching($search, $filters));
     }
 
     /**
@@ -103,5 +107,23 @@ class RecordManagementService
         }
 
         return $data;
+    }
+
+    /**
+     * Bring balances, snapshots and monthly totals in line with records removed in bulk.
+     *
+     * @param  array{account_ids: array<int, int|null>, first_id: ?int, effects: Collection<int, \stdClass>}  $deletion
+     */
+    private function applyDeletion(array $deletion): void
+    {
+        foreach ($deletion['effects'] as $effect) {
+            $this->lastBalance->apply($effect->type, $effect->account_id, $effect->to_account_id, $effect->total, -1);
+        }
+
+        if ($deletion['first_id'] !== null) {
+            $this->snapshots->invalidate($deletion['account_ids'], $deletion['first_id']);
+        }
+
+        $this->monthlyTotals->refresh($deletion['account_ids']);
     }
 }

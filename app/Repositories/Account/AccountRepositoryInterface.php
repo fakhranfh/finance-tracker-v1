@@ -32,9 +32,11 @@ interface AccountRepositoryInterface
     public function deleteMany(array $ids): void;
 
     /**
-     * Delete every account matching the search filter (all when null).
+     * IDs of the accounts matching the search filter (all when null).
+     *
+     * @return array<int, int>
      */
-    public function deleteMatching(?string $search = null): void;
+    public function idsMatching(?string $search = null): array;
 
     /**
      * Count accounts matching the search filter, optionally excluding one ID.

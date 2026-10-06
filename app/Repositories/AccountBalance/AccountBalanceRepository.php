@@ -2,8 +2,6 @@
 
 namespace App\Repositories\AccountBalance;
 
-use App\Models\Account;
-use App\Models\Record;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -69,7 +67,7 @@ class AccountBalanceRepository implements AccountBalanceRepositoryInterface
     {
         $watermark = DB::table('account_balance_snapshots')->where('account_id', $accountId)->max('last_record_id') ?? 0;
 
-        return Record::query()
+        return DB::table('records')
             ->where('id', '>', $watermark)
             ->where(fn ($q) => $q->where('account_id', $accountId)->orWhere('to_account_id', $accountId))
             ->count();
@@ -77,12 +75,12 @@ class AccountBalanceRepository implements AccountBalanceRepositoryInterface
 
     public function lastBalance(int $accountId): ?string
     {
-        return Account::query()->whereKey($accountId)->toBase()->value('last_balance');
+        return DB::table('accounts')->where('id', $accountId)->value('last_balance');
     }
 
     public function latestRecordId(int $accountId): ?int
     {
-        return Record::query()
+        return DB::table('records')
             ->where(fn ($q) => $q->where('account_id', $accountId)->orWhere('to_account_id', $accountId))
             ->max('id');
     }
@@ -94,56 +92,7 @@ class AccountBalanceRepository implements AccountBalanceRepositoryInterface
             ->orderByDesc('last_record_id')
             ->first();
 
-        if (! $snapshot) {
-            return null;
-        }
-
-        return [
-            'last_record_id' => $snapshot->last_record_id,
-            'balance' => $snapshot->balance,
-            'totals' => [
-                'income' => (float) $snapshot->income,
-                'expense' => (float) $snapshot->expense,
-                'transfer_in' => (float) $snapshot->transfer_in,
-                'transfer_out' => (float) $snapshot->transfer_out,
-                'record_count' => (int) $snapshot->record_count,
-            ],
-        ];
-    }
-
-    public function totalsAfterRecords(int $accountId, ?array $startTotals, int $afterRecordId, ?int $uptoRecordId = null): array
-    {
-        $row = Record::query()
-            ->where(fn ($q) => $q->where('account_id', $accountId)->orWhere('to_account_id', $accountId))
-            ->where('id', '>', $afterRecordId)
-            ->when($uptoRecordId !== null, fn ($q) => $q->where('id', '<=', $uptoRecordId))
-            ->selectRaw(
-                "coalesce(sum(case when type = 'income' and account_id = ? then amount end), 0) as income,
-                 coalesce(sum(case when type = 'expense' and account_id = ? then amount end), 0) as expense,
-                 coalesce(sum(case when type = 'transfer' and account_id = ? then amount end), 0) as transfer_out,
-                 coalesce(sum(case when type = 'transfer' and to_account_id = ? then amount end), 0) as transfer_in,
-                 count(*) as record_count",
-                [$accountId, $accountId, $accountId, $accountId],
-            )
-            ->toBase()
-            ->first();
-
-        $start = $startTotals ?? ['income' => 0, 'expense' => 0, 'transfer_in' => 0, 'transfer_out' => 0, 'record_count' => 0];
-
-        return [
-            'income' => round($start['income'] + (float) $row->income, 2),
-            'expense' => round($start['expense'] + (float) $row->expense, 2),
-            'transfer_in' => round($start['transfer_in'] + (float) $row->transfer_in, 2),
-            'transfer_out' => round($start['transfer_out'] + (float) $row->transfer_out, 2),
-            'record_count' => $start['record_count'] + (int) $row->record_count,
-        ];
-    }
-
-    public function currentTotals(int $accountId): array
-    {
-        $base = $this->latestSnapshot($accountId);
-
-        return $this->totalsAfterRecords($accountId, $base['totals'] ?? null, $base['last_record_id'] ?? 0);
+        return $snapshot ? ['last_record_id' => $snapshot->last_record_id, 'balance' => $snapshot->balance] : null;
     }
 
     public function balanceAfterRecords(int $accountId, string $startBalance, int $afterRecordId, int $uptoRecordId): string
@@ -162,17 +111,12 @@ class AccountBalanceRepository implements AccountBalanceRepositoryInterface
         ])->balance;
     }
 
-    public function storeSnapshot(int $accountId, int $lastRecordId, string $balance, array $totals): void
+    public function storeSnapshot(int $accountId, int $lastRecordId, string $balance): void
     {
         DB::table('account_balance_snapshots')->insertOrIgnore([
             'account_id' => $accountId,
             'last_record_id' => $lastRecordId,
             'balance' => $balance,
-            'income' => $totals['income'],
-            'expense' => $totals['expense'],
-            'transfer_in' => $totals['transfer_in'],
-            'transfer_out' => $totals['transfer_out'],
-            'record_count' => $totals['record_count'],
             'taken_at' => now(),
         ]);
     }

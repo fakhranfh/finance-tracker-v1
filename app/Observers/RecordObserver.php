@@ -5,18 +5,21 @@ namespace App\Observers;
 use App\Models\Record;
 use App\Services\AccountBalanceSnapshotService;
 use App\Services\AccountLastBalanceService;
+use App\Services\AccountMonthlyTotalsService;
 
 class RecordObserver
 {
     public function __construct(
         protected AccountBalanceSnapshotService $snapshots,
         protected AccountLastBalanceService $lastBalance,
+        protected AccountMonthlyTotalsService $monthlyTotals,
     ) {}
 
     public function created(Record $record): void
     {
         $this->lastBalance->apply($record->type, $record->account_id, $record->to_account_id, $record->amount);
         $this->snapshots->refreshIfNeeded([$record->account_id, $record->to_account_id]);
+        $this->monthlyTotals->refresh([$record->account_id, $record->to_account_id]);
     }
 
     public function updated(Record $record): void
@@ -38,11 +41,19 @@ class RecordObserver
             $record->getOriginal('account_id'),
             $record->getOriginal('to_account_id'),
         ], $record->id);
+
+        $this->monthlyTotals->refresh([
+            $record->account_id,
+            $record->to_account_id,
+            $record->getOriginal('account_id'),
+            $record->getOriginal('to_account_id'),
+        ]);
     }
 
     public function deleted(Record $record): void
     {
         $this->lastBalance->apply($record->type, $record->account_id, $record->to_account_id, $record->amount, -1);
         $this->snapshots->invalidate([$record->account_id, $record->to_account_id], $record->id);
+        $this->monthlyTotals->refresh([$record->account_id, $record->to_account_id]);
     }
 }

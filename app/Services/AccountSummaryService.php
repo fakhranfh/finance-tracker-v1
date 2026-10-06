@@ -87,8 +87,8 @@ class AccountSummaryService
     }
 
     /**
-     * The all-time range reads the account snapshot. Bounded ranges filter by
-     * recorded_at, which snapshots (keyed by record ID) cannot answer.
+     * The all-time range sums the monthly totals. Bounded ranges combine whole
+     * months from them with the records at either edge.
      *
      * @param  array{preset: string, start: ?CarbonImmutable, end: ?CarbonImmutable}  $range
      * @return array{income: float, expense: float, transfer_in: float, transfer_out: float, net: float, record_count: int}

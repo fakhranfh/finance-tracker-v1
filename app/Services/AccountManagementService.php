@@ -5,14 +5,20 @@ namespace App\Services;
 use App\Enums\RecordType;
 use App\Models\Account;
 use App\Repositories\Account\AccountRepositoryInterface;
+use App\Repositories\Record\RecordRepositoryInterface;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
 
 class AccountManagementService
 {
     public function __construct(
         protected AccountRepositoryInterface $accountRepository,
         protected RecordManagementService $recordManagementService,
+        protected RecordRepositoryInterface $recordRepository,
+        protected AccountLastBalanceService $lastBalance,
+        protected AccountBalanceSnapshotService $snapshots,
+        protected AccountMonthlyTotalsService $monthlyTotals,
     ) {}
 
     /**
@@ -66,11 +72,11 @@ class AccountManagementService
     public function update(Account $account, array $data): Account
     {
         if (($data['adjust_by'] ?? 'record') === 'balance') {
-            return $this->accountRepository->update($account, [
+            return $this->refreshSnapshotIfBalanceChanged($this->accountRepository->update($account, [
                 'name' => $data['name'],
                 'last_balance' => $data['balance'],
                 ...Arr::only($data, ['color', 'icon']),
-            ]);
+            ]));
         }
 
         $account = $this->accountRepository->update($account, Arr::only($data, ['name', 'color', 'icon']));
@@ -95,7 +101,7 @@ class AccountManagementService
      */
     public function delete(Account $account): void
     {
-        $this->accountRepository->delete($account);
+        $this->deleteMany([$account->id]);
     }
 
     /**
@@ -105,7 +111,11 @@ class AccountManagementService
      */
     public function deleteMany(array $ids): void
     {
+        $shared = $this->recordRepository->sharedTransfers($ids);
+
         $this->accountRepository->deleteMany($ids);
+
+        $this->applyDeletion($shared);
     }
 
     /**
@@ -113,7 +123,7 @@ class AccountManagementService
      */
     public function deleteMatching(?string $search = null): void
     {
-        $this->accountRepository->deleteMatching($search);
+        $this->deleteMany($this->accountRepository->idsMatching($search));
     }
 
     /**
@@ -122,5 +132,37 @@ class AccountManagementService
     public function countMatching(?string $search = null, ?int $exceptId = null): int
     {
         return $this->accountRepository->countMatching($search, $exceptId);
+    }
+
+    /**
+     * Snapshots of an account go stale when its balance is set directly.
+     */
+    private function refreshSnapshotIfBalanceChanged(Account $account): Account
+    {
+        if ($account->wasChanged('last_balance')) {
+            $this->snapshots->invalidate([$account->id]);
+        }
+
+        return $account;
+    }
+
+    /**
+     * Deleting accounts removes the transfers they shared with other accounts,
+     * so correct the counterparts' balances and snapshots and totals.
+     *
+     * @param  array{counterparts: array<int, int|null>, transfers_out: Collection<int, \stdClass>, transfers_in: Collection<int, \stdClass>}  $deletion
+     */
+    private function applyDeletion(array $deletion): void
+    {
+        foreach ($deletion['transfers_out'] as $transfer) {
+            $this->lastBalance->adjust($transfer->to_account_id, $transfer->total, -1);
+        }
+
+        foreach ($deletion['transfers_in'] as $transfer) {
+            $this->lastBalance->adjust($transfer->account_id, $transfer->total);
+        }
+
+        $this->snapshots->invalidate($deletion['counterparts']);
+        $this->monthlyTotals->refresh($deletion['counterparts']);
     }
 }

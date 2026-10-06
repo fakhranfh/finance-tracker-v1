@@ -6,7 +6,7 @@ export const testEnv = {
     ...process.env,
     APP_ENV: 'testing',
     DB_CONNECTION: 'pgsql',
-    DB_DATABASE: process.env.DB_DATABASE_TEST ?? 'laravel_13_boilerplate_v1_e2e',
+    DB_DATABASE: process.env.DB_DATABASE_TEST ?? 'finance-tracker-test-e2e',
     DB_URL: '',
     BCRYPT_ROUNDS: '4',
     CACHE_STORE: 'array',

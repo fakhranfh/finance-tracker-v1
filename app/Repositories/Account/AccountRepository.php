@@ -3,20 +3,12 @@
 namespace App\Repositories\Account;
 
 use App\Models\Account;
-use App\Models\Record;
-use App\Services\AccountBalanceSnapshotService;
-use App\Services\AccountLastBalanceService;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
 
 class AccountRepository implements AccountRepositoryInterface
 {
-    public function __construct(
-        protected AccountBalanceSnapshotService $snapshots,
-        protected AccountLastBalanceService $lastBalance,
-    ) {}
-
     public function find(int $id): ?Account
     {
         return Account::query()->withBalance()->find($id);
@@ -64,16 +56,19 @@ class AccountRepository implements AccountRepositoryInterface
 
     public function deleteMany(array $ids): void
     {
-        $this->deleteInvalidating(Account::query()->whereIn('id', $ids));
+        Account::query()->whereIn('id', $ids)->delete();
     }
 
-    public function deleteMatching(?string $search = null): void
+    /**
+     * @return array<int, int>
+     */
+    public function idsMatching(?string $search = null): array
     {
         $query = Account::query();
 
         $this->applySearch($query, $search);
 
-        $this->deleteInvalidating($query);
+        return $query->pluck('id')->all();
     }
 
     public function countMatching(?string $search = null, ?int $exceptId = null): int
@@ -83,38 +78,6 @@ class AccountRepository implements AccountRepositoryInterface
         $this->applySearch($query, $search);
 
         return $query->count();
-    }
-
-    /**
-     * Deleting accounts cascades to the transfers they share with other
-     * accounts, which makes those accounts' snapshots stale.
-     *
-     * @param  Builder<Account>  $query
-     */
-    private function deleteInvalidating(Builder $query): void
-    {
-        $ids = (clone $query)->pluck('id');
-
-        $counterparts = [
-            ...Record::query()->whereIn('account_id', $ids)->distinct()->pluck('to_account_id'),
-            ...Record::query()->whereIn('to_account_id', $ids)->distinct()->pluck('account_id'),
-        ];
-
-        $transfersOut = Record::query()->where('type', 'transfer')->whereIn('account_id', $ids)->whereNotIn('to_account_id', $ids)
-            ->toBase()->selectRaw('to_account_id, sum(amount) as total')->groupBy('to_account_id')->get();
-        $transfersIn = Record::query()->where('type', 'transfer')->whereIn('to_account_id', $ids)->whereNotIn('account_id', $ids)
-            ->toBase()->selectRaw('account_id, sum(amount) as total')->groupBy('account_id')->get();
-
-        $query->delete();
-
-        foreach ($transfersOut as $transfer) {
-            $this->lastBalance->adjust($transfer->to_account_id, $transfer->total, -1);
-        }
-        foreach ($transfersIn as $transfer) {
-            $this->lastBalance->adjust($transfer->account_id, $transfer->total);
-        }
-
-        $this->snapshots->invalidate($counterparts);
     }
 
     private function applySearch(Builder $query, ?string $search): void
@@ -137,15 +100,11 @@ class AccountRepository implements AccountRepositoryInterface
     {
         $account->update($data);
 
-        if ($account->wasChanged('last_balance')) {
-            $this->snapshots->invalidate([$account->id]);
-        }
-
         return $account;
     }
 
     public function delete(Account $account): void
     {
-        $this->deleteInvalidating(Account::query()->whereKey($account->id));
+        Account::query()->whereKey($account->id)->delete();
     }
 }

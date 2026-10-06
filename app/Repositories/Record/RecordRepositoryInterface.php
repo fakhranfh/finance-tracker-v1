@@ -4,6 +4,7 @@ namespace App\Repositories\Record;
 
 use App\Models\Record;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 
 interface RecordRepositoryInterface
 {
@@ -20,18 +21,28 @@ interface RecordRepositoryInterface
     public function paginate(int $perPage, ?string $search = null, ?string $sort = null, string $direction = 'asc', array $filters = []): LengthAwarePaginator;
 
     /**
-     * Delete records by ID.
+     * Transfers linking the given accounts to accounts outside them, as seen from those outside accounts.
+     *
+     * @param  array<int, int>  $accountIds
+     * @return array{counterparts: array<int, int|null>, transfers_out: Collection<int, \stdClass>, transfers_in: Collection<int, \stdClass>}
+     */
+    public function sharedTransfers(array $accountIds): array;
+
+    /**
+     * Delete records by ID and describe what was removed.
      *
      * @param  array<int, int>  $ids
+     * @return array{account_ids: array<int, int|null>, first_id: ?int, effects: Collection<int, \stdClass>}
      */
-    public function deleteMany(array $ids): void;
+    public function deleteMany(array $ids): array;
 
     /**
      * Delete every record matching the search and filters (all when none apply).
      *
      * @param  array<string, mixed>  $filters
+     * @return array{account_ids: array<int, int|null>, first_id: ?int, effects: Collection<int, \stdClass>}
      */
-    public function deleteMatching(?string $search = null, array $filters = []): void;
+    public function deleteMatching(?string $search = null, array $filters = []): array;
 
     /**
      * Count records matching the search and filters, optionally excluding one ID.

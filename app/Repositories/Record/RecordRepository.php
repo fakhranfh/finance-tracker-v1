@@ -3,18 +3,13 @@
 namespace App\Repositories\Record;
 
 use App\Models\Record;
-use App\Services\AccountBalanceSnapshotService;
-use App\Services\AccountLastBalanceService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class RecordRepository implements RecordRepositoryInterface
 {
-    public function __construct(
-        protected AccountBalanceSnapshotService $snapshots,
-        protected AccountLastBalanceService $lastBalance,
-    ) {}
-
     public function find(int $id): ?Record
     {
         return Record::query()->with(['account', 'toAccount'])->find($id);
@@ -39,19 +34,41 @@ class RecordRepository implements RecordRepositoryInterface
         return $query->paginate($perPage)->withQueryString();
     }
 
-    public function deleteMany(array $ids): void
+    /**
+     * Transfers that link the given accounts to accounts outside them, as seen from those outside accounts.
+     *
+     * @param  array<int, int>  $accountIds
+     * @return array{counterparts: array<int, int|null>, transfers_out: Collection<int, \stdClass>, transfers_in: Collection<int, \stdClass>}
+     */
+    public function sharedTransfers(array $accountIds): array
     {
-        $this->deleteInvalidating(Record::query()->whereIn('id', $ids));
+        $counterparts = [
+            ...Record::query()->whereIn('account_id', $accountIds)->distinct()->pluck('to_account_id'),
+            ...Record::query()->whereIn('to_account_id', $accountIds)->distinct()->pluck('account_id'),
+        ];
+
+        return [
+            'counterparts' => $counterparts,
+            'transfers_out' => DB::table('records')->where('type', 'transfer')->whereIn('account_id', $accountIds)->whereNotIn('to_account_id', $accountIds)
+                ->selectRaw('to_account_id, sum(amount) as total')->groupBy('to_account_id')->get(),
+            'transfers_in' => DB::table('records')->where('type', 'transfer')->whereIn('to_account_id', $accountIds)->whereNotIn('account_id', $accountIds)
+                ->selectRaw('account_id, sum(amount) as total')->groupBy('account_id')->get(),
+        ];
     }
 
-    public function deleteMatching(?string $search = null, array $filters = []): void
+    public function deleteMany(array $ids): array
+    {
+        return $this->deleteAndDescribe(Record::query()->whereIn('id', $ids));
+    }
+
+    public function deleteMatching(?string $search = null, array $filters = []): array
     {
         $query = Record::query();
 
         $this->applySearch($query, $search);
         $this->applyFilters($query, $filters);
 
-        $this->deleteInvalidating($query);
+        return $this->deleteAndDescribe($query);
     }
 
     public function countMatching(?string $search = null, ?int $exceptId = null, array $filters = []): int
@@ -65,11 +82,12 @@ class RecordRepository implements RecordRepositoryInterface
     }
 
     /**
-     * Bulk deletes skip model events, so invalidate snapshots by hand.
+     * Bulk deletes skip model events, so describe what they removed for the caller to apply.
      *
      * @param  Builder<Record>  $query
+     * @return array{account_ids: array<int, int|null>, first_id: ?int, effects: Collection<int, \stdClass>}
      */
-    private function deleteInvalidating(Builder $query): void
+    private function deleteAndDescribe(Builder $query): array
     {
         $accountIds = [
             ...(clone $query)->distinct()->pluck('account_id'),
@@ -84,13 +102,7 @@ class RecordRepository implements RecordRepositoryInterface
 
         $query->delete();
 
-        foreach ($effects as $effect) {
-            $this->lastBalance->apply($effect->type, $effect->account_id, $effect->to_account_id, $effect->total, -1);
-        }
-
-        if ($firstId !== null) {
-            $this->snapshots->invalidate($accountIds, $firstId);
-        }
+        return ['account_ids' => $accountIds, 'first_id' => $firstId, 'effects' => $effects];
     }
 
     private function applySearch(Builder $query, ?string $search): void
