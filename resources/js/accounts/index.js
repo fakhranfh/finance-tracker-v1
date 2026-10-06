@@ -2,6 +2,7 @@ import { createTable } from '../shared/table/table.js';
 import { routes } from '../routes.js';
 import { formatDateTime } from '../shared/datetime.js';
 import { formatMoney } from '../shared/money.js';
+import { createAccountOrder } from './reorder.js';
 
 createTable({
     ids: {
@@ -33,4 +34,15 @@ createTable({
         editUrl: routes.pages.accountEdit(item.id),
         locked: false,
     }),
+});
+
+createAccountOrder({
+    openButton: document.getElementById('open-reorder-accounts'),
+    modalId: 'reorder-accounts-modal',
+    list: document.getElementById('reorder-accounts-list'),
+    saveButton: document.getElementById('save-reorder-accounts'),
+    routes: {
+        index: routes.accounts.index,
+        reorder: routes.accounts.reorder,
+    },
 });

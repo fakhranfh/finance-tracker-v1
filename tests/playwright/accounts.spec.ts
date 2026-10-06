@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { seedUser } from './support/seed';
+import { resetDatabase, seedUser } from './support/seed';
 
 async function login(page, email: string, password: string) {
     await page.goto('/login');
@@ -73,6 +73,37 @@ test.describe('Manage Accounts', () => {
 
         await expect(page.locator('input[name="color"]')).toHaveValue('#ff1744');
         await expect(page.locator('input[name="icon"][value="bank"]')).toBeChecked();
+    });
+
+    test('moves an account up in the arranged order and keeps it after reopening', async ({ page }) => {
+        resetDatabase();
+        const { email, password } = seedUser();
+
+        await login(page, email, password);
+
+        for (const name of ['Order A', 'Order B']) {
+            await page.goto('/accounts/create');
+            await page.getByLabel('Name', { exact: true }).fill(name);
+            await page.getByLabel('Balance', { exact: true }).fill('1000');
+            await page.getByRole('button', { name: 'Save' }).click();
+            await expect(page).toHaveURL('/accounts');
+        }
+
+        await page.goto('/accounts');
+        await page.getByRole('button', { name: 'Arrange order' }).click();
+
+        const modal = page.locator('#reorder-accounts-modal');
+        await expect(modal).toBeVisible();
+        await expect(modal.locator('#reorder-accounts-list li').first()).toContainText('Order A');
+
+        await modal.locator('#reorder-accounts-list li', { hasText: 'Order B' }).getByRole('button', { name: 'Move up' }).click();
+        await expect(modal.locator('#reorder-accounts-list li').first()).toContainText('Order B');
+
+        await modal.getByRole('button', { name: 'Save' }).click();
+        await expect(modal).toBeHidden();
+
+        await page.getByRole('button', { name: 'Arrange order' }).click();
+        await expect(modal.locator('#reorder-accounts-list li').first()).toContainText('Order B');
     });
 
     test('redirects a guest to login', async ({ page }) => {

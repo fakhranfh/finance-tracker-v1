@@ -18,6 +18,13 @@ interface AccountRepositoryInterface
     public function paginate(int $perPage, ?string $search = null, ?string $sort = null, string $direction = 'asc'): LengthAwarePaginator;
 
     /**
+     * Reorder accounts: the given IDs take the sort slots they occupy, in this order.
+     *
+     * @param  array<int, int>  $ids
+     */
+    public function reorder(array $ids): void;
+
+    /**
      * Delete accounts by ID.
      *
      * @param  array<int, int>  $ids

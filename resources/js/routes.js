@@ -31,6 +31,7 @@ export const routes = {
         destroy: (id) => endpoint(`/accounts/${id}`),
         bulkDestroy: endpoint('/accounts'),
         generate: endpoint('/accounts/generate'),
+        reorder: endpoint('/accounts/order'),
     },
     records: {
         index: endpoint('/records'),

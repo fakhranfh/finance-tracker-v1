@@ -38,6 +38,7 @@ Route::middleware('web')->name('api.')->group(function (): void {
     Route::middleware('auth:sanctum')->group(function (): void {
         Route::post('/email/verification-notification', VerificationNotificationController::class)
             ->name('verification.send');
+        Route::put('/accounts/order', [AccountController::class, 'reorder'])->name('accounts.reorder');
         Route::delete('/accounts', [AccountController::class, 'bulkDestroy'])->name('accounts.bulk-destroy');
         Route::post('/accounts/generate', [AccountController::class, 'generate'])
             ->middleware(EnsureLocalEnvironment::class)

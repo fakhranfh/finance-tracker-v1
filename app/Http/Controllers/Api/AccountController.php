@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Account\BulkDeleteAccountRequest;
+use App\Http\Requests\Account\ReorderAccountRequest;
 use App\Http\Requests\Account\StoreAccountRequest;
 use App\Http\Requests\Account\UpdateAccountRequest;
 use App\Http\Resources\AccountResource;
@@ -36,6 +37,13 @@ class AccountController extends Controller
         ))->additional([
             'deletable_total' => $this->accountManagementService->countMatching($search),
         ]);
+    }
+
+    public function reorder(ReorderAccountRequest $request): Response
+    {
+        $this->accountManagementService->reorder($request->validated('ids'));
+
+        return response()->noContent();
     }
 
     public function bulkDestroy(BulkDeleteAccountRequest $request): Response

@@ -12,5 +12,6 @@ createAccountCards({
     routes: {
         index: routes.accounts.index,
         update: routes.accounts.update,
+        reorder: routes.accounts.reorder,
     },
 });

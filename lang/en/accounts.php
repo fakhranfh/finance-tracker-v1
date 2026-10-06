@@ -50,6 +50,16 @@ return [
         ],
     ],
 
+    'order' => [
+        'start' => 'Arrange order',
+        'done' => 'Done',
+        'move_left' => 'Move left',
+        'move_right' => 'Move right',
+        'move_up' => 'Move up',
+        'move_down' => 'Move down',
+        'title' => 'Arrange account order',
+    ],
+
     'actions' => [
         'edit' => 'Edit',
         'delete' => 'Delete',

@@ -44,6 +44,9 @@
                     {{ __('accounts.actions.generate') }}
                 </x-atoms.button>
             @endif
+            <x-atoms.button type="button" id="open-reorder-accounts" variant="secondary">
+                {{ __('accounts.order.start') }}
+            </x-atoms.button>
             <x-atoms.button href="{{ route('accounts.create') }}" class="col-span-2 sm:col-auto">
                 {{ __('accounts.create') }}
             </x-atoms.button>
@@ -87,6 +90,24 @@
 
         <x-molecules.pagination data-pagination />
     </div>
+
+    <x-organisms.modal id="reorder-accounts-modal" :title="__('accounts.order.title')">
+        <ol
+            id="reorder-accounts-list"
+            class="max-h-[60vh] space-y-2 overflow-y-auto pr-1"
+            data-label-move-up="{{ __('accounts.order.move_up') }}"
+            data-label-move-down="{{ __('accounts.order.move_down') }}"
+        ></ol>
+
+        <div class="mt-5 flex justify-end gap-3">
+            <x-atoms.button type="button" variant="secondary" data-modal-close>
+                {{ __('accounts.actions.cancel') }}
+            </x-atoms.button>
+            <x-atoms.button type="button" id="save-reorder-accounts">
+                {{ __('accounts.actions.save') }}
+            </x-atoms.button>
+        </div>
+    </x-organisms.modal>
 
     <x-organisms.modal id="delete-account-modal" :title="__('accounts.actions.confirm_delete')">
         <div class="flex justify-end gap-3">

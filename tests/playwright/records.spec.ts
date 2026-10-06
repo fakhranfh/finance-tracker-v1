@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { seedUser } from './support/seed';
+import { resetDatabase, seedUser } from './support/seed';
 
 async function login(page, email: string, password: string) {
     await page.goto('/login');
@@ -11,6 +11,7 @@ async function login(page, email: string, password: string) {
 
 test.describe('Manage Records', () => {
     test('prompts to create an account when none exists', async ({ page }) => {
+        resetDatabase();
         const { email, password } = seedUser();
 
         await login(page, email, password);

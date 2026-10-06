@@ -86,7 +86,7 @@
                                         "example": 9.99
                                     },
                                     "color": {
-                                        "description": "One of the colors in config/account.php",
+                                        "description": "Hex color code, e.g. #2563EB",
                                         "type": "string",
                                         "example": "#2563EB"
                                     },
@@ -210,7 +210,7 @@
                                         "example": 9.99
                                     },
                                     "color": {
-                                        "description": "One of the colors in config/account.php",
+                                        "description": "Hex color code, e.g. #2563EB",
                                         "type": "string",
                                         "example": "#2563EB"
                                     },
@@ -258,6 +258,49 @@
                 "responses": {
                     "204": {
                         "description": "Account deleted"
+                    }
+                }
+            }
+        },
+        "/accounts/order": {
+            "put": {
+                "tags": [
+                    "Accounts"
+                ],
+                "summary": "Reorder accounts",
+                "description": "Gives the listed accounts the display slots they currently occupy, in the order of `ids`. Accounts not listed keep their positions.",
+                "operationId": "22721aa2c38ccff63843f24447616081",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "ids"
+                                ],
+                                "properties": {
+                                    "ids": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        },
+                                        "example": [
+                                            3,
+                                            1
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "Order saved"
+                    },
+                    "422": {
+                        "description": "Validation error, e.g. an unknown account ID"
                     }
                 }
             }

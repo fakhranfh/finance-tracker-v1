@@ -7,6 +7,7 @@ use App\Models\Record;
 use App\Services\AccountBalanceSnapshotService;
 use App\Services\AccountLastBalanceService;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class AccountRepository implements AccountRepositoryInterface
@@ -33,10 +34,32 @@ class AccountRepository implements AccountRepositoryInterface
         if ($sort && in_array($sort, $sortable, true)) {
             $query->orderBy($sort, $direction);
         } else {
-            $query->latest();
+            $query->orderBy('sort_order')->orderBy('id');
         }
 
         return $query->paginate($perPage)->withQueryString();
+    }
+
+    /**
+     * Give the given accounts the sort slots they currently occupy, in the
+     * order of $ids. Accounts not listed keep their positions.
+     *
+     * @param  array<int, int>  $ids
+     */
+    public function reorder(array $ids): void
+    {
+        DB::transaction(function () use ($ids): void {
+            $slots = Account::query()
+                ->whereIn('id', $ids)
+                ->orderBy('sort_order')
+                ->orderBy('id')
+                ->pluck('sort_order')
+                ->values();
+
+            foreach ($ids as $index => $id) {
+                Account::query()->whereKey($id)->update(['sort_order' => $slots[$index]]);
+            }
+        });
     }
 
     public function deleteMany(array $ids): void

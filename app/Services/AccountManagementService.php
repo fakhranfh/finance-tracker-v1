@@ -41,8 +41,19 @@ class AccountManagementService
         return $this->accountRepository->create([
             'name' => $data['name'],
             'last_balance' => $data['balance'],
+            'sort_order' => (Account::query()->max('sort_order') ?? 0) + 1,
             ...Arr::only($data, ['color', 'icon']),
         ]);
+    }
+
+    /**
+     * Reorder accounts by the given IDs, keeping the positions they occupy.
+     *
+     * @param  array<int, int>  $ids
+     */
+    public function reorder(array $ids): void
+    {
+        $this->accountRepository->reorder($ids);
     }
 
     /**

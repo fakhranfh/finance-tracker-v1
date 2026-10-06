@@ -106,4 +106,25 @@ trait DocumentsApi
         responses: [new OA\Response(response: 204, description: 'Accounts deleted')]
     )]
     private function documentBulkDestroyEndpoint(): void {}
+
+    #[OA\Put(
+        path: '/accounts/order',
+        summary: 'Reorder accounts',
+        description: 'Gives the listed accounts the display slots they currently occupy, in the order of `ids`. Accounts not listed keep their positions.',
+        tags: ['Accounts'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['ids'],
+                properties: [
+                    new OA\Property(property: 'ids', type: 'array', items: new OA\Items(type: 'integer'), example: [3, 1]),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 204, description: 'Order saved'),
+            new OA\Response(response: 422, description: 'Validation error, e.g. an unknown account ID'),
+        ]
+    )]
+    private function documentReorderEndpoint(): void {}
 }
