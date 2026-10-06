@@ -31,6 +31,7 @@ createTable({
             formatMoney(item.balance),
             formatDateTime(item.created_at),
         ],
+        viewUrl: routes.pages.accountSummary(item.id),
         editUrl: routes.pages.accountEdit(item.id),
         locked: false,
     }),

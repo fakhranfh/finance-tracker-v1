@@ -32,6 +32,7 @@ export const routes = {
         bulkDestroy: endpoint('/accounts'),
         generate: endpoint('/accounts/generate'),
         reorder: endpoint('/accounts/order'),
+        summary: (id) => endpoint(`/accounts/${id}/summary`),
     },
     records: {
         index: endpoint('/records'),
@@ -51,6 +52,7 @@ export const routes = {
         accounts: '/accounts',
         accountCreate: '/accounts/create',
         accountEdit: (id) => `/accounts/${id}/edit`,
+        accountSummary: (id) => `/accounts/${id}/summary`,
         records: '/records',
         recordCreate: '/records/create',
         recordEdit: (id) => `/records/${id}/edit`,

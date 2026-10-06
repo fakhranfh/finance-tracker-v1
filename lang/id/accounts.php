@@ -58,6 +58,7 @@ return [
     ],
 
     'actions' => [
+        'view' => 'Lihat',
         'edit' => 'Ubah',
         'delete' => 'Hapus',
         'save' => 'Simpan',
@@ -68,6 +69,29 @@ return [
         'generate' => 'Generate',
         'generate_count' => 'Jumlah akun yang akan dibuat',
         'autofill' => 'Isi otomatis',
+    ],
+
+    'summary' => [
+        'subtitle' => 'Pemasukan, pengeluaran, dan transfer untuk akun ini.',
+        'range' => 'Periode',
+        'from' => 'Dari',
+        'to' => 'Sampai',
+        'apply' => 'Terapkan',
+        'presets' => [
+            'this_month' => 'Bulan ini',
+            'last_month' => 'Bulan lalu',
+            'last_30_days' => '30 hari terakhir',
+            'this_year' => 'Tahun ini',
+            'all' => 'Semua waktu',
+            'custom' => 'Rentang kustom',
+        ],
+        'income' => 'Total pemasukan',
+        'expense' => 'Total pengeluaran',
+        'transfer' => 'Transfer',
+        'transfer_in' => 'Masuk',
+        'transfer_out' => 'Keluar',
+        'net' => 'Selisih',
+        'records' => ':count catatan',
     ],
 
     'flash' => [

@@ -82,6 +82,7 @@
                     'clearSelection' => __('accounts.table.clear_selection'),
                     'expand' => __('accounts.table.show_more'),
                     'collapse' => __('accounts.table.show_less'),
+                    'view' => __('accounts.actions.view'),
                     'edit' => __('accounts.actions.edit'),
                     'delete' => __('accounts.actions.delete'),
                 ],

@@ -37,6 +37,7 @@ export function createAccountCards({ ids, routes }) {
         card.style.backgroundColor = account.color;
         fragment.querySelector('[data-account-card-icon]').innerHTML = iconMarkup(account.icon);
         fragment.querySelector('[data-account-card-name]').textContent = account.name;
+        fragment.querySelector('[data-account-card-link]').href = routes.summary(account.id);
         fragment.querySelector('[data-account-card-balance]').textContent = formatMoney(account.balance);
         fragment.querySelector('[data-account-card-edit]').addEventListener('click', () => openAppearance(account));
 

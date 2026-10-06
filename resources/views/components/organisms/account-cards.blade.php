@@ -9,12 +9,16 @@
         <div class="group relative flex h-16 min-w-0 items-center gap-2 rounded-lg px-2 text-white sm:gap-3 sm:px-4" data-account-card>
             <svg class="hidden h-6 w-6 shrink-0 sm:block" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true" data-account-card-icon></svg>
             <div class="min-w-0 flex-1 overflow-hidden">
-                <p class="truncate font-body text-[11px] font-semibold sm:text-body-sm" data-account-card-name></p>
+                <p class="truncate font-body text-[11px] font-semibold sm:text-body-sm">
+                    <a href="#" class="after:absolute after:inset-0 after:content-[''] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white" data-account-card-link>
+                        <span data-account-card-name></span>
+                    </a>
+                </p>
                 <p class="truncate font-body text-[11px] sm:text-body-sm" data-account-card-balance></p>
             </div>
             <button
                 type="button"
-                class="hidden shrink-0 cursor-pointer rounded-md p-1 opacity-100 sm:block sm:p-1.5 transition-opacity hover:bg-white/20 focus-visible:opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
+                class="relative z-10 hidden shrink-0 cursor-pointer rounded-md p-1 opacity-100 sm:block sm:p-1.5 transition-opacity hover:bg-white/20 focus-visible:opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
                 data-account-card-edit
             >
                 <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">

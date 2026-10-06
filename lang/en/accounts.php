@@ -58,6 +58,7 @@ return [
     ],
 
     'actions' => [
+        'view' => 'View',
         'edit' => 'Edit',
         'delete' => 'Delete',
         'save' => 'Save',
@@ -68,6 +69,29 @@ return [
         'generate' => 'Generate',
         'generate_count' => 'Number of accounts to generate',
         'autofill' => 'Autofill',
+    ],
+
+    'summary' => [
+        'subtitle' => 'Income, expense, and transfers for this account.',
+        'range' => 'Period',
+        'from' => 'From',
+        'to' => 'To',
+        'apply' => 'Apply',
+        'presets' => [
+            'this_month' => 'This month',
+            'last_month' => 'Last month',
+            'last_30_days' => 'Last 30 days',
+            'this_year' => 'This year',
+            'all' => 'All time',
+            'custom' => 'Custom range',
+        ],
+        'income' => 'Total income',
+        'expense' => 'Total expense',
+        'transfer' => 'Transfers',
+        'transfer_in' => 'In',
+        'transfer_out' => 'Out',
+        'net' => 'Net',
+        'records' => ':count records',
     ],
 
     'flash' => [

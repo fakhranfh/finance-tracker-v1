@@ -66,6 +66,7 @@ class Table extends Component
             'data-label-clear-selection' => $labels['clearSelection'] ?? '',
             'data-label-expand' => $labels['expand'] ?? '',
             'data-label-collapse' => $labels['collapse'] ?? '',
+            'data-label-view' => $labels['view'] ?? '',
             'data-label-edit' => $labels['edit'] ?? '',
             'data-label-delete' => $labels['delete'] ?? '',
             'data-locked-id' => $config['lockedId'] ?? '',

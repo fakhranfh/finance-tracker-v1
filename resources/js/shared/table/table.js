@@ -150,11 +150,12 @@ export function createTable(config) {
     const rowRenderer = createTableRow({ tbody, selection, selectAll });
 
     const renderRow = (item) => {
-        const { cells, editUrl, locked } = config.row(item, { lockedId });
+        const { cells, viewUrl, editUrl, locked } = config.row(item, { lockedId });
 
         return rowRenderer.render({
             id: item.id,
             cells,
+            viewUrl,
             editUrl,
             onDelete: () => rowDelete.request(item.id),
             locked,
