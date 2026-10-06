@@ -9,12 +9,10 @@
 
 <div class="w-full sm:w-44">
     <label for="from" class="mb-1 block font-body text-body-sm font-medium text-on-surface">{{ __('accounts.summary.from') }}</label>
-    <x-atoms.input type="date" name="from" id="from" value="{{ $range['preset'] === 'custom' ? $range['from'] : '' }}" />
+    <x-atoms.input type="date" name="from" id="from" value="{{ $range['preset'] === 'custom' ? $range['from'] : '' }}" :disabled="$range['preset'] !== 'custom'" class="disabled:cursor-not-allowed disabled:bg-surface-container disabled:text-on-surface-variant disabled:opacity-70" />
 </div>
 
 <div class="w-full sm:w-44">
     <label for="to" class="mb-1 block font-body text-body-sm font-medium text-on-surface">{{ __('accounts.summary.to') }}</label>
-    <x-atoms.input type="date" name="to" id="to" value="{{ $range['preset'] === 'custom' ? $range['to'] : '' }}" />
+    <x-atoms.input type="date" name="to" id="to" value="{{ $range['preset'] === 'custom' ? $range['to'] : '' }}" :disabled="$range['preset'] !== 'custom'" class="disabled:cursor-not-allowed disabled:bg-surface-container disabled:text-on-surface-variant disabled:opacity-70" />
 </div>
-
-<x-atoms.button type="submit" variant="secondary" class="max-sm:w-full">{{ __('accounts.summary.apply') }}</x-atoms.button>

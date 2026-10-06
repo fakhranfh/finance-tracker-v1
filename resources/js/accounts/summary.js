@@ -99,6 +99,28 @@ async function load() {
 
 form.addEventListener('submit', (event) => {
     event.preventDefault();
+    load();
+});
+
+// The date fields only apply to a custom range.
+function syncDateFields() {
+    const isCustom = form.elements.namedItem('range').value === 'custom';
+
+    form.elements.namedItem('from').disabled = !isCustom;
+    form.elements.namedItem('to').disabled = !isCustom;
+}
+
+// No apply button: any change applies at once. A custom range waits until both dates are set.
+form.addEventListener('change', () => {
+    syncDateFields();
+
+    const range = form.elements.namedItem('range').value;
+    const from = form.elements.namedItem('from').value;
+    const to = form.elements.namedItem('to').value;
+
+    if (range === 'custom' && (!from || !to)) {
+        return;
+    }
 
     if (mobileQuery.matches) {
         closeModal(MODAL_ID);
