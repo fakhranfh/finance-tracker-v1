@@ -1,5 +1,5 @@
-import { post } from './http.js';
-import { setButtonLoading } from './loading-state.js';
+import { post } from '../http.js';
+import { setButtonLoading } from '../loading-state.js';
 
 /**
  * Dev-only "generate sample data" button. The Blade view renders the button

@@ -1,4 +1,4 @@
-import { createMultiSelectFilter, createTable } from '../shared/table.js';
+import { createMultiSelectFilter, createTable } from '../shared/table/table.js';
 import { routes } from '../routes.js';
 import { formatDateTime } from '../shared/datetime.js';
 import { formatMoney } from '../shared/money.js';

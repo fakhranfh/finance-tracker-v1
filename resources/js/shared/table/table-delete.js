@@ -1,6 +1,6 @@
-import { del } from './http.js';
-import { closeModal, openModal } from './modal.js';
-import { setButtonLoading } from './loading-state.js';
+import { del } from '../http.js';
+import { closeModal, openModal } from '../modal.js';
+import { setButtonLoading } from '../loading-state.js';
 
 /**
  * Single-row delete: `request(id)` opens the confirm modal, the confirm
