@@ -1,6 +1,6 @@
 import { closeModal, openModal } from '../shared/modal.js';
 import { clearFieldErrors, showFieldErrors, showGenericError } from '../shared/field-errors.js';
-import { hideSkeleton, setButtonLoading } from '../shared/loading-state.js';
+import { hideSkeleton, setButtonLoading, showSkeleton } from '../shared/loading-state.js';
 import { get, put } from '../shared/http.js';
 import { formatMoney } from '../shared/money.js';
 import { renderPagination } from '../shared/table/table-pagination.js';
@@ -59,6 +59,8 @@ export function createAccountCards({ ids, routes }) {
     }
 
     async function loadAccounts(url = `${routes.index}?per_page=${ACCOUNTS_PER_PAGE}`) {
+        showSkeleton(ids.list, ids.skeleton);
+
         const { ok, data } = await get(url);
 
         if (ok) {
