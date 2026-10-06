@@ -2,64 +2,68 @@
 
 namespace App\Observers;
 
+use App\Jobs\SyncRecordEffects;
 use App\Models\Record;
-use App\Services\AccountBalanceSnapshotService;
-use App\Services\AccountLastBalanceService;
-use App\Services\AccountMonthlyTotalsService;
-use App\Services\AccountYearlyTotalsService;
 
 class RecordObserver
 {
-    public function __construct(
-        protected AccountBalanceSnapshotService $snapshots,
-        protected AccountLastBalanceService $lastBalance,
-        protected AccountMonthlyTotalsService $monthlyTotals,
-        protected AccountYearlyTotalsService $yearlyTotals,
-    ) {}
-
     public function created(Record $record): void
     {
-        $this->lastBalance->apply($record->type, $record->account_id, $record->to_account_id, $record->amount);
-        $this->snapshots->refreshIfNeeded([$record->account_id, $record->to_account_id]);
-        $this->monthlyTotals->refresh([$record->account_id, $record->to_account_id]);
-        $this->yearlyTotals->refresh([$record->account_id, $record->to_account_id]);
+        SyncRecordEffects::dispatch(
+            [$record->account_id, $record->to_account_id],
+            [$this->change($record->type, $record->account_id, $record->to_account_id, $record->amount, 1)],
+            null,
+            true,
+        )->afterCommit();
     }
 
     public function updated(Record $record): void
     {
+        $balanceChanges = [];
+
         if ($record->wasChanged(['type', 'account_id', 'to_account_id', 'amount'])) {
-            $this->lastBalance->apply(
+            $balanceChanges[] = $this->change(
                 $record->getOriginal('type'),
                 $record->getOriginal('account_id'),
                 $record->getOriginal('to_account_id'),
                 $record->getOriginal('amount'),
                 -1,
             );
-            $this->lastBalance->apply($record->type, $record->account_id, $record->to_account_id, $record->amount);
+            $balanceChanges[] = $this->change($record->type, $record->account_id, $record->to_account_id, $record->amount, 1);
         }
 
-        $this->snapshots->invalidate([
-            $record->account_id,
-            $record->to_account_id,
-            $record->getOriginal('account_id'),
-            $record->getOriginal('to_account_id'),
-        ], $record->id);
-
-        $touched = [
-            $record->account_id,
-            $record->to_account_id,
-            $record->getOriginal('account_id'),
-            $record->getOriginal('to_account_id'),
-        ];
-        $this->monthlyTotals->refresh($touched);
-        $this->yearlyTotals->refresh($touched);
+        SyncRecordEffects::dispatch(
+            [
+                $record->account_id,
+                $record->to_account_id,
+                $record->getOriginal('account_id'),
+                $record->getOriginal('to_account_id'),
+            ],
+            $balanceChanges,
+            $record->id,
+        )->afterCommit();
     }
 
     public function deleted(Record $record): void
     {
-        $this->lastBalance->apply($record->type, $record->account_id, $record->to_account_id, $record->amount, -1);
-        $this->snapshots->invalidate([$record->account_id, $record->to_account_id], $record->id);
-        $this->monthlyTotals->refresh([$record->account_id, $record->to_account_id]);
-        $this->yearlyTotals->refresh([$record->account_id, $record->to_account_id]);
+        SyncRecordEffects::dispatch(
+            [$record->account_id, $record->to_account_id],
+            [$this->change($record->type, $record->account_id, $record->to_account_id, $record->amount, -1)],
+            $record->id,
+        )->afterCommit();
+    }
+
+    /**
+     * @return array{type: mixed, account_id: ?int, to_account_id: ?int, amount: string|float, sign: int}
+     */
+    private function change(mixed $type, ?int $accountId, ?int $toAccountId, string|float $amount, int $sign): array
+    {
+        return [
+            'type' => $type,
+            'account_id' => $accountId,
+            'to_account_id' => $toAccountId,
+            'amount' => $amount,
+            'sign' => $sign,
+        ];
     }
 }

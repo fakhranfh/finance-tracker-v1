@@ -77,10 +77,10 @@ it('keeps the snapshot when a record newer than it changes', function () {
     $newer = Record::factory()->create(['account_id' => $account->id, 'type' => RecordType::Income, 'amount' => 100]);
     $before = snapshotOf($account);
 
-    Queue::fake();
+    Queue::fake([RefreshAccountBalanceSnapshot::class]);
     $newer->update(['amount' => 250]);
 
-    Queue::assertNothingPushed();
+    Queue::assertNotPushed(RefreshAccountBalanceSnapshot::class);
     expect(snapshotOf($account))->toEqual($before)
         ->and(balanceOf($account))->toEqual(550);
 });
