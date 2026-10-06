@@ -189,3 +189,23 @@ it('reports and fixes drifted last balances with the reconcile command', functio
     $this->artisan('accounts:reconcile-balances', ['--fix' => true])->assertSuccessful();
     expect($account->fresh()->last_balance)->toEqual(1100);
 });
+
+it('stores cumulative income, expense and transfers in and out with each snapshot', function () {
+    $account = Account::factory()->create(['last_balance' => 1000]);
+    $other = Account::factory()->create(['last_balance' => 0]);
+
+    Record::factory()->count(2)->create(['account_id' => $account->id, 'type' => RecordType::Income, 'amount' => 100]);
+    Record::factory()->create(['account_id' => $account->id, 'type' => RecordType::Expense, 'amount' => 30]);
+    Record::factory()->create(['account_id' => $account->id, 'to_account_id' => $other->id, 'type' => RecordType::Transfer, 'amount' => 50]);
+    Record::factory()->create(['account_id' => $other->id, 'to_account_id' => $account->id, 'type' => RecordType::Transfer, 'amount' => 20]);
+
+    RefreshAccountBalanceSnapshot::dispatchSync($account->id);
+
+    $snapshot = snapshotOf($account);
+    expect((float) $snapshot->income)->toEqual(200.0)
+        ->and((float) $snapshot->expense)->toEqual(30.0)
+        ->and((float) $snapshot->transfer_in)->toEqual(20.0)
+        ->and((float) $snapshot->transfer_out)->toEqual(50.0)
+        ->and((float) $snapshot->net)->toEqual(140.0)
+        ->and((float) $snapshot->balance)->toEqual(1140.0);
+});

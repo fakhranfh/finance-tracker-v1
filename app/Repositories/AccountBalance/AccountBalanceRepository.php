@@ -92,7 +92,66 @@ class AccountBalanceRepository implements AccountBalanceRepositoryInterface
             ->orderByDesc('last_record_id')
             ->first();
 
-        return $snapshot ? ['last_record_id' => $snapshot->last_record_id, 'balance' => $snapshot->balance] : null;
+        if (! $snapshot) {
+            return null;
+        }
+
+        return [
+            'last_record_id' => $snapshot->last_record_id,
+            'balance' => $snapshot->balance,
+            'flows' => [
+                'income' => $snapshot->income,
+                'expense' => $snapshot->expense,
+                'transfer_in' => $snapshot->transfer_in,
+                'transfer_out' => $snapshot->transfer_out,
+                'net' => $snapshot->net,
+            ],
+        ];
+    }
+
+    /**
+     * Flow totals of the start totals plus the records in (afterRecordId, uptoRecordId].
+     *
+     * @param  array{income: string|float, expense: string|float, transfer_in: string|float, transfer_out: string|float, net: string|float}  $start
+     * @return array{income: string, expense: string, transfer_in: string, transfer_out: string, net: string}
+     */
+    public function flowsAfterRecords(int $accountId, array $start, int $afterRecordId, int $uptoRecordId): array
+    {
+        $row = DB::selectOne(<<<'SQL'
+            select
+                cast(? as decimal(14,2))
+                + coalesce(sum(case when type = 'income' and account_id = ? then amount end), 0) as income,
+                cast(? as decimal(14,2))
+                + coalesce(sum(case when type = 'expense' and account_id = ? then amount end), 0) as expense,
+                cast(? as decimal(14,2))
+                + coalesce(sum(case when type = 'transfer' and to_account_id = ? then amount end), 0) as transfer_in,
+                cast(? as decimal(14,2))
+                + coalesce(sum(case when type = 'transfer' and account_id = ? then amount end), 0) as transfer_out,
+                cast(? as decimal(14,2))
+                + coalesce(sum(case
+                    when type = 'income' and account_id = ? then amount
+                    when type = 'expense' and account_id = ? then -amount
+                    when type = 'transfer' and to_account_id = ? then amount
+                    when type = 'transfer' and account_id = ? then -amount
+                end), 0) as net
+            from records
+            where id > ? and id <= ? and (account_id = ? or to_account_id = ?)
+            SQL, [
+            $start['income'], $accountId,
+            $start['expense'], $accountId,
+            $start['transfer_in'], $accountId,
+            $start['transfer_out'], $accountId,
+            $start['net'], $accountId, $accountId, $accountId, $accountId,
+            $afterRecordId, $uptoRecordId, $accountId, $accountId,
+        ]);
+
+        return [
+            'income' => $row->income,
+            'expense' => $row->expense,
+            'transfer_in' => $row->transfer_in,
+            'transfer_out' => $row->transfer_out,
+            'net' => $row->net,
+        ];
     }
 
     public function balanceAfterRecords(int $accountId, string $startBalance, int $afterRecordId, int $uptoRecordId): string
@@ -111,12 +170,17 @@ class AccountBalanceRepository implements AccountBalanceRepositoryInterface
         ])->balance;
     }
 
-    public function storeSnapshot(int $accountId, int $lastRecordId, string $balance): void
+    public function storeSnapshot(int $accountId, int $lastRecordId, string $balance, array $flows): void
     {
         DB::table('account_balance_snapshots')->insertOrIgnore([
             'account_id' => $accountId,
             'last_record_id' => $lastRecordId,
             'balance' => $balance,
+            'income' => $flows['income'],
+            'expense' => $flows['expense'],
+            'transfer_in' => $flows['transfer_in'],
+            'transfer_out' => $flows['transfer_out'],
+            'net' => $flows['net'],
             'taken_at' => now(),
         ]);
     }

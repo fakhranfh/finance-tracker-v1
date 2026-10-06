@@ -16,7 +16,7 @@ interface AccountSummaryRepositoryInterface
     /**
      * Flow totals of the account per UTC year, from its yearly totals. Keys are years, oldest first.
      *
-     * @return array<int, array{income: float, expense: float, transfer_in: float, transfer_out: float, record_count: int}>
+     * @return array<int, array{income: float, expense: float, transfer_in: float, transfer_out: float, record_count: int, net: float, balance: float}>
      */
     public function totalsByYear(int $accountId): array;
 

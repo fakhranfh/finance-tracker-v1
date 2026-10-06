@@ -21,10 +21,10 @@ class AccountSummaryRepository implements AccountSummaryRepositoryInterface
         $rows = DB::table('account_yearly_totals')
             ->where('account_id', $accountId)
             ->orderBy('year')
-            ->get(['year', 'income', 'expense', 'transfer_in', 'transfer_out', 'record_count']);
+            ->get(['year', 'income', 'expense', 'transfer_in', 'transfer_out', 'record_count', 'net', 'balance']);
 
         foreach ($rows as $row) {
-            $years[(int) $row->year] = $this->flows($row);
+            $years[(int) $row->year] = [...$this->flows($row), 'net' => round((float) $row->net, 2), 'balance' => round((float) $row->balance, 2)];
         }
 
         return $years;
@@ -40,13 +40,19 @@ class AccountSummaryRepository implements AccountSummaryRepositoryInterface
 
             $rows = DB::table('account_monthly_totals')
                 ->where('account_id', $accountId)
-                ->get(['month', 'income', 'expense', 'transfer_in', 'transfer_out', 'record_count']);
+                ->orderBy('month')
+                ->get(['month', 'income', 'expense', 'transfer_in', 'transfer_out', 'record_count', 'net', 'balance']);
 
             foreach ($rows as $row) {
                 $year = (int) substr((string) $row->month, 0, 4);
-                $years[$year] ??= ['income' => 0.0, 'expense' => 0.0, 'transfer_in' => 0.0, 'transfer_out' => 0.0, 'record_count' => 0];
-                $years[$year] = $this->sum($years[$year], $this->flows($row));
+                $years[$year] ??= ['income' => 0.0, 'expense' => 0.0, 'transfer_in' => 0.0, 'transfer_out' => 0.0, 'record_count' => 0, 'balance' => 0.0];
+                $years[$year] = [...$this->sum($years[$year], $this->flows($row)), 'balance' => round((float) $row->balance, 2)];
             }
+
+            foreach ($years as &$totals) {
+                $totals['net'] = $this->net($totals);
+            }
+            unset($totals);
 
             DB::transaction(function () use ($accountId, $years): void {
                 DB::table('account_yearly_totals')->where('account_id', $accountId)->delete();
@@ -61,6 +67,8 @@ class AccountSummaryRepository implements AccountSummaryRepositoryInterface
                         'transfer_in' => $totals['transfer_in'],
                         'transfer_out' => $totals['transfer_out'],
                         'record_count' => $totals['record_count'],
+                        'net' => $totals['net'],
+                        'balance' => $totals['balance'],
                     ];
                 }
 
@@ -106,7 +114,7 @@ class AccountSummaryRepository implements AccountSummaryRepositoryInterface
 
             foreach ($records as $record) {
                 $month = CarbonImmutable::parse($record->recorded_at, 'UTC')->startOfMonth()->toDateString();
-                $months[$month] ??= ['income' => 0.0, 'expense' => 0.0, 'transfer_in' => 0.0, 'transfer_out' => 0.0, 'record_count' => 0];
+                $months[$month] ??= ['income' => 0.0, 'expense' => 0.0, 'transfer_in' => 0.0, 'transfer_out' => 0.0, 'record_count' => 0, 'balance' => 0.0];
 
                 $amount = (float) $record->amount;
                 $isSource = (int) $record->account_id === $accountId;
@@ -122,6 +130,22 @@ class AccountSummaryRepository implements AccountSummaryRepositoryInterface
                 $months[$month]['record_count']++;
             }
 
+            // accounts.last_balance is the balance after every record, so the opening
+            // balance is what remains once all net flows are taken back out of it.
+            ksort($months);
+            $net = 0.0;
+            foreach ($months as $totals) {
+                $net += $totals['income'] - $totals['expense'] + $totals['transfer_in'] - $totals['transfer_out'];
+            }
+
+            $running = round((float) DB::table('accounts')->where('id', $accountId)->value('last_balance') - $net, 2);
+            foreach ($months as &$totals) {
+                $totals['net'] = $this->net($totals);
+                $running = round($running + $totals['net'], 2);
+                $totals['balance'] = $running;
+            }
+            unset($totals);
+
             DB::transaction(function () use ($accountId, $months): void {
                 DB::table('account_monthly_totals')->where('account_id', $accountId)->delete();
 
@@ -135,6 +159,8 @@ class AccountSummaryRepository implements AccountSummaryRepositoryInterface
                         'transfer_in' => round($totals['transfer_in'], 2),
                         'transfer_out' => round($totals['transfer_out'], 2),
                         'record_count' => $totals['record_count'],
+                        'net' => $totals['net'],
+                        'balance' => $totals['balance'],
                     ];
                 }
 
@@ -184,6 +210,16 @@ class AccountSummaryRepository implements AccountSummaryRepositoryInterface
             ->first();
 
         return $this->flows($row);
+    }
+
+    /**
+     * Money in minus money out, counting transfers in and out of the account.
+     *
+     * @param  array{income: float, expense: float, transfer_in: float, transfer_out: float}  $flows
+     */
+    private function net(array $flows): float
+    {
+        return round($flows['income'] - $flows['expense'] + $flows['transfer_in'] - $flows['transfer_out'], 2);
     }
 
     private function flows(object $row): array

@@ -51,7 +51,7 @@ interface AccountBalanceRepositoryInterface
     /**
      * Latest snapshot of the account, if any.
      *
-     * @return array{last_record_id: int, balance: string}|null
+     * @return array{last_record_id: int, balance: string, flows: array{income: string, expense: string, transfer_in: string, transfer_out: string, net: string}}|null
      */
     public function latestSnapshot(int $accountId): ?array;
 
@@ -61,7 +61,17 @@ interface AccountBalanceRepositoryInterface
     public function balanceAfterRecords(int $accountId, string $startBalance, int $afterRecordId, int $uptoRecordId): string;
 
     /**
-     * Store a snapshot, ignoring one that already exists for the same record.
+     * Start flow totals plus the flows of the records in (afterRecordId, uptoRecordId].
+     *
+     * @param  array{income: string|float, expense: string|float, transfer_in: string|float, transfer_out: string|float, net: string|float}  $start
+     * @return array{income: string, expense: string, transfer_in: string, transfer_out: string, net: string}
      */
-    public function storeSnapshot(int $accountId, int $lastRecordId, string $balance): void;
+    public function flowsAfterRecords(int $accountId, array $start, int $afterRecordId, int $uptoRecordId): array;
+
+    /**
+     * Store a snapshot with its cumulative flow totals, ignoring one that already exists for the same record.
+     *
+     * @param  array{income: string, expense: string, transfer_in: string, transfer_out: string, net: string}  $flows
+     */
+    public function storeSnapshot(int $accountId, int $lastRecordId, string $balance, array $flows): void;
 }

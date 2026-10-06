@@ -26,18 +26,14 @@ class AccountYearlyTotalsService
     /**
      * Flow totals of the account for each UTC year, oldest first.
      *
-     * @return array<int, array{year: int, income: float, expense: float, transfer_in: float, transfer_out: float, net: float, record_count: int}>
+     * @return array<int, array{year: int, income: float, expense: float, transfer_in: float, transfer_out: float, net: float, record_count: int, balance: float}>
      */
     public function totals(int $accountId): array
     {
         $yearly = [];
 
         foreach ($this->summaries->totalsByYear($accountId) as $year => $flows) {
-            $yearly[] = [
-                'year' => $year,
-                ...$flows,
-                'net' => $flows['income'] - $flows['expense'] + $flows['transfer_in'] - $flows['transfer_out'],
-            ];
+            $yearly[] = ['year' => $year, ...$flows];
         }
 
         return $yearly;
