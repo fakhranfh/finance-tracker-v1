@@ -36,14 +36,14 @@ it('updates an account color and icon without changing its balance', function ()
     $this->assertDatabaseCount('records', 0);
 });
 
-it('rejects a color outside the palette', function () {
+it('rejects a color that is not a hex code', function () {
     $actor = User::factory()->create();
     $target = Account::factory()->create();
 
     $response = $this->actingAs($actor)->putJson("/api/accounts/{$target->id}", [
         'name' => $target->name,
         'balance' => 1000,
-        'color' => '#000000',
+        'color' => 'red',
     ]);
 
     $response->assertStatus(422);

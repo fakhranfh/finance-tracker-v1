@@ -26,7 +26,7 @@ class StoreAccountRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'balance' => ['required', 'numeric', 'min:0'],
-            'color' => ['sometimes', 'string', Rule::in(config('account.colors'))],
+            'color' => ['sometimes', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'icon' => ['sometimes', 'string', Rule::in(array_keys(config('account.icons')))],
         ];
     }

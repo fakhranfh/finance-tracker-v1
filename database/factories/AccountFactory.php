@@ -20,7 +20,7 @@ class AccountFactory extends Factory
         return [
             'name' => fake()->randomElement(['Tunai', 'BCA', 'BRI', 'BNI', 'Mandiri', 'Jago', 'GoPay', 'OVO', 'DANA', 'ShopeePay', 'Tabungan', 'Dana Darurat']).' '.fake()->unique()->numberBetween(1, 9999),
             'last_balance' => fake()->numberBetween(10, 1000) * 1000,
-            'color' => fake()->randomElement(config('account.colors')),
+            'color' => fake()->hexColor(),
             'icon' => fake()->randomElement(array_keys(config('account.icons'))),
         ];
     }

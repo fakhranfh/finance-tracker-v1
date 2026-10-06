@@ -7,9 +7,6 @@ use Illuminate\View\View;
 
 class AccountCards extends Component
 {
-    /** @var array<int, string> */
-    public array $colors;
-
     /** @var array<string, string> */
     public array $icons;
 
@@ -18,7 +15,6 @@ class AccountCards extends Component
 
     public function __construct()
     {
-        $this->colors = config('account.colors');
         $this->icons = config('account.icons');
         $this->iconLabels = collect(array_keys($this->icons))
             ->mapWithKeys(fn (string $icon): array => [$icon => __("accounts.appearance.icons.{$icon}")])

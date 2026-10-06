@@ -57,6 +57,44 @@
 
             <x-molecules.form-group name="balance" type="number" :label="__('accounts.fields.balance')" step="1" min="0" required />
 
+            <fieldset class="space-y-2">
+                <legend class="font-body text-body-sm font-medium text-on-surface">{{ __('accounts.appearance.color') }}</legend>
+                <div class="flex items-center gap-3">
+                    <input
+                        type="color"
+                        name="color"
+                        value="{{ config('account.default_color') }}"
+                        class="h-10 w-14 cursor-pointer rounded-md border border-outline-variant bg-surface p-1"
+                        data-color-hex
+                    >
+                    <span class="font-body text-body-sm text-on-surface-variant" data-color-hex-label>{{ config('account.default_color') }}</span>
+                </div>
+            </fieldset>
+
+            <fieldset class="space-y-2">
+                <legend class="font-body text-body-sm font-medium text-on-surface">{{ __('accounts.appearance.icon') }}</legend>
+                <div class="flex flex-wrap gap-3">
+                    @foreach (config('account.icons') as $icon => $path)
+                        <label class="cursor-pointer">
+                            <input
+                                type="radio"
+                                name="icon"
+                                value="{{ $icon }}"
+                                class="peer sr-only"
+                                @checked($icon === config('account.default_icon'))
+                            >
+                            <span
+                                class="flex h-10 w-10 items-center justify-center rounded-lg border border-outline-variant text-on-surface peer-checked:border-primary peer-checked:ring-2 peer-checked:ring-primary peer-focus-visible:ring-2"
+                                title="{{ __("accounts.appearance.icons.{$icon}") }}"
+                            >
+                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">{!! $path !!}</svg>
+                                <span class="sr-only">{{ __("accounts.appearance.icons.{$icon}") }}</span>
+                            </span>
+                        </label>
+                    @endforeach
+                </div>
+            </fieldset>
+
             <div class="flex items-center gap-3">
                 <x-atoms.button type="submit">
                     {{ __('accounts.actions.save') }}

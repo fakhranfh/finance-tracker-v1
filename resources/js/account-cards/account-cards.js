@@ -21,10 +21,6 @@ export function createAccountCards({ ids, routes }) {
 
     let currentAccount = null;
 
-    modal.querySelectorAll('[data-swatch]').forEach((swatch) => {
-        swatch.style.backgroundColor = swatch.dataset.swatch;
-    });
-
     function iconMarkup(icon) {
         return root.querySelector(`[data-icon-template="${icon}"]`)?.innerHTML ?? '';
     }

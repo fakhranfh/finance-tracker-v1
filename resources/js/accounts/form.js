@@ -11,12 +11,26 @@ const itemId = form?.dataset.itemId;
 
 wireDevTools(form, accountFormFixture);
 
+const colorInput = form?.querySelector('[data-color-hex]');
+const colorLabel = form?.querySelector('[data-color-hex-label]');
+
+function syncColorLabel() {
+    if (colorInput && colorLabel) {
+        colorLabel.textContent = colorInput.value.toUpperCase();
+    }
+}
+
+colorInput?.addEventListener('input', syncColorLabel);
+
 async function loadItem() {
     const { ok, data } = await get(routes.accounts.show(itemId));
 
     if (ok) {
         form.elements.namedItem('name').value = data.data.name ?? '';
         form.elements.namedItem('balance').value = data.data.balance ?? '';
+        form.elements.namedItem('color').value = data.data.color ?? '';
+        form.elements.namedItem('icon').value = data.data.icon ?? '';
+        syncColorLabel();
     }
 
     hideSkeleton('account-form', 'account-form-skeleton');
@@ -45,6 +59,8 @@ if (form) {
         const payload = {
             name: form.elements.namedItem('name').value,
             balance: form.elements.namedItem('balance').value,
+            color: form.elements.namedItem('color').value,
+            icon: form.elements.namedItem('icon').value,
         };
 
         if (itemId) {

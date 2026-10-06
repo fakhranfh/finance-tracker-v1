@@ -180,13 +180,8 @@
       {
         "hooks": [
           {
-            "type": "command",
-            "command": "php .claude/hooks/announce-stop-hooks.php",
-            "statusMessage": "Stop started..."
-          },
-          {
             "type": "prompt",
-            "prompt": "Check the work done in this turn. If app/, routes/, config/, lang/, database/, resources/views/, or tests/ files changed, block the stop (\"ok\": false) and state that the Larastan and Pest checks have not been run yet. Otherwise return \"ok\": true.",
+            "prompt": "Check the work done in this turn. If app/, routes/, config/, lang/, database/, resources/views/, resources/js/, or tests/ files changed, block the stop (\"ok\": false) and state that the Larastan, Pest, and Playwright checks have not been run yet. Otherwise return \"ok\": true.",
             "timeout": 120,
             "statusMessage": "Checking whether Larastan and Pest need to run..."
           }

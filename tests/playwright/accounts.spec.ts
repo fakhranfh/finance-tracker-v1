@@ -55,6 +55,26 @@ test.describe('Manage Accounts', () => {
         await expect(page.getByRole('row', { name: new RegExp(mainValue) })).toHaveCount(0);
     });
 
+    test('saves a chosen color and icon, then shows them when editing', async ({ page }) => {
+        const { email, password } = seedUser();
+        const mainValue = `Color ${Date.now()}`;
+
+        await login(page, email, password);
+        await page.goto('/accounts/create');
+
+        await page.getByLabel('Name', { exact: true }).fill(mainValue);
+        await page.getByLabel('Balance', { exact: true }).fill('5000');
+        await page.locator('input[name="color"]').fill('#ff1744');
+        await page.locator('input[name="icon"][value="bank"]').check({ force: true });
+        await page.getByRole('button', { name: 'Save' }).click();
+
+        await expect(page).toHaveURL('/accounts');
+        await page.getByRole('row', { name: new RegExp(mainValue) }).getByRole('link', { name: 'Edit' }).click();
+
+        await expect(page.locator('input[name="color"]')).toHaveValue('#ff1744');
+        await expect(page.locator('input[name="icon"][value="bank"]')).toBeChecked();
+    });
+
     test('redirects a guest to login', async ({ page }) => {
         await page.goto('/accounts');
 

@@ -41,18 +41,11 @@
         <form id="account-appearance-form" novalidate class="space-y-5">
             <fieldset class="space-y-2">
                 <legend class="font-body text-body-sm font-medium text-on-surface">{{ __('accounts.appearance.color') }}</legend>
-                <div class="flex flex-wrap gap-3">
-                    @foreach ($colors as $color)
-                        <label class="cursor-pointer">
-                            <input type="radio" name="color" value="{{ $color }}" class="peer sr-only">
-                            <span
-                                class="block h-9 w-9 rounded-full ring-primary ring-offset-2 peer-checked:ring-2 peer-focus-visible:ring-2"
-                                data-swatch="{{ $color }}"
-                                title="{{ $color }}"
-                            ></span>
-                        </label>
-                    @endforeach
-                </div>
+                <input
+                    type="color"
+                    name="color"
+                    class="h-10 w-14 cursor-pointer rounded-md border border-outline-variant bg-surface p-1"
+                >
             </fieldset>
 
             <fieldset class="space-y-2">

@@ -16,6 +16,37 @@ test.describe('Dashboard', () => {
         await expect(page.getByRole('button', { name: 'Log out' })).toBeVisible();
     });
 
+    test('changes an account card color and icon from the dashboard modal', async ({ page }) => {
+        const { email, password } = seedUser();
+        const accountName = `Card ${Date.now()}`;
+
+        await page.goto('/login');
+        await page.getByLabel('Email address').fill(email);
+        await page.getByLabel('Password', { exact: true }).fill(password);
+        await page.getByRole('button', { name: 'Log in' }).click();
+        await expect(page).toHaveURL('/dashboard');
+
+        await page.goto('/accounts/create');
+        await page.getByLabel('Name', { exact: true }).fill(accountName);
+        await page.getByLabel('Balance', { exact: true }).fill('3000');
+        await page.getByRole('button', { name: 'Save' }).click();
+        await expect(page).toHaveURL('/accounts');
+
+        await page.goto('/dashboard');
+        const card = page.locator('[data-account-card]', { hasText: accountName });
+        await expect(card).toBeVisible();
+
+        await card.getByRole('button', { name: 'Edit' }).click();
+        const modal = page.locator('#account-appearance-modal');
+        await expect(modal).toBeVisible();
+        await modal.locator('input[name="color"]').fill('#2e7d32');
+        await modal.locator('input[name="icon"][value="sprout"]').check({ force: true });
+        await modal.getByRole('button', { name: 'Save' }).click();
+
+        await expect(modal).toBeHidden();
+        await expect(card).toHaveCSS('background-color', 'rgb(46, 125, 50)');
+    });
+
     test('redirects a guest to login', async ({ page }) => {
         await page.goto('/dashboard');
 
