@@ -14,7 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /**
  * @property-read string|null $balance Only present when loaded through the withBalance() scope.
  */
-#[Fillable(['name', 'last_balance'])]
+#[Fillable(['name', 'last_balance', 'color', 'icon'])]
 class Account extends Model
 {
     /** @use HasFactory<AccountFactory> */

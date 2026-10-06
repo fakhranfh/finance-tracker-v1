@@ -11,7 +11,7 @@ test.describe('Dashboard', () => {
         await page.getByRole('button', { name: 'Log in' }).click();
 
         await expect(page).toHaveURL('/dashboard');
-        await expect(page.getByRole('heading', { name: /Welcome back/ })).toBeVisible();
+        await expect(page.getByRole('link', { name: 'Add account' })).toBeVisible();
         await expect(page.getByRole('link', { name: 'Dashboard' })).toBeVisible();
         await expect(page.getByRole('button', { name: 'Log out' })).toBeVisible();
     });

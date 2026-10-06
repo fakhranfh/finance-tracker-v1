@@ -38,6 +38,18 @@ return [
 
     'adjustment_note' => 'Penyesuaian saldo',
 
+    'appearance' => [
+        'title' => 'Ubah warna dan ikon',
+        'color' => 'Warna',
+        'icon' => 'Ikon',
+        'icons' => [
+            'cash' => 'Tunai',
+            'wallet' => 'Dompet',
+            'bank' => 'Bank',
+            'sprout' => 'Tabungan',
+        ],
+    ],
+
     'actions' => [
         'edit' => 'Ubah',
         'delete' => 'Hapus',

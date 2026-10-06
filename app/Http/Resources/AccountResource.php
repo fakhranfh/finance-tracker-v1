@@ -26,6 +26,8 @@ class AccountResource extends JsonResource
             'name' => $account->name,
             'balance' => $account->balance,
             'last_balance' => $account->last_balance,
+            'color' => $account->color,
+            'icon' => $account->icon,
             'created_at' => $account->created_at?->toIso8601String(),
         ];
     }

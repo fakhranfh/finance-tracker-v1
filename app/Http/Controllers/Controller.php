@@ -15,6 +15,17 @@ use OpenApi\Attributes as OA;
 )]
 #[OA\Tag(name: 'Auth', description: 'Authentication endpoints')]
 #[OA\Tag(name: 'Profile', description: 'Authenticated user profile endpoints')]
+#[OA\Tag(name: 'Accounts', description: 'Account endpoints')]
+#[OA\Schema(
+    schema: 'User',
+    properties: [
+        new OA\Property(property: 'id', type: 'integer', example: 1),
+        new OA\Property(property: 'name', type: 'string', example: 'Jane Doe'),
+        new OA\Property(property: 'email', type: 'string', format: 'email', example: 'jane@example.com'),
+        new OA\Property(property: 'timezone', type: 'string', example: 'Asia/Jakarta'),
+        new OA\Property(property: 'created_at', type: 'string', format: 'date-time'),
+    ]
+)]
 abstract class Controller
 {
     //

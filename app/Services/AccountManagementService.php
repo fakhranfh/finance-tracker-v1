@@ -41,6 +41,7 @@ class AccountManagementService
         return $this->accountRepository->create([
             'name' => $data['name'],
             'last_balance' => $data['balance'],
+            ...Arr::only($data, ['color', 'icon']),
         ]);
     }
 
@@ -57,10 +58,11 @@ class AccountManagementService
             return $this->accountRepository->update($account, [
                 'name' => $data['name'],
                 'last_balance' => $data['balance'],
+                ...Arr::only($data, ['color', 'icon']),
             ]);
         }
 
-        $account = $this->accountRepository->update($account, Arr::only($data, ['name']));
+        $account = $this->accountRepository->update($account, Arr::only($data, ['name', 'color', 'icon']));
 
         $difference = round((float) $data['balance'] - (float) $this->accountRepository->find($account->id)->balance, 2);
 

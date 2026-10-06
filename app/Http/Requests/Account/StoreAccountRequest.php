@@ -4,6 +4,7 @@ namespace App\Http\Requests\Account;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreAccountRequest extends FormRequest
 {
@@ -25,6 +26,8 @@ class StoreAccountRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'balance' => ['required', 'numeric', 'min:0'],
+            'color' => ['sometimes', 'string', Rule::in(config('account.colors'))],
+            'icon' => ['sometimes', 'string', Rule::in(array_keys(config('account.icons')))],
         ];
     }
 }

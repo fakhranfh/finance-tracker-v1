@@ -12,6 +12,256 @@
         }
     ],
     "paths": {
+        "/accounts": {
+            "get": {
+                "tags": [
+                    "Accounts"
+                ],
+                "summary": "List accounts",
+                "operationId": "c0129dbc0c959b04b716d57c3910f260",
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "direction",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "asc",
+                                "desc"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 10
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated list of accounts"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Accounts"
+                ],
+                "summary": "Create a account",
+                "operationId": "d4e63cbb03400af35fb0ca85d7bf5321",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Sample name"
+                                    },
+                                    "balance": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 9.99
+                                    },
+                                    "color": {
+                                        "description": "One of the colors in config/account.php",
+                                        "type": "string",
+                                        "example": "#2563EB"
+                                    },
+                                    "icon": {
+                                        "type": "string",
+                                        "example": "wallet",
+                                        "enum": [
+                                            "cash",
+                                            "wallet",
+                                            "bank",
+                                            "sprout"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Account created"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Accounts"
+                ],
+                "summary": "Bulk delete accounts",
+                "operationId": "e9c626ce9e1fcb6d42930418aa7f9a56",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "ids": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "all": {
+                                        "type": "boolean"
+                                    },
+                                    "search": {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "Accounts deleted"
+                    }
+                }
+            }
+        },
+        "/accounts/{id}": {
+            "get": {
+                "tags": [
+                    "Accounts"
+                ],
+                "summary": "Show a account",
+                "operationId": "ec439e2a8ea9b384aea36a334f6856e8",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The account"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Accounts"
+                ],
+                "summary": "Update a account",
+                "operationId": "32841a801de22d57664ebba8fea8eea3",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Sample name"
+                                    },
+                                    "balance": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 9.99
+                                    },
+                                    "color": {
+                                        "description": "One of the colors in config/account.php",
+                                        "type": "string",
+                                        "example": "#2563EB"
+                                    },
+                                    "icon": {
+                                        "type": "string",
+                                        "example": "wallet",
+                                        "enum": [
+                                            "cash",
+                                            "wallet",
+                                            "bank",
+                                            "sprout"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Account updated"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Accounts"
+                ],
+                "summary": "Delete a account",
+                "operationId": "e410236d10ec9d22b604ca341cc3ffc2",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Account deleted"
+                    }
+                }
+            }
+        },
         "/forgot-password": {
             "post": {
                 "tags": [
@@ -326,6 +576,274 @@
                 ]
             }
         },
+        "/records": {
+            "get": {
+                "tags": [
+                    "Records"
+                ],
+                "summary": "List records",
+                "operationId": "c6df4362f0997b9582b3dd9033b145a0",
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "direction",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "asc",
+                                "desc"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 10
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated list of records"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Records"
+                ],
+                "summary": "Create a record",
+                "operationId": "c2a0a7f0e50e32b643ccedc8f8a542db",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "type": {
+                                        "type": "string",
+                                        "example": "expense",
+                                        "enum": [
+                                            "income",
+                                            "expense",
+                                            "transfer"
+                                        ]
+                                    },
+                                    "account_id": {
+                                        "description": "Source account for transfers.",
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "to_account_id": {
+                                        "description": "Destination account; required for transfers, ignored otherwise.",
+                                        "type": "integer",
+                                        "nullable": true
+                                    },
+                                    "amount": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 9.99
+                                    },
+                                    "note": {
+                                        "type": "string",
+                                        "example": "Sample note"
+                                    },
+                                    "recorded_at": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "example": "2026-01-15T10:30:00+07:00"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Record created"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Records"
+                ],
+                "summary": "Bulk delete records",
+                "operationId": "df565581d5efe0241ce8de7d237b5e7c",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "ids": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "all": {
+                                        "type": "boolean"
+                                    },
+                                    "search": {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "Records deleted"
+                    }
+                }
+            }
+        },
+        "/records/{id}": {
+            "get": {
+                "tags": [
+                    "Records"
+                ],
+                "summary": "Show a record",
+                "operationId": "27f7de25c3de698e08de56400389954f",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The record"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Records"
+                ],
+                "summary": "Update a record",
+                "operationId": "a67742d3f4e19492f46b7f6dcb1d6c64",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "type": {
+                                        "type": "string",
+                                        "example": "expense",
+                                        "enum": [
+                                            "income",
+                                            "expense",
+                                            "transfer"
+                                        ]
+                                    },
+                                    "account_id": {
+                                        "description": "Source account for transfers.",
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "to_account_id": {
+                                        "description": "Destination account; required for transfers, ignored otherwise.",
+                                        "type": "integer",
+                                        "nullable": true
+                                    },
+                                    "amount": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 9.99
+                                    },
+                                    "note": {
+                                        "type": "string",
+                                        "example": "Sample note"
+                                    },
+                                    "recorded_at": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "example": "2026-01-15T10:30:00+07:00"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Record updated"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Records"
+                ],
+                "summary": "Delete a record",
+                "operationId": "65ce76ad5f86ceea7fad711c76a41755",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Record deleted"
+                    }
+                }
+            }
+        },
         "/register": {
             "post": {
                 "tags": [
@@ -507,457 +1025,6 @@
                     }
                 }
             }
-        },
-        "/users": {
-            "get": {
-                "tags": [
-                    "Users"
-                ],
-                "summary": "List users (paginated)",
-                "operationId": "aecc39ae181b9df6e8ccbc12f38c958b",
-                "parameters": [
-                    {
-                        "name": "per_page",
-                        "in": "query",
-                        "schema": {
-                            "type": "integer",
-                            "default": 10,
-                            "maximum": 100,
-                            "minimum": 1
-                        }
-                    },
-                    {
-                        "name": "search",
-                        "in": "query",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "sort",
-                        "in": "query",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "direction",
-                        "in": "query",
-                        "schema": {
-                            "type": "string",
-                            "default": "asc",
-                            "enum": [
-                                "asc",
-                                "desc"
-                            ]
-                        }
-                    },
-                    {
-                        "name": "page",
-                        "in": "query",
-                        "schema": {
-                            "type": "integer",
-                            "minimum": 1
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Paginated list of users",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/components/schemas/User"
-                                            }
-                                        },
-                                        "links": {
-                                            "type": "object"
-                                        },
-                                        "meta": {
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthenticated"
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
-            },
-            "post": {
-                "tags": [
-                    "Users"
-                ],
-                "summary": "Create a user",
-                "operationId": "94d8c20db3626adea898cfe66adab929",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "name",
-                                    "email",
-                                    "password",
-                                    "password_confirmation"
-                                ],
-                                "properties": {
-                                    "name": {
-                                        "type": "string",
-                                        "example": "Jane Doe",
-                                        "maxLength": 255
-                                    },
-                                    "email": {
-                                        "type": "string",
-                                        "format": "email",
-                                        "example": "jane@example.com",
-                                        "maxLength": 255
-                                    },
-                                    "password": {
-                                        "type": "string",
-                                        "format": "password",
-                                        "example": "Password123!"
-                                    },
-                                    "password_confirmation": {
-                                        "type": "string",
-                                        "format": "password",
-                                        "example": "Password123!"
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "201": {
-                        "description": "User created",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/components/schemas/User"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthenticated"
-                    },
-                    "422": {
-                        "description": "Validation error"
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
-            },
-            "delete": {
-                "tags": [
-                    "Users"
-                ],
-                "summary": "Bulk delete users",
-                "description": "Delete by `ids`, or set `all` to delete every user matching `search`. The authenticated user is always excluded.",
-                "operationId": "16552597a81512de6f811e853a4d2dd4",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "properties": {
-                                    "ids": {
-                                        "type": "array",
-                                        "items": {
-                                            "type": "integer"
-                                        },
-                                        "example": [
-                                            2,
-                                            3
-                                        ]
-                                    },
-                                    "all": {
-                                        "type": "boolean",
-                                        "example": false
-                                    },
-                                    "search": {
-                                        "type": "string",
-                                        "nullable": true
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "204": {
-                        "description": "Users deleted"
-                    },
-                    "401": {
-                        "description": "Unauthenticated"
-                    },
-                    "422": {
-                        "description": "Validation error"
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
-            }
-        },
-        "/users/{user}": {
-            "get": {
-                "tags": [
-                    "Users"
-                ],
-                "summary": "Show a user",
-                "operationId": "af62281eb1e562040209fb3f5509dfa0",
-                "parameters": [
-                    {
-                        "name": "user",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "User details",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/components/schemas/User"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthenticated"
-                    },
-                    "404": {
-                        "description": "User not found"
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
-            },
-            "put": {
-                "tags": [
-                    "Users"
-                ],
-                "summary": "Update a user",
-                "operationId": "09f767febe8230cd320d7b79ec603053",
-                "parameters": [
-                    {
-                        "name": "user",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "name",
-                                    "email"
-                                ],
-                                "properties": {
-                                    "name": {
-                                        "type": "string",
-                                        "example": "Jane Doe",
-                                        "maxLength": 255
-                                    },
-                                    "email": {
-                                        "type": "string",
-                                        "format": "email",
-                                        "example": "jane@example.com",
-                                        "maxLength": 255
-                                    },
-                                    "password": {
-                                        "description": "Leave empty to keep the current password.",
-                                        "type": "string",
-                                        "format": "password",
-                                        "nullable": true
-                                    },
-                                    "password_confirmation": {
-                                        "type": "string",
-                                        "format": "password",
-                                        "nullable": true
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "User updated",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/components/schemas/User"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthenticated"
-                    },
-                    "404": {
-                        "description": "User not found"
-                    },
-                    "422": {
-                        "description": "Validation error"
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
-            },
-            "delete": {
-                "tags": [
-                    "Users"
-                ],
-                "summary": "Delete a user",
-                "description": "The authenticated user cannot delete themselves.",
-                "operationId": "831bb4a0d2fe3862e30d70ecce6f65d2",
-                "parameters": [
-                    {
-                        "name": "user",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "User deleted"
-                    },
-                    "401": {
-                        "description": "Unauthenticated"
-                    },
-                    "403": {
-                        "description": "Cannot delete yourself"
-                    },
-                    "404": {
-                        "description": "User not found"
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
-            }
-        },
-        "/users/generate": {
-            "post": {
-                "tags": [
-                    "Users"
-                ],
-                "summary": "Generate sample users (local environment only)",
-                "operationId": "3d421fdf7bc6592879f092abd857452f",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "count"
-                                ],
-                                "properties": {
-                                    "count": {
-                                        "type": "integer",
-                                        "example": 5,
-                                        "maximum": 50,
-                                        "minimum": 1
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Generated sample users",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/components/schemas/User"
-                                            }
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthenticated"
-                    },
-                    "404": {
-                        "description": "Not available outside local environment"
-                    },
-                    "422": {
-                        "description": "Validation error"
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
-            }
         }
     },
     "components": {
@@ -965,7 +1032,6 @@
             "User": {
                 "properties": {
                     "id": {
-                        "description": "OpenAPI/Swagger annotations for the User management endpoints.\nSee .ai/rules/api-docs.md.",
                         "type": "integer",
                         "example": 1
                     },
@@ -980,13 +1046,11 @@
                     },
                     "timezone": {
                         "type": "string",
-                        "example": "Asia/Jakarta",
-                        "nullable": true
+                        "example": "Asia/Jakarta"
                     },
                     "created_at": {
                         "type": "string",
-                        "format": "date-time",
-                        "nullable": true
+                        "format": "date-time"
                     }
                 },
                 "type": "object"
@@ -1003,8 +1067,12 @@
             "description": "Authenticated user profile endpoints"
         },
         {
-            "name": "Users",
-            "description": "User management endpoints"
+            "name": "Accounts",
+            "description": "Account endpoints"
+        },
+        {
+            "name": "Records",
+            "description": "Records"
         }
     ]
 }

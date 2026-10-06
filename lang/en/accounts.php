@@ -38,6 +38,18 @@ return [
 
     'adjustment_note' => 'Balance adjustment',
 
+    'appearance' => [
+        'title' => 'Edit color and icon',
+        'color' => 'Color',
+        'icon' => 'Icon',
+        'icons' => [
+            'cash' => 'Cash',
+            'wallet' => 'Wallet',
+            'bank' => 'Bank',
+            'sprout' => 'Savings',
+        ],
+    ],
+
     'actions' => [
         'edit' => 'Edit',
         'delete' => 'Delete',
