@@ -5,6 +5,7 @@ use App\Jobs\RefreshAccountBalanceSnapshot;
 use App\Models\Account;
 use App\Models\Record;
 use App\Repositories\Account\AccountRepositoryInterface;
+use App\Repositories\AccountSummary\AccountSummaryRepositoryInterface;
 use App\Repositories\Record\RecordRepositoryInterface;
 use Illuminate\Support\Facades\DB;
 
@@ -187,4 +188,25 @@ it('reports and fixes drifted last balances with the reconcile command', functio
 
     $this->artisan('accounts:reconcile-balances', ['--fix' => true])->assertSuccessful();
     expect($account->fresh()->last_balance)->toEqual(1100);
+});
+
+it('stores flow totals in the snapshot and serves the all-time summary from it', function () {
+    $from = Account::factory()->create(['last_balance' => 500]);
+    $to = Account::factory()->create(['last_balance' => 0]);
+    Record::factory()->count(3)->create(['account_id' => $from->id, 'type' => RecordType::Income, 'amount' => 100]);
+    Record::factory()->create(['account_id' => $from->id, 'type' => RecordType::Expense, 'amount' => 40]);
+    Record::factory()->create(['account_id' => $from->id, 'to_account_id' => $to->id, 'type' => RecordType::Transfer, 'amount' => 25]);
+
+    $snapshot = snapshotOf($from);
+    // Snapshot taken at the third record, so it covers only the three incomes.
+    expect((float) $snapshot->income)->toEqual(300)
+        ->and((float) $snapshot->expense)->toEqual(0)
+        ->and((float) $snapshot->transfer_out)->toEqual(0)
+        ->and((float) $snapshot->transfer_in)->toEqual(0)
+        ->and($snapshot->record_count)->toBe(3);
+
+    Record::factory()->create(['account_id' => $from->id, 'type' => RecordType::Income, 'amount' => 10]);
+
+    $totals = app(AccountSummaryRepositoryInterface::class)->totalsAll($from->id);
+    expect($totals)->toMatchArray(['income' => 310.0, 'expense' => 40.0, 'transfer_out' => 25.0, 'transfer_in' => 0.0, 'record_count' => 6]);
 });

@@ -3,13 +3,15 @@
 namespace App\Services;
 
 use App\Models\Account;
-use App\Models\Record;
+use App\Repositories\AccountSummary\AccountSummaryRepositoryInterface;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 
 class AccountSummaryService
 {
     public const PRESETS = ['this_month', 'last_month', 'last_30_days', 'this_year', 'all', 'custom'];
+
+    public function __construct(protected AccountSummaryRepositoryInterface $summaries) {}
 
     /**
      * Summarize income, expense and transfers of one account for the range
@@ -85,40 +87,21 @@ class AccountSummaryService
     }
 
     /**
-     * Transfers count as outgoing for the source and incoming for the destination.
+     * The all-time range reads the account snapshot. Bounded ranges filter by
+     * recorded_at, which snapshots (keyed by record ID) cannot answer.
      *
-     * @param  array{start: ?CarbonImmutable, end: ?CarbonImmutable}  $range
+     * @param  array{preset: string, start: ?CarbonImmutable, end: ?CarbonImmutable}  $range
      * @return array{income: float, expense: float, transfer_in: float, transfer_out: float, net: float, record_count: int}
      */
     private function totals(int $accountId, array $range): array
     {
-        $row = Record::query()
-            ->where(fn ($query) => $query->where('account_id', $accountId)->orWhere('to_account_id', $accountId))
-            ->when($range['start'], fn ($query, $start) => $query->where('recorded_at', '>=', $start->utc()))
-            ->when($range['end'], fn ($query, $end) => $query->where('recorded_at', '<=', $end->utc()))
-            ->selectRaw(
-                "coalesce(sum(case when type = 'income' and account_id = ? then amount end), 0) as income,
-                 coalesce(sum(case when type = 'expense' and account_id = ? then amount end), 0) as expense,
-                 coalesce(sum(case when type = 'transfer' and account_id = ? then amount end), 0) as transfer_out,
-                 coalesce(sum(case when type = 'transfer' and to_account_id = ? then amount end), 0) as transfer_in,
-                 count(*) as record_count",
-                [$accountId, $accountId, $accountId, $accountId],
-            )
-            ->toBase()
-            ->first();
-
-        $income = (float) $row->income;
-        $expense = (float) $row->expense;
-        $transferIn = (float) $row->transfer_in;
-        $transferOut = (float) $row->transfer_out;
+        $flows = $range['preset'] === 'all'
+            ? $this->summaries->totalsAll($accountId)
+            : $this->summaries->totalsInRange($accountId, $range['start'], $range['end']);
 
         return [
-            'income' => $income,
-            'expense' => $expense,
-            'transfer_in' => $transferIn,
-            'transfer_out' => $transferOut,
-            'net' => $income - $expense + $transferIn - $transferOut,
-            'record_count' => (int) $row->record_count,
+            ...$flows,
+            'net' => $flows['income'] - $flows['expense'] + $flows['transfer_in'] - $flows['transfer_out'],
         ];
     }
 }

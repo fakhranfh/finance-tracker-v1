@@ -46,6 +46,8 @@ class RefreshAccountBalanceSnapshot implements ShouldBeUniqueUntilProcessing, Sh
             return;
         }
 
-        $balances->storeSnapshot($this->accountId, $lastRecordId, $balance);
+        $totals = $balances->totalsAfterRecords($this->accountId, $base['totals'] ?? null, $baseRecordId, $lastRecordId);
+
+        $balances->storeSnapshot($this->accountId, $lastRecordId, $balance, $totals);
     }
 }

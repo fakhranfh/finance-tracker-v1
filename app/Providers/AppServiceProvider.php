@@ -6,6 +6,8 @@ use App\Repositories\Account\AccountRepository;
 use App\Repositories\Account\AccountRepositoryInterface;
 use App\Repositories\AccountBalance\AccountBalanceRepository;
 use App\Repositories\AccountBalance\AccountBalanceRepositoryInterface;
+use App\Repositories\AccountSummary\AccountSummaryRepository;
+use App\Repositories\AccountSummary\AccountSummaryRepositoryInterface;
 use App\Repositories\Record\RecordRepository;
 use App\Repositories\Record\RecordRepositoryInterface;
 use App\Repositories\User\UserRepository;
@@ -27,6 +29,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(RecordRepositoryInterface::class, RecordRepository::class);
         $this->app->bind(AccountRepositoryInterface::class, AccountRepository::class);
         $this->app->bind(AccountBalanceRepositoryInterface::class, AccountBalanceRepository::class);
+        $this->app->bind(AccountSummaryRepositoryInterface::class, AccountSummaryRepository::class);
         $this->app->bind(UserRepositoryInterface::class, UserRepository::class);
     }
 
