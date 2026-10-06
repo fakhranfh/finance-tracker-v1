@@ -1,6 +1,6 @@
 @extends('layouts.dashboard')
 
-@section('title', __('records.title') . ' - ' . config('app.name', 'Laravel'))
+@section('title', __('records.title'))
 
 @section('content')
     <div class="mb-6 flex flex-wrap items-center justify-between gap-4">

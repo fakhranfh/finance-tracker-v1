@@ -1,6 +1,6 @@
 @extends('layouts.dashboard')
 
-@section('title', __('__slug__.title') . ' - ' . config('app.name', 'Laravel'))
+@section('title', __('__slug__.title'))
 
 @php
     $tableHeaders = [
