@@ -1,12 +1,6 @@
 <div id="account-cards" data-account-cards>
     <x-organisms.account-cards-skeleton id="account-cards-skeleton" />
 
-    <div class="mb-3 hidden justify-end" data-account-cards-toolbar>
-        <x-atoms.button type="button" variant="secondary" data-account-cards-reorder data-done-label="{{ __('accounts.order.done') }}">
-            {{ __('accounts.order.start') }}
-        </x-atoms.button>
-    </div>
-
     <div id="account-cards-list" class="hidden grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5"></div>
 
     <div class="mt-4 hidden justify-center" data-account-cards-more>
@@ -21,20 +15,6 @@
             <div class="min-w-0 flex-1">
                 <p class="truncate font-body text-body-sm font-semibold" data-account-card-name></p>
                 <p class="font-body text-body-sm" data-account-card-balance></p>
-            </div>
-            <div class="hidden shrink-0 items-center gap-1" data-account-card-move>
-                <button type="button" class="cursor-pointer rounded-md p-1.5 hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-40" data-account-card-move-left>
-                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
-                    </svg>
-                    <span class="sr-only">{{ __('accounts.order.move_left') }}</span>
-                </button>
-                <button type="button" class="cursor-pointer rounded-md p-1.5 hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-40" data-account-card-move-right>
-                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
-                    </svg>
-                    <span class="sr-only">{{ __('accounts.order.move_right') }}</span>
-                </button>
             </div>
             <button
                 type="button"

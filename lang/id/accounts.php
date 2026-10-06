@@ -52,9 +52,6 @@ return [
 
     'order' => [
         'start' => 'Atur urutan',
-        'done' => 'Selesai',
-        'move_left' => 'Geser ke kiri',
-        'move_right' => 'Geser ke kanan',
         'move_up' => 'Naikkan',
         'move_down' => 'Turunkan',
         'title' => 'Atur urutan akun',
