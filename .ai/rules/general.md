@@ -20,4 +20,10 @@ API controllers must group all of an entity's REST actions (`index`, `show`, `st
 
 Note: `App\Http\Controllers\Api\Auth\*` predates this rule and stays as-is (one class per auth action, since login/register/logout/etc. aren't CRUD on one entity) — follow the entity-controller shape for new resourceful entities going forward.
 
+## JS placement: shared is for cross-page utilities only; component modules get their own folder
+- `resources/js/shared/` holds only utilities used across pages (e.g. `http.js`, `modal.js`, `loading-state.js`).
+- A module set that serves one component is grouped in a folder named after that component, e.g. `resources/js/shared/table/` (`table.js` plus its `table-*.js` helpers).
+- Modules inside that folder import siblings with `./` and shared utilities with `../`.
+- Page folders (`resources/js/<feature>/`) keep their own page scripts and import the component from its folder, e.g. `../shared/table/table.js`.
+
 This is enforced by a Claude Code hook (`.claude/hooks/validate-single-controller-per-entity.php`, registered in `.claude/settings.json` as a `PostToolUse` hook on `Write` of `app/Http/Controllers/Api/**/*.php`), which blocks creating a new invokable (`__invoke`-only) controller inside a subdirectory of `app/Http/Controllers/Api/` (e.g. `app/Http/Controllers/Api/Product/CreateProductController.php`).
