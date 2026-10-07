@@ -15,6 +15,7 @@ class RecordManagementService
         protected AccountLastBalanceService $lastBalance,
         protected AccountBalanceSnapshotService $snapshots,
         protected AccountMonthlyTotalsService $monthlyTotals,
+        protected AccountYearlyTotalsService $yearlyTotals,
     ) {}
 
     /**
@@ -110,7 +111,7 @@ class RecordManagementService
     }
 
     /**
-     * Bring balances, snapshots and monthly totals in line with records removed in bulk.
+     * Bring balances, snapshots and monthly and yearly totals in line with records removed in bulk.
      *
      * @param  array{account_ids: array<int, int|null>, first_id: ?int, effects: Collection<int, \stdClass>}  $deletion
      */
@@ -125,5 +126,6 @@ class RecordManagementService
         }
 
         $this->monthlyTotals->refresh($deletion['account_ids']);
+        $this->yearlyTotals->refresh($deletion['account_ids']);
     }
 }

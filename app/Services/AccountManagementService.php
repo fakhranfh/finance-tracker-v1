@@ -19,6 +19,7 @@ class AccountManagementService
         protected AccountLastBalanceService $lastBalance,
         protected AccountBalanceSnapshotService $snapshots,
         protected AccountMonthlyTotalsService $monthlyTotals,
+        protected AccountYearlyTotalsService $yearlyTotals,
     ) {}
 
     /**
@@ -135,12 +136,14 @@ class AccountManagementService
     }
 
     /**
-     * Snapshots of an account go stale when its balance is set directly.
+     * Snapshots and the balances in the monthly and yearly totals go stale when an account's balance is set directly.
      */
     private function refreshSnapshotIfBalanceChanged(Account $account): Account
     {
         if ($account->wasChanged('last_balance')) {
             $this->snapshots->invalidate([$account->id]);
+            $this->monthlyTotals->refresh([$account->id]);
+            $this->yearlyTotals->refresh([$account->id]);
         }
 
         return $account;
@@ -164,5 +167,6 @@ class AccountManagementService
 
         $this->snapshots->invalidate($deletion['counterparts']);
         $this->monthlyTotals->refresh($deletion['counterparts']);
+        $this->yearlyTotals->refresh($deletion['counterparts']);
     }
 }

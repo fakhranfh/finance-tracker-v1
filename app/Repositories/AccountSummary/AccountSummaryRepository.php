@@ -92,9 +92,30 @@ class AccountSummaryRepository implements AccountSummaryRepositoryInterface
             return $this->recordFlows($accountId, $start, $end, true);
         }
 
+        // Whole years are [$yearFrom, $yearTo): inside the whole months, so they come from the yearly totals.
+        $yearFrom = $first->month === 1 ? $first : $first->startOfYear()->addYear();
+        $yearTo = $next->startOfYear();
+        $lastMonth = $next->subMonthNoOverflow();
+
+        if ($yearFrom->lessThan($yearTo)) {
+            $parts = [$this->yearFlows($accountId, $yearFrom->year, $yearTo->year - 1)];
+
+            if ($first->lessThan($yearFrom)) {
+                $parts[] = $this->bucketFlows($accountId, $first->toDateString(), $yearFrom->subMonthNoOverflow()->toDateString());
+            }
+
+            if ($yearTo->lessThanOrEqualTo($lastMonth)) {
+                $parts[] = $this->bucketFlows($accountId, $yearTo->toDateString(), $lastMonth->toDateString());
+            }
+
+            $months = $this->sum(...$parts);
+        } else {
+            $months = $this->bucketFlows($accountId, $first->toDateString(), $lastMonth->toDateString());
+        }
+
         return $this->sum(
             $this->recordFlows($accountId, $start, $first, false),
-            $this->bucketFlows($accountId, $first->toDateString(), $next->subMonthNoOverflow()->toDateString()),
+            $months,
             $this->recordFlows($accountId, $next, $end, true),
         );
     }
@@ -180,6 +201,24 @@ class AccountSummaryRepository implements AccountSummaryRepositoryInterface
             ->where('account_id', $accountId)
             ->when($fromMonth, fn ($query, $from) => $query->where('month', '>=', $from))
             ->when($toMonth, fn ($query, $to) => $query->where('month', '<=', $to))
+            ->selectRaw(
+                'coalesce(sum(income), 0) as income, coalesce(sum(expense), 0) as expense,
+                 coalesce(sum(transfer_in), 0) as transfer_in, coalesce(sum(transfer_out), 0) as transfer_out,
+                 coalesce(sum(record_count), 0) as record_count',
+            )
+            ->first();
+
+        return $this->flows($row);
+    }
+
+    /**
+     * Flows of the yearly totals whose year falls within [$fromYear, $toYear].
+     */
+    private function yearFlows(int $accountId, int $fromYear, int $toYear): array
+    {
+        $row = DB::table('account_yearly_totals')
+            ->where('account_id', $accountId)
+            ->whereBetween('year', [$fromYear, $toYear])
             ->selectRaw(
                 'coalesce(sum(income), 0) as income, coalesce(sum(expense), 0) as expense,
                  coalesce(sum(transfer_in), 0) as transfer_in, coalesce(sum(transfer_out), 0) as transfer_out,
