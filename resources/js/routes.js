@@ -34,6 +34,7 @@ export const routes = {
         reorder: endpoint('/accounts/order'),
         summary: (id) => endpoint(`/accounts/${id}/summary`),
         generateRecords: (id) => endpoint(`/accounts/${id}/records/generate`),
+        deleteRecords: (id) => endpoint(`/accounts/${id}/records`),
     },
     records: {
         index: endpoint('/records'),

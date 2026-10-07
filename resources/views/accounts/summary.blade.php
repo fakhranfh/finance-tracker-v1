@@ -94,25 +94,56 @@
         <h2 class="mb-3 mt-8 font-heading text-title-md font-bold text-on-surface">{{ __('accounts.summary.records_title') }}</h2>
 
         @if (app()->isLocal())
-            <div class="mb-4 flex items-center gap-3">
+            <div class="mb-4 flex flex-wrap items-center gap-3">
                 <x-atoms.input
                     type="number"
                     name="generate-count"
                     id="account-generate-count"
                     value="10"
                     min="1"
-                    max="50"
+                    max="1000"
                     class="!w-24"
-                    aria-label="{{ __('accounts.actions.generate_count') }}"
-                    title="{{ __('accounts.actions.generate_count') }}"
+                    aria-label="{{ __('records.actions.generate_count') }}"
+                    title="{{ __('records.actions.generate_count') }}"
+                />
+                <x-atoms.select
+                    name="generate-type"
+                    id="account-generate-type"
+                    class="!w-40"
+                    aria-label="{{ __('records.actions.generate_type') }}"
+                    title="{{ __('records.actions.generate_type') }}"
+                >
+                    <option value="">{{ __('records.actions.generate_type_random') }}</option>
+                    @foreach ($typeLabels as $value => $label)
+                        <option value="{{ $value }}">{{ $label }}</option>
+                    @endforeach
+                </x-atoms.select>
+                <x-atoms.input
+                    type="number"
+                    name="generate-amount"
+                    id="account-generate-amount"
+                    min="1"
+                    step="any"
+                    placeholder="{{ __('records.actions.generate_amount_random') }}"
+                    class="!w-40"
+                    aria-label="{{ __('records.actions.generate_amount') }}"
+                    title="{{ __('records.actions.generate_amount') }}"
                 />
                 <x-atoms.button
                     type="button"
                     id="account-generate-records"
                     variant="secondary"
-                    data-success-message="{{ __('records.flash.generated') }}"
+                    data-success-message="{{ __('records.flash.generate_queued') }}"
                 >
                     {{ __('records.actions.generate') }}
+                </x-atoms.button>
+                <x-atoms.button
+                    type="button"
+                    id="account-delete-records"
+                    variant="secondary"
+                    data-confirm="{{ __('records.actions.delete_all_confirm') }}"
+                >
+                    {{ __('records.actions.delete_all') }}
                 </x-atoms.button>
             </div>
         @endif

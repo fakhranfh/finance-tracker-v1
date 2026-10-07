@@ -73,11 +73,50 @@ it('generates exactly the requested number of records dated inside the period', 
         'date_to' => $to->toDateString(),
     ]);
 
-    $response->assertOk();
-    expect($response->json('data'))->toHaveCount(7);
+    $response->assertAccepted();
     expect(Record::query()->where('account_id', $account->id)->count())->toBe(7);
     expect(Record::query()->where('recorded_at', '<', $from->utc())->count())->toBe(0);
     expect(Record::query()->where('recorded_at', '>', $to->endOfDay()->utc())->count())->toBe(0);
+});
+
+it('generates records of the chosen type and amount, up to 1000', function () {
+    $this->withoutMiddleware(PreventRequestForgery::class);
+    app()->detectEnvironment(fn () => 'local');
+
+    $actor = User::factory()->create(['timezone' => 'UTC']);
+    $account = Account::factory()->create(['last_balance' => 0]);
+
+    $this->actingAs($actor)->postJson("/api/accounts/{$account->id}/records/generate", [
+        'count' => 5,
+        'type' => 'income',
+        'amount' => 25000,
+    ])->assertAccepted();
+
+    $records = Record::query()->where('account_id', $account->id)->get();
+    expect($records)->toHaveCount(5);
+    expect($records->every(fn ($r) => $r->type->value === 'income' && (float) $r->amount === 25000.0))->toBeTrue();
+
+    $this->actingAs($actor)->postJson("/api/accounts/{$account->id}/records/generate", ['count' => 1001])
+        ->assertJsonValidationErrors('count');
+});
+
+it('deletes all records of an account in the local environment only', function () {
+    $this->withoutMiddleware(PreventRequestForgery::class);
+
+    $actor = User::factory()->create();
+    $account = Account::factory()->create(['last_balance' => 0]);
+    $other = Account::factory()->create(['last_balance' => 0]);
+    Record::factory()->count(3)->create(['account_id' => $account->id]);
+    Record::factory()->count(2)->create(['account_id' => $other->id]);
+
+    app()->detectEnvironment(fn () => 'production');
+    $this->actingAs($actor)->deleteJson("/api/accounts/{$account->id}/records")->assertNotFound();
+    expect(Record::query()->count())->toBe(5);
+
+    app()->detectEnvironment(fn () => 'local');
+    $this->actingAs($actor)->deleteJson("/api/accounts/{$account->id}/records")->assertNoContent();
+    expect(Record::query()->where('account_id', $account->id)->count())->toBe(0);
+    expect(Record::query()->where('account_id', $other->id)->count())->toBe(2);
 });
 
 it('rejects generating account records outside the local environment', function () {

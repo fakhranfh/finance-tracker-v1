@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AccountController;
+use App\Http\Controllers\Api\AccountRecordDeleteController;
 use App\Http\Controllers\Api\AccountRecordGenerateController;
 use App\Http\Controllers\Api\AccountSummaryController;
 use App\Http\Controllers\Api\Auth\DevAutoLoginController;
@@ -46,6 +47,9 @@ Route::middleware('web')->name('api.')->group(function (): void {
         Route::post('/accounts/{account}/records/generate', AccountRecordGenerateController::class)
             ->middleware(EnsureLocalEnvironment::class)
             ->name('accounts.records.generate');
+        Route::delete('/accounts/{account}/records', AccountRecordDeleteController::class)
+            ->middleware(EnsureLocalEnvironment::class)
+            ->name('accounts.records.destroy');
         Route::post('/accounts/generate', [AccountController::class, 'generate'])
             ->middleware(EnsureLocalEnvironment::class)
             ->name('accounts.generate');

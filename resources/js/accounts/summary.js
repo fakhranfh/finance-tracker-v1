@@ -1,7 +1,7 @@
 import { closeModal, openModal } from '../shared/modal.js';
-import { hideSkeleton, showSkeleton } from '../shared/loading-state.js';
+import { hideSkeleton, setButtonLoading, showSkeleton } from '../shared/loading-state.js';
 import { createTable } from '../shared/table/table.js';
-import { get } from '../shared/http.js';
+import { del, get } from '../shared/http.js';
 import { formatDateTime } from '../shared/datetime.js';
 import { formatMoney } from '../shared/money.js';
 import { routes } from '../routes.js';
@@ -60,7 +60,12 @@ const recordsTable = createTable({
     // Generated records change the totals too, so refresh the summary.
     onDataChanged: () => load(),
     // Records are dated inside the period on screen, so they show up in its totals and list.
-    generatePayload: () => ({ date_from: period.date_from, date_to: period.date_to }),
+    generatePayload: () => ({
+        date_from: period.date_from,
+        date_to: period.date_to,
+        type: document.getElementById('account-generate-type').value || null,
+        amount: document.getElementById('account-generate-amount').value || null,
+    }),
     routes: {
         index: routes.records.index,
         generate: routes.accounts.generateRecords(accountId),
@@ -134,6 +139,25 @@ form.addEventListener('change', () => {
     }
 
     load();
+});
+
+// Dev-only: the button exists only in the local environment.
+const deleteButton = document.getElementById('account-delete-records');
+
+deleteButton?.addEventListener('click', async () => {
+    if (!window.confirm(deleteButton.dataset.confirm)) {
+        return;
+    }
+
+    setButtonLoading(deleteButton, true);
+
+    const { ok } = await del(routes.accounts.deleteRecords(accountId));
+
+    setButtonLoading(deleteButton, false);
+
+    if (ok) {
+        await load();
+    }
 });
 
 document.querySelector(`[data-modal-open="${MODAL_ID}"]`).addEventListener('click', () => openModal(MODAL_ID));

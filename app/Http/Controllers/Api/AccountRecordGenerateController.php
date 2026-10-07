@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\RecordType;
 use App\Http\Controllers\Controller;
-use App\Http\Resources\RecordResource;
 use App\Models\Account;
 use App\Services\AccountSampleRecordService;
 use Carbon\CarbonImmutable;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Validation\Rule;
 
 class AccountRecordGenerateController extends Controller
 {
@@ -16,10 +17,12 @@ class AccountRecordGenerateController extends Controller
         protected AccountSampleRecordService $accountSampleRecordService,
     ) {}
 
-    public function __invoke(Request $request, Account $account): AnonymousResourceCollection
+    public function __invoke(Request $request, Account $account): JsonResponse
     {
         $validated = $request->validate([
-            'count' => ['required', 'integer', 'min:1', 'max:50'],
+            'count' => ['required', 'integer', 'min:1', 'max:1000'],
+            'type' => ['sometimes', 'nullable', Rule::enum(RecordType::class)],
+            'amount' => ['sometimes', 'nullable', 'numeric', 'min:1', 'max:999999999999'],
             'date_from' => ['sometimes', 'nullable', 'date_format:Y-m-d'],
             'date_to' => ['sometimes', 'nullable', 'date_format:Y-m-d', 'after_or_equal:date_from'],
         ]);
@@ -27,9 +30,16 @@ class AccountRecordGenerateController extends Controller
         $timezone = $request->user()?->timezone ?: config('app.timezone', 'UTC');
         [$start, $end] = $this->window($validated, $timezone);
 
-        return RecordResource::collection(
-            $this->accountSampleRecordService->generate($account, $validated['count'], $start, $end),
+        $this->accountSampleRecordService->queue(
+            $account,
+            $validated['count'],
+            $start,
+            $end,
+            isset($validated['type']) ? RecordType::from($validated['type']) : null,
+            $validated['amount'] ?? null,
         );
+
+        return response()->json(['message' => __('records.flash.generate_queued')], 202);
     }
 
     /**
