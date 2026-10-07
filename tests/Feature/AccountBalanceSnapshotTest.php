@@ -6,6 +6,7 @@ use App\Models\Account;
 use App\Models\Record;
 use App\Repositories\Account\AccountRepositoryInterface;
 use App\Services\AccountManagementService;
+use App\Services\AccountSummaryService;
 use App\Services\RecordManagementService;
 use Illuminate\Support\Facades\DB;
 
@@ -19,15 +20,11 @@ function snapshotOf(Account $account): ?object
     return DB::table('account_balance_snapshots')->where('account_id', $account->id)->orderByDesc('last_record_id')->first();
 }
 
-beforeEach(function () {
-    config(['balance.snapshot_threshold' => 3]);
-});
-
-it('snapshots automatically once enough records pile up', function () {
+it('adds a snapshot for every record', function () {
     $account = Account::factory()->create(['last_balance' => 1000]);
 
     Record::factory()->count(2)->create(['account_id' => $account->id, 'type' => RecordType::Income, 'amount' => 100]);
-    expect(snapshotOf($account))->toBeNull();
+    expect(DB::table('account_balance_snapshots')->where('account_id', $account->id)->count())->toBe(2);
 
     $last = Record::factory()->create(['account_id' => $account->id, 'type' => RecordType::Income, 'amount' => 100]);
 
@@ -36,12 +33,12 @@ it('snapshots automatically once enough records pile up', function () {
         ->and(balanceOf($account))->toEqual(1300);
 });
 
-it('adds records newer than the snapshot on top of it', function () {
+it('snapshots the balance after the newest record', function () {
     $account = Account::factory()->create(['last_balance' => 1000]);
     Record::factory()->count(3)->create(['account_id' => $account->id, 'type' => RecordType::Income, 'amount' => 100]);
     Record::factory()->create(['account_id' => $account->id, 'type' => RecordType::Expense, 'amount' => 50]);
 
-    expect(snapshotOf($account)->balance)->toEqual(1300)
+    expect(snapshotOf($account)->balance)->toEqual(1250)
         ->and(balanceOf($account))->toEqual(1250);
 });
 
@@ -71,17 +68,15 @@ it('rebuilds the snapshot when an old record changes or is deleted', function ()
         ->and(balanceOf($account))->toEqual(500);
 });
 
-it('keeps the snapshot when a record newer than it changes', function () {
+it('replaces the newest snapshot when the newest record changes', function () {
     $account = Account::factory()->create(['last_balance' => 0]);
     Record::factory()->count(3)->create(['account_id' => $account->id, 'type' => RecordType::Income, 'amount' => 100]);
     $newer = Record::factory()->create(['account_id' => $account->id, 'type' => RecordType::Income, 'amount' => 100]);
-    $before = snapshotOf($account);
 
-    Queue::fake([RefreshAccountBalanceSnapshot::class]);
     $newer->update(['amount' => 250]);
 
-    Queue::assertNotPushed(RefreshAccountBalanceSnapshot::class);
-    expect(snapshotOf($account))->toEqual($before)
+    expect(snapshotOf($account)->last_record_id)->toBe($newer->id)
+        ->and(snapshotOf($account)->balance)->toEqual(550)
         ->and(balanceOf($account))->toEqual(550);
 });
 
@@ -128,9 +123,9 @@ it('appends a new snapshot instead of overwriting the previous one', function ()
 
     $snapshots = DB::table('account_balance_snapshots')->where('account_id', $account->id)->orderBy('last_record_id')->get();
 
-    expect($snapshots)->toHaveCount(2)
-        ->and($snapshots[0]->balance)->toEqual(1300)
-        ->and($snapshots[1]->balance)->toEqual(1270)
+    expect($snapshots)->toHaveCount(6)
+        ->and($snapshots[2]->balance)->toEqual(1300)
+        ->and($snapshots[5]->balance)->toEqual(1270)
         ->and(balanceOf($account))->toEqual(1270);
 });
 
@@ -148,16 +143,14 @@ it('keeps accounts.last_balance in step with the newest snapshot', function () {
     expect($account->fresh()->last_balance)->toEqual(1000);
 });
 
-it('updates last_balance right away, before any snapshot exists', function () {
-    config(['balance.snapshot_threshold' => 100]);
+it('updates last_balance from the totals as records change', function () {
     $from = Account::factory()->create(['last_balance' => 500]);
     $to = Account::factory()->create(['last_balance' => 0]);
 
     $income = Record::factory()->create(['account_id' => $from->id, 'type' => RecordType::Income, 'amount' => 100]);
     Record::factory()->create(['account_id' => $from->id, 'to_account_id' => $to->id, 'type' => RecordType::Transfer, 'amount' => 50]);
 
-    expect(snapshotOf($from))->toBeNull()
-        ->and($from->fresh()->last_balance)->toEqual(550)
+    expect($from->fresh()->last_balance)->toEqual(550)
         ->and($to->fresh()->last_balance)->toEqual(50);
 
     $income->delete();
@@ -208,4 +201,20 @@ it('stores cumulative income, expense and transfers in and out with each snapsho
         ->and((float) $snapshot->transfer_out)->toEqual(50.0)
         ->and((float) $snapshot->net)->toEqual(140.0)
         ->and((float) $snapshot->balance)->toEqual(1140.0);
+});
+
+it('fills the snapshot and totals from the records when the all-time summary finds nothing stored', function () {
+    $account = Account::factory()->create(['last_balance' => 1000]);
+    Record::factory()->count(2)->create(['account_id' => $account->id, 'type' => RecordType::Income, 'amount' => 100]);
+    DB::table('account_balance_snapshots')->delete();
+    DB::table('account_monthly_totals')->delete();
+    DB::table('account_yearly_totals')->delete();
+
+    $totals = app(AccountSummaryService::class)->allTime($account->id);
+
+    expect($totals['income'])->toEqual(200.0)
+        ->and($totals['record_count'])->toBe(2)
+        ->and(snapshotOf($account)->balance)->toEqual(1200)
+        ->and(DB::table('account_monthly_totals')->where('account_id', $account->id)->count())->toBe(1)
+        ->and($account->fresh()->last_balance)->toEqual(1200);
 });

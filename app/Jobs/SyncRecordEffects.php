@@ -2,17 +2,18 @@
 
 namespace App\Jobs;
 
-use App\Services\AccountBalanceSnapshotService;
-use App\Services\AccountLastBalanceService;
+use App\Repositories\AccountBalance\AccountBalanceRepositoryInterface;
 use App\Services\AccountMonthlyTotalsService;
+use App\Services\AccountSummaryService;
 use App\Services\AccountYearlyTotalsService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 
 /**
- * Apply the side effects of a record change in the background: last balance,
- * snapshots, monthly and yearly totals. Steps run in this order because the
- * snapshot reads last_balance when no snapshot exists yet.
+ * Apply the side effects of a record change in the background: monthly and
+ * yearly totals, last balance and a new balance snapshot. The opening balance
+ * is read before the totals are rebuilt, because it is last_balance minus the
+ * net of the totals as they were before this change.
  */
 class SyncRecordEffects implements ShouldQueue
 {
@@ -20,40 +21,61 @@ class SyncRecordEffects implements ShouldQueue
 
     /**
      * @param  array<int, int|null>  $accountIds
-     * @param  array<int, array{type: mixed, account_id: ?int, to_account_id: ?int, amount: string|float, sign: int}>  $balanceChanges
      */
     public function __construct(
         public array $accountIds,
-        public array $balanceChanges = [],
         public ?int $invalidateFromRecordId = null,
-        public bool $refreshSnapshots = false,
+        public ?int $createdRecordId = null,
+        public bool $backfill = false,
     ) {}
 
     public function handle(
-        AccountLastBalanceService $lastBalance,
-        AccountBalanceSnapshotService $snapshots,
+        AccountBalanceRepositoryInterface $balances,
+        AccountSummaryService $summaries,
         AccountMonthlyTotalsService $monthlyTotals,
         AccountYearlyTotalsService $yearlyTotals,
     ): void {
-        foreach ($this->balanceChanges as $change) {
-            $lastBalance->apply(
-                $change['type'],
-                $change['account_id'],
-                $change['to_account_id'],
-                $change['amount'],
-                $change['sign'],
-            );
+        $ids = array_values(array_unique(array_filter($this->accountIds)));
+
+        $openings = [];
+        foreach ($this->backfill ? [] : $ids as $id) {
+            $openings[$id] = round((float) $balances->lastBalance($id) - $summaries->allTime($id, false)['net'], 2);
         }
+
+        $monthlyTotals->refresh($ids, $openings);
+        $yearlyTotals->refresh($ids);
 
         if ($this->invalidateFromRecordId !== null) {
-            $snapshots->invalidate($this->accountIds, $this->invalidateFromRecordId);
+            $balances->deleteSnapshots($ids, $this->invalidateFromRecordId);
         }
 
-        if ($this->refreshSnapshots) {
-            $snapshots->refreshIfNeeded($this->accountIds);
-        }
+        foreach ($ids as $id) {
+            $totals = $summaries->allTime($id, false);
+            // A backfill changes no record, so last_balance already includes all of them.
+            $opening = $openings[$id] ??= round((float) $balances->lastBalance($id) - $totals['net'], 2);
+            $balance = number_format($opening + $totals['net'], 2, '.', '');
 
-        $monthlyTotals->refresh($this->accountIds);
-        $yearlyTotals->refresh($this->accountIds);
+            $balances->setLastBalance($id, $balance);
+
+            if ($this->createdRecordId !== null) {
+                // One snapshot per new record, even when several arrive before this job runs.
+                $base = $balances->latestSnapshot($id, $this->createdRecordId);
+                $flows = $balances->flowsAfterRecords(
+                    $id,
+                    $base['flows'] ?? ['income' => 0, 'expense' => 0, 'transfer_in' => 0, 'transfer_out' => 0, 'net' => 0, 'record_count' => 0],
+                    $base['last_record_id'] ?? 0,
+                    $this->createdRecordId,
+                );
+                $balances->storeSnapshot($id, $this->createdRecordId, number_format($opening + (float) $flows['net'], 2, '.', ''), $flows);
+
+                continue;
+            }
+
+            $lastRecordId = $balances->latestRecordId($id);
+
+            if ($lastRecordId !== null) {
+                $balances->storeSnapshot($id, $lastRecordId, $balance, $totals);
+            }
+        }
     }
 }

@@ -14,6 +14,29 @@ interface AccountSummaryRepositoryInterface
     public function totalsAll(int $accountId): array;
 
     /**
+     * Flow totals of the account over all its records: its newest balance snapshot plus
+     * the records after it. Null when the account has no snapshot.
+     *
+     * @return array{income: float, expense: float, transfer_in: float, transfer_out: float, record_count: int}|null
+     */
+    public function totalsAllFromSnapshot(int $accountId): ?array;
+
+    /**
+     * Flow totals of the account over all its records, from its yearly totals or else its
+     * monthly totals. Null when it has neither.
+     *
+     * @return array{income: float, expense: float, transfer_in: float, transfer_out: float, record_count: int}|null
+     */
+    public function totalsAllFromTotals(int $accountId): ?array;
+
+    /**
+     * Flow totals of the account over all its records, summed from the records themselves.
+     *
+     * @return array{income: float, expense: float, transfer_in: float, transfer_out: float, record_count: int}
+     */
+    public function totalsAllFromRecords(int $accountId): array;
+
+    /**
      * Flow totals of the account per UTC year, from its yearly totals. Keys are years, oldest first.
      *
      * @return array<int, array{income: float, expense: float, transfer_in: float, transfer_out: float, record_count: int, net: float, balance: float}>
@@ -41,6 +64,7 @@ interface AccountSummaryRepositoryInterface
      * Recompute the monthly totals of the given accounts from their records.
      *
      * @param  array<int, int>  $accountIds
+     * @param  array<int, float>  $openings  Opening balance per account ID; derived from last_balance when missing.
      */
-    public function rebuild(array $accountIds): void;
+    public function rebuild(array $accountIds, array $openings = []): void;
 }

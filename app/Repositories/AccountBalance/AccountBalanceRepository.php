@@ -85,10 +85,11 @@ class AccountBalanceRepository implements AccountBalanceRepositoryInterface
             ->max('id');
     }
 
-    public function latestSnapshot(int $accountId): ?array
+    public function latestSnapshot(int $accountId, ?int $beforeRecordId = null): ?array
     {
         $snapshot = DB::table('account_balance_snapshots')
             ->where('account_id', $accountId)
+            ->when($beforeRecordId !== null, fn ($q) => $q->where('last_record_id', '<', $beforeRecordId))
             ->orderByDesc('last_record_id')
             ->first();
 
@@ -105,6 +106,7 @@ class AccountBalanceRepository implements AccountBalanceRepositoryInterface
                 'transfer_in' => $snapshot->transfer_in,
                 'transfer_out' => $snapshot->transfer_out,
                 'net' => $snapshot->net,
+                'record_count' => $snapshot->record_count,
             ],
         ];
     }
@@ -112,8 +114,8 @@ class AccountBalanceRepository implements AccountBalanceRepositoryInterface
     /**
      * Flow totals of the start totals plus the records in (afterRecordId, uptoRecordId].
      *
-     * @param  array{income: string|float, expense: string|float, transfer_in: string|float, transfer_out: string|float, net: string|float}  $start
-     * @return array{income: string, expense: string, transfer_in: string, transfer_out: string, net: string}
+     * @param  array{income: string|float, expense: string|float, transfer_in: string|float, transfer_out: string|float, net: string|float, record_count?: int}  $start
+     * @return array{income: string, expense: string, transfer_in: string, transfer_out: string, net: string, record_count: int}
      */
     public function flowsAfterRecords(int $accountId, array $start, int $afterRecordId, int $uptoRecordId): array
     {
@@ -133,7 +135,8 @@ class AccountBalanceRepository implements AccountBalanceRepositoryInterface
                     when type = 'expense' and account_id = ? then -amount
                     when type = 'transfer' and to_account_id = ? then amount
                     when type = 'transfer' and account_id = ? then -amount
-                end), 0) as net
+                end), 0) as net,
+                cast(? as bigint) + count(*) as record_count
             from records
             where id > ? and id <= ? and (account_id = ? or to_account_id = ?)
             SQL, [
@@ -142,6 +145,7 @@ class AccountBalanceRepository implements AccountBalanceRepositoryInterface
             $start['transfer_in'], $accountId,
             $start['transfer_out'], $accountId,
             $start['net'], $accountId, $accountId, $accountId, $accountId,
+            $start['record_count'] ?? 0,
             $afterRecordId, $uptoRecordId, $accountId, $accountId,
         ]);
 
@@ -151,6 +155,7 @@ class AccountBalanceRepository implements AccountBalanceRepositoryInterface
             'transfer_in' => $row->transfer_in,
             'transfer_out' => $row->transfer_out,
             'net' => $row->net,
+            'record_count' => (int) $row->record_count,
         ];
     }
 
@@ -181,6 +186,7 @@ class AccountBalanceRepository implements AccountBalanceRepositoryInterface
             'transfer_in' => $flows['transfer_in'],
             'transfer_out' => $flows['transfer_out'],
             'net' => $flows['net'],
+            'record_count' => $flows['record_count'],
             'taken_at' => now(),
         ]);
     }

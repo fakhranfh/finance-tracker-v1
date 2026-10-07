@@ -12,13 +12,14 @@ class AccountMonthlyTotalsService
      * Recompute the monthly totals of the given accounts, ignoring null IDs.
      *
      * @param  array<int, int|null>  $accountIds
+     * @param  array<int, float>  $openings  Opening balance per account ID, when already known.
      */
-    public function refresh(array $accountIds): void
+    public function refresh(array $accountIds, array $openings = []): void
     {
         $ids = array_values(array_unique(array_filter($accountIds)));
 
         if ($ids !== []) {
-            $this->summaries->rebuild($ids);
+            $this->summaries->rebuild($ids, $openings);
         }
     }
 }

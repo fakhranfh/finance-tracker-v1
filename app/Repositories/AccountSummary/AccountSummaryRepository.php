@@ -14,6 +14,68 @@ class AccountSummaryRepository implements AccountSummaryRepositoryInterface
         return $this->bucketFlows($accountId, null, null);
     }
 
+    public function totalsAllFromSnapshot(int $accountId): ?array
+    {
+        $snapshot = DB::table('account_balance_snapshots')
+            ->where('account_id', $accountId)
+            ->orderByDesc('last_record_id')
+            ->first();
+
+        if (! $snapshot) {
+            return null;
+        }
+
+        $tail = $this->recordFlowsAfter($accountId, $snapshot->last_record_id);
+
+        return $this->sum($this->flows($snapshot), $tail);
+    }
+
+    public function totalsAllFromTotals(int $accountId): ?array
+    {
+        foreach (['account_yearly_totals', 'account_monthly_totals'] as $table) {
+            $row = DB::table($table)
+                ->where('account_id', $accountId)
+                ->selectRaw(
+                    'count(*) as row_count, coalesce(sum(income), 0) as income, coalesce(sum(expense), 0) as expense,
+                     coalesce(sum(transfer_in), 0) as transfer_in, coalesce(sum(transfer_out), 0) as transfer_out,
+                     coalesce(sum(record_count), 0) as record_count',
+                )
+                ->first();
+
+            if ($row->row_count > 0) {
+                return $this->flows($row);
+            }
+        }
+
+        return null;
+    }
+
+    public function totalsAllFromRecords(int $accountId): array
+    {
+        return $this->recordFlowsAfter($accountId, 0);
+    }
+
+    /**
+     * Flows of the records with an ID above $afterId.
+     */
+    private function recordFlowsAfter(int $accountId, int $afterId): array
+    {
+        $row = DB::table('records')
+            ->where(fn ($query) => $query->where('account_id', $accountId)->orWhere('to_account_id', $accountId))
+            ->where('id', '>', $afterId)
+            ->selectRaw(
+                "coalesce(sum(case when type = 'income' and account_id = ? then amount end), 0) as income,
+                 coalesce(sum(case when type = 'expense' and account_id = ? then amount end), 0) as expense,
+                 coalesce(sum(case when type = 'transfer' and account_id = ? then amount end), 0) as transfer_out,
+                 coalesce(sum(case when type = 'transfer' and to_account_id = ? then amount end), 0) as transfer_in,
+                 count(*) as record_count",
+                [$accountId, $accountId, $accountId, $accountId],
+            )
+            ->first();
+
+        return $this->flows($row);
+    }
+
     public function totalsByYear(int $accountId): array
     {
         $years = [];
@@ -123,7 +185,7 @@ class AccountSummaryRepository implements AccountSummaryRepositoryInterface
     /**
      * Transfers count as outgoing for the source and incoming for the destination.
      */
-    public function rebuild(array $accountIds): void
+    public function rebuild(array $accountIds, array $openings = []): void
     {
         foreach (array_unique($accountIds) as $accountId) {
             $months = [];
@@ -151,15 +213,16 @@ class AccountSummaryRepository implements AccountSummaryRepositoryInterface
                 $months[$month]['record_count']++;
             }
 
-            // accounts.last_balance is the balance after every record, so the opening
-            // balance is what remains once all net flows are taken back out of it.
+            // Unless the caller knows the opening balance, accounts.last_balance is the
+            // balance after every record, so the opening balance is what remains once
+            // all net flows are taken back out of it.
             ksort($months);
             $net = 0.0;
             foreach ($months as $totals) {
                 $net += $totals['income'] - $totals['expense'] + $totals['transfer_in'] - $totals['transfer_out'];
             }
 
-            $running = round((float) DB::table('accounts')->where('id', $accountId)->value('last_balance') - $net, 2);
+            $running = round($openings[$accountId] ?? (float) DB::table('accounts')->where('id', $accountId)->value('last_balance') - $net, 2);
             foreach ($months as &$totals) {
                 $totals['net'] = $this->net($totals);
                 $running = round($running + $totals['net'], 2);

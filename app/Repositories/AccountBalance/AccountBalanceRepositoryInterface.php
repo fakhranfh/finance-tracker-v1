@@ -49,11 +49,11 @@ interface AccountBalanceRepositoryInterface
     public function latestRecordId(int $accountId): ?int;
 
     /**
-     * Latest snapshot of the account, if any.
+     * Latest snapshot of the account, if any, optionally only those before the given record ID.
      *
-     * @return array{last_record_id: int, balance: string, flows: array{income: string, expense: string, transfer_in: string, transfer_out: string, net: string}}|null
+     * @return array{last_record_id: int, balance: string, flows: array{income: string, expense: string, transfer_in: string, transfer_out: string, net: string, record_count: int}}|null
      */
-    public function latestSnapshot(int $accountId): ?array;
+    public function latestSnapshot(int $accountId, ?int $beforeRecordId = null): ?array;
 
     /**
      * Start balance plus the effect of the records in (afterRecordId, uptoRecordId].
@@ -63,15 +63,15 @@ interface AccountBalanceRepositoryInterface
     /**
      * Start flow totals plus the flows of the records in (afterRecordId, uptoRecordId].
      *
-     * @param  array{income: string|float, expense: string|float, transfer_in: string|float, transfer_out: string|float, net: string|float}  $start
-     * @return array{income: string, expense: string, transfer_in: string, transfer_out: string, net: string}
+     * @param  array{income: string|float, expense: string|float, transfer_in: string|float, transfer_out: string|float, net: string|float, record_count?: int}  $start
+     * @return array{income: string, expense: string, transfer_in: string, transfer_out: string, net: string, record_count: int}
      */
     public function flowsAfterRecords(int $accountId, array $start, int $afterRecordId, int $uptoRecordId): array;
 
     /**
      * Store a snapshot with its cumulative flow totals, ignoring one that already exists for the same record.
      *
-     * @param  array{income: string, expense: string, transfer_in: string, transfer_out: string, net: string}  $flows
+     * @param  array{income: string|float, expense: string|float, transfer_in: string|float, transfer_out: string|float, net: string|float, record_count: int}  $flows
      */
     public function storeSnapshot(int $accountId, int $lastRecordId, string $balance, array $flows): void;
 }
