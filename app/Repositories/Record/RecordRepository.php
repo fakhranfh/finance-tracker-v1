@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\LazyCollection;
 
 class RecordRepository implements RecordRepositoryInterface
 {
@@ -22,16 +23,20 @@ class RecordRepository implements RecordRepositoryInterface
         $this->applySearch($query, $search);
         $this->applyFilters($query, $filters);
 
-        $sortable = ['type', 'amount', 'note', 'recorded_at', 'created_at'];
-        $direction = $direction === 'desc' ? 'desc' : 'asc';
-
-        if ($sort && in_array($sort, $sortable, true)) {
-            $query->orderBy($sort, $direction)->orderByDesc('id');
-        } else {
-            $query->latest('recorded_at')->latest('id');
-        }
+        $this->applySort($query, $sort, $direction);
 
         return $query->paginate($perPage)->withQueryString();
+    }
+
+    public function export(?string $search = null, ?string $sort = null, string $direction = 'asc', array $filters = []): LazyCollection
+    {
+        $query = Record::query()->with(['account', 'toAccount']);
+
+        $this->applySearch($query, $search);
+        $this->applyFilters($query, $filters);
+        $this->applySort($query, $sort, $direction);
+
+        return $query->lazy(500);
     }
 
     /**
@@ -103,6 +108,21 @@ class RecordRepository implements RecordRepositoryInterface
         $query->delete();
 
         return ['account_ids' => $accountIds, 'first_id' => $firstId, 'effects' => $effects];
+    }
+
+    /**
+     * @param  Builder<Record>  $query
+     */
+    private function applySort(Builder $query, ?string $sort, string $direction): void
+    {
+        $sortable = ['type', 'amount', 'note', 'recorded_at', 'created_at'];
+        $direction = $direction === 'desc' ? 'desc' : 'asc';
+
+        if ($sort && in_array($sort, $sortable, true)) {
+            $query->orderBy($sort, $direction)->orderByDesc('id');
+        } else {
+            $query->latest('recorded_at')->latest('id');
+        }
     }
 
     private function applySearch(Builder $query, ?string $search): void

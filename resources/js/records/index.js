@@ -12,7 +12,7 @@ if (generateAccounts) {
     createMultiSelectFilter(generateAccounts);
 }
 
-createTable({
+const table = createTable({
     ids: {
         table: 'records-table',
         wrapper: 'records-table-wrapper',
@@ -48,4 +48,10 @@ createTable({
         editUrl: routes.pages.recordEdit(item.id),
         locked: false,
     }),
+});
+
+document.querySelectorAll('[data-export-format]').forEach((button) => {
+    button.addEventListener('click', () => {
+        window.location.href = `${routes.records.export(button.dataset.exportFormat)}?${table.exportQuery()}`;
+    });
 });

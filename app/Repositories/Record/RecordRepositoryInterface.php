@@ -5,6 +5,7 @@ namespace App\Repositories\Record;
 use App\Models\Record;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
+use Illuminate\Support\LazyCollection;
 
 interface RecordRepositoryInterface
 {
@@ -19,6 +20,14 @@ interface RecordRepositoryInterface
      * @param  array<string, mixed>  $filters
      */
     public function paginate(int $perPage, ?string $search = null, ?string $sort = null, string $direction = 'asc', array $filters = []): LengthAwarePaginator;
+
+    /**
+     * Every record matching the search and filters, in table order, streamed in chunks.
+     *
+     * @param  array<string, mixed>  $filters
+     * @return LazyCollection<int, Record>
+     */
+    public function export(?string $search = null, ?string $sort = null, string $direction = 'asc', array $filters = []): LazyCollection;
 
     /**
      * Transfers linking the given accounts to accounts outside them, as seen from those outside accounts.

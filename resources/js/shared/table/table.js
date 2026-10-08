@@ -351,5 +351,14 @@ export function createTable(config) {
 
     load().then(() => flash.showStored());
 
-    return { reload };
+    /** Current search, sort and filters as a query string, without paging. */
+    const exportQuery = () => {
+        const params = new URL(currentUrl, window.location.origin).searchParams;
+        params.delete('page');
+        params.delete('per_page');
+
+        return params.toString();
+    };
+
+    return { reload, exportQuery };
 }

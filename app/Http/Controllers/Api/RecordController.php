@@ -16,6 +16,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 class RecordController extends Controller
 {
@@ -39,6 +40,18 @@ class RecordController extends Controller
         ))->additional([
             'deletable_total' => $this->recordManagementService->countMatching($search, filters: $filters),
         ]);
+    }
+
+    public function export(Request $request, string $format): SymfonyResponse
+    {
+        return $this->recordManagementService->export(
+            $format,
+            $request->user()?->timezone ?: config('app.timezone', 'UTC'),
+            $request->string('search')->value() ?: null,
+            $request->string('sort')->value() ?: null,
+            $request->string('direction', 'asc')->value(),
+            $request->validate(RecordFilterRules::rules()),
+        );
     }
 
     public function bulkDestroy(BulkDeleteRecordRequest $request): Response

@@ -3,13 +3,21 @@
 namespace App\Services;
 
 use App\Enums\RecordType;
+use App\Exports\RecordsExport;
 use App\Models\Record;
 use App\Repositories\Record\RecordRepositoryInterface;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class RecordManagementService
 {
+    private const EXPORT_DATE_FORMAT = 'd M Y, H:i';
+
     public function __construct(
         protected RecordRepositoryInterface $recordRepository,
         protected AccountLastBalanceService $lastBalance,
@@ -27,6 +35,31 @@ class RecordManagementService
     public function paginate(int $perPage = 10, ?string $search = null, ?string $sort = null, string $direction = 'asc', array $filters = []): LengthAwarePaginator
     {
         return $this->recordRepository->paginate($perPage, $search, $sort, $direction, $filters);
+    }
+
+    /**
+     * Download every record matching the search and filters, in table order, as xlsx or pdf.
+     *
+     * @param  array<string, mixed>  $filters
+     */
+    public function export(string $format, string $timezone, ?string $search = null, ?string $sort = null, string $direction = 'asc', array $filters = []): BinaryFileResponse|Response|StreamedResponse
+    {
+        $records = $this->recordRepository->export($search, $sort, $direction, $filters);
+        $headings = [
+            __('records.table.recorded_at'),
+            __('records.table.type'),
+            __('records.fields.from_account'),
+            __('records.fields.to_account'),
+            __('records.table.amount'),
+            __('records.table.note'),
+        ];
+        $filename = 'records-'.now()->format('Ymd-His').'.'.$format;
+
+        return $format === 'pdf'
+            ? Pdf::loadView('records.export', ['records' => $records->all(), 'headings' => $headings, 'timezone' => $timezone, 'dateFormat' => self::EXPORT_DATE_FORMAT])
+                ->setPaper('a4', 'landscape')
+                ->download($filename)
+            : Excel::download(new RecordsExport($records, $headings, $timezone, self::EXPORT_DATE_FORMAT), $filename);
     }
 
     /**

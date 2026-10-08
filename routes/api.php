@@ -57,6 +57,9 @@ Route::middleware('web')->name('api.')->group(function (): void {
             ->parameters(['accounts' => 'account'])
             ->except('create', 'edit')
             ->names('accounts');
+        Route::get('/records/export/{format}', [RecordController::class, 'export'])
+            ->whereIn('format', ['xlsx', 'pdf'])
+            ->name('records.export');
         Route::delete('/records', [RecordController::class, 'bulkDestroy'])->name('records.bulk-destroy');
         Route::post('/records/generate', [RecordController::class, 'generate'])
             ->middleware(EnsureLocalEnvironment::class)

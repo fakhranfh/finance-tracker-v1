@@ -50,6 +50,12 @@
                     {{ __('records.actions.generate') }}
                 </x-atoms.button>
             @endif
+            <x-atoms.button type="button" variant="secondary" data-export-format="xlsx">
+                {{ __('records.actions.export_excel') }}
+            </x-atoms.button>
+            <x-atoms.button type="button" variant="secondary" data-export-format="pdf">
+                {{ __('records.actions.export_pdf') }}
+            </x-atoms.button>
             @if ($hasAccounts)
                 <x-atoms.button href="{{ route('records.create') }}" class="col-span-2 sm:col-auto">
                     {{ __('records.create') }}

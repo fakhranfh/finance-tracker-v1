@@ -63,6 +63,8 @@ return [
     ],
 
     'actions' => [
+        'export_excel' => 'Export Excel',
+        'export_pdf' => 'Export PDF',
         'edit' => 'Edit',
         'delete' => 'Delete',
         'save' => 'Save',

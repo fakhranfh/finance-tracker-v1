@@ -63,6 +63,8 @@ return [
     ],
 
     'actions' => [
+        'export_excel' => 'Ekspor Excel',
+        'export_pdf' => 'Ekspor PDF',
         'edit' => 'Ubah',
         'delete' => 'Hapus',
         'save' => 'Simpan',
