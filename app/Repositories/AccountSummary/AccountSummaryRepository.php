@@ -143,8 +143,10 @@ class AccountSummaryRepository implements AccountSummaryRepositoryInterface
 
     public function totalsInRange(int $accountId, CarbonImmutable $start, CarbonImmutable $end): array
     {
-        $start = $start->utc();
-        $end = $end->utc();
+        // Whole months are those of the totals timezone, so the range is cut along its month borders.
+        $timezone = $this->totalsTimezone();
+        $start = $start->setTimezone($timezone);
+        $end = $end->setTimezone($timezone);
 
         // Whole months are [$first, $next): inside the range, and ending at or before it.
         $first = $start->equalTo($start->startOfMonth()) ? $start : $start->startOfMonth()->addMonthNoOverflow();
@@ -189,6 +191,7 @@ class AccountSummaryRepository implements AccountSummaryRepositoryInterface
     {
         foreach (array_unique($accountIds) as $accountId) {
             $months = [];
+            $timezone = $this->totalsTimezone();
 
             $records = DB::table('records')
                 ->where(fn ($query) => $query->where('account_id', $accountId)->orWhere('to_account_id', $accountId))
@@ -196,7 +199,7 @@ class AccountSummaryRepository implements AccountSummaryRepositoryInterface
                 ->cursor();
 
             foreach ($records as $record) {
-                $month = CarbonImmutable::parse($record->recorded_at, 'UTC')->startOfMonth()->toDateString();
+                $month = CarbonImmutable::parse($record->recorded_at, 'UTC')->setTimezone($timezone)->startOfMonth()->toDateString();
                 $months[$month] ??= ['income' => 0.0, 'expense' => 0.0, 'transfer_in' => 0.0, 'transfer_out' => 0.0, 'record_count' => 0, 'balance' => 0.0];
 
                 $amount = (float) $record->amount;
@@ -253,6 +256,11 @@ class AccountSummaryRepository implements AccountSummaryRepositoryInterface
                 }
             });
         }
+    }
+
+    public function totalsTimezone(): string
+    {
+        return (string) (DB::table('users')->orderBy('id')->value('timezone') ?: config('account.totals_timezone', 'UTC'));
     }
 
     /**

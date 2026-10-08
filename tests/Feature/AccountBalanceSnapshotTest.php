@@ -205,7 +205,7 @@ it('stores cumulative income, expense and transfers in and out with each snapsho
 
 it('fills the snapshot and totals from the records when the all-time summary finds nothing stored', function () {
     $account = Account::factory()->create(['last_balance' => 1000]);
-    Record::factory()->count(2)->create(['account_id' => $account->id, 'type' => RecordType::Income, 'amount' => 100]);
+    Record::factory()->count(2)->create(['account_id' => $account->id, 'type' => RecordType::Income, 'amount' => 100, 'recorded_at' => '2026-02-10 10:00:00']);
     DB::table('account_balance_snapshots')->delete();
     DB::table('account_monthly_totals')->delete();
     DB::table('account_yearly_totals')->delete();

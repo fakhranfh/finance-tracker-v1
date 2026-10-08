@@ -67,4 +67,10 @@ interface AccountSummaryRepositoryInterface
      * @param  array<int, float>  $openings  Opening balance per account ID; derived from last_balance when missing.
      */
     public function rebuild(array $accountIds, array $openings = []): void;
+
+    /**
+     * The timezone the monthly totals are bucketed in: the first user's, since accounts are not tied
+     * to a user, or the configured one when there is none. Whole months are those of this timezone.
+     */
+    public function totalsTimezone(): string;
 }

@@ -9,12 +9,12 @@ class RecordObserver
 {
     public function created(Record $record): void
     {
-        SyncRecordEffects::dispatch([$record->account_id, $record->to_account_id], null, $record->id)->afterCommit();
+        SyncRecordEffects::request([$record->account_id, $record->to_account_id], null, $record->id);
     }
 
     public function updated(Record $record): void
     {
-        SyncRecordEffects::dispatch(
+        SyncRecordEffects::request(
             [
                 $record->account_id,
                 $record->to_account_id,
@@ -22,14 +22,14 @@ class RecordObserver
                 $record->getOriginal('to_account_id'),
             ],
             $record->id,
-        )->afterCommit();
+        );
     }
 
     public function deleted(Record $record): void
     {
-        SyncRecordEffects::dispatch(
+        SyncRecordEffects::request(
             [$record->account_id, $record->to_account_id],
             $record->id,
-        )->afterCommit();
+        );
     }
 }

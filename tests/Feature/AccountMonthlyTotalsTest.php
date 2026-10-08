@@ -3,6 +3,7 @@
 use App\Enums\RecordType;
 use App\Models\Account;
 use App\Models\Record;
+use App\Models\User;
 use App\Repositories\Account\AccountRepositoryInterface;
 use App\Repositories\AccountSummary\AccountSummaryRepositoryInterface;
 use App\Services\AccountManagementService;
@@ -177,4 +178,23 @@ it('refreshes the other side of a transfer when an account is deleted', function
     app(AccountManagementService::class)->delete($from);
 
     expect(app(AccountSummaryRepositoryInterface::class)->totalsAll($to->id))->toMatchArray(['transfer_in' => 0.0, 'record_count' => 0]);
+});
+
+it("buckets the monthly totals in the first user's timezone", function () {
+    User::factory()->create(['timezone' => 'Asia/Jakarta']);
+    $account = Account::factory()->create(['last_balance' => 0]);
+
+    // 18:00 UTC on 28 Feb is already 1 March in Jakarta; 16:59 UTC on 31 Mar is still 31 March there.
+    foreach (['2026-02-28 16:59:00' => 1, '2026-02-28 18:00:00' => 2, '2026-03-31 16:59:00' => 4, '2026-03-31 17:00:00' => 8] as $at => $amount) {
+        Record::factory()->create(['account_id' => $account->id, 'to_account_id' => null, 'type' => RecordType::Income, 'amount' => $amount, 'recorded_at' => $at]);
+    }
+
+    $months = DB::table('account_monthly_totals')->where('account_id', $account->id)->orderBy('month')->pluck('income', 'month');
+    expect($months->map(fn ($v) => (float) $v)->all())->toBe(['2026-02-01' => 1.0, '2026-03-01' => 6.0, '2026-04-01' => 8.0]);
+
+    $start = CarbonImmutable::parse('2026-03-01', 'Asia/Jakarta')->startOfDay();
+    $end = $start->endOfMonth();
+    $flows = app(AccountSummaryRepositoryInterface::class)->totalsInRange($account->id, $start, $end);
+
+    expect($flows['income'])->toBe(6.0)->and($flows['record_count'])->toBe(2);
 });

@@ -123,7 +123,7 @@ class AccountSummaryService
 
             // Nothing stored yet: have the job fill the snapshot and the totals for next time.
             if ($flows['record_count'] > 0) {
-                SyncRecordEffects::dispatch([$accountId], null, null, true);
+                SyncRecordEffects::request([$accountId], null, null, true);
             }
         }
 
