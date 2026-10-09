@@ -136,7 +136,7 @@ class AccountBalanceRepository implements AccountBalanceRepositoryInterface
                     when type = 'transfer' and to_account_id = ? then amount
                     when type = 'transfer' and account_id = ? then -amount
                 end), 0) as net,
-                cast(? as bigint) + count(*) as record_count
+                ? + count(*) as record_count
             from records
             where id > ? and id <= ? and (account_id = ? or to_account_id = ?)
             SQL, [
