@@ -19,6 +19,7 @@ export default defineConfig({
                 'resources/js/profile/edit.js',
                 'resources/js/accounts/index.js',
                 'resources/js/accounts/form.js',
+                'resources/js/accounts/summary.js',
                 'resources/js/records/index.js',
                 'resources/js/records/form.js',
                 'resources/js/categories/index.js',

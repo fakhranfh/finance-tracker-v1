@@ -27,3 +27,6 @@ Note: `App\Http\Controllers\Api\Auth\*` predates this rule and stays as-is (one 
 - Page folders (`resources/js/<feature>/`) keep their own page scripts and import the component from its folder, e.g. `../shared/table/table.js`.
 
 This is enforced by a Claude Code hook (`.claude/hooks/validate-single-controller-per-entity.php`, registered in `.claude/settings.json` as a `PostToolUse` hook on `Write` of `app/Http/Controllers/Api/**/*.php`), which blocks creating a new invokable (`__invoke`-only) controller inside a subdirectory of `app/Http/Controllers/Api/` (e.g. `app/Http/Controllers/Api/Product/CreateProductController.php`).
+
+## Register every new page JS entry in vite.config.js
+Whenever you add a new JS file that a view loads directly with `@vite('resources/js/...')` (page entry points, not modules only imported by other JS), add it to the `input` array in `vite.config.js` in the same change. Otherwise `npm run build` omits it from the manifest and the page returns a 500 (`Unable to locate file in Vite manifest`) in CI/production, even though it can pass locally with a stale `public/build` or a `hot` file.
