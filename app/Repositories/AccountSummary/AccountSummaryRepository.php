@@ -2,6 +2,7 @@
 
 namespace App\Repositories\AccountSummary;
 
+use App\Enums\RecordType;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 
@@ -81,12 +82,10 @@ class AccountSummaryRepository implements AccountSummaryRepositoryInterface
 
                 $amount = (float) $record->amount;
                 $isSource = (int) $record->account_id === $accountId;
-                $key = match (true) {
-                    $record->type === 'income' && $isSource => 'income',
-                    $record->type === 'expense' && $isSource => 'expense',
-                    $record->type === 'transfer' && $isSource => 'transfer_out',
-                    $record->type === 'transfer' => 'transfer_in',
-                    default => null,
+                $key = match (RecordType::from($record->type)) {
+                    RecordType::Income => $isSource ? 'income' : null,
+                    RecordType::Expense => $isSource ? 'expense' : null,
+                    RecordType::Transfer => $isSource ? 'transfer_out' : 'transfer_in',
                 };
 
                 if ($key !== null) {
