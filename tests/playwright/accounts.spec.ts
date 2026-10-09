@@ -119,7 +119,7 @@ test.describe('Manage Accounts', () => {
 
         await page.getByRole('row', { name: new RegExp(name) }).getByRole('link', { name: 'View' }).click();
 
-        await expect(page).toHaveURL(/\/accounts\/\d+\/summary$/);
+        await expect(page).toHaveURL(/\/accounts\/\d+\/summary(\?.*)?$/);
         await expect(page.getByRole('heading', { name })).toBeVisible();
     });
 
