@@ -15,6 +15,16 @@ return [
         'transfer' => 'Transfer',
     ],
 
+    'summary' => [
+        'income' => 'Total income',
+        'expense' => 'Total expense',
+        'transfer' => 'Transfers',
+        'transfer_in' => 'In',
+        'transfer_out' => 'Out',
+        'net' => 'Net',
+        'records' => ':count records',
+    ],
+
     'table' => [
         'recorded_at' => 'Date',
         'type' => 'Type',
@@ -36,6 +46,14 @@ return [
     ],
 
     'filters' => [
+        'period' => 'Period',
+        'all_time' => 'All time',
+        'periods' => [
+            'this_month' => 'This month',
+            'last_month' => 'Last month',
+            'last_30_days' => 'Last 30 days',
+            'this_year' => 'This year',
+        ],
         'type' => 'Type',
         'all_types' => 'All types',
         'category' => 'Category',

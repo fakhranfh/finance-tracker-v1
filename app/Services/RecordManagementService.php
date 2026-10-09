@@ -9,6 +9,7 @@ use App\Models\Category;
 use App\Models\Record;
 use App\Repositories\Record\RecordRepositoryInterface;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\CarbonImmutable;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Facades\Excel;
@@ -26,6 +27,7 @@ class RecordManagementService
         protected AccountBalanceSnapshotService $snapshots,
         protected AccountMonthlyTotalsService $monthlyTotals,
         protected AccountYearlyTotalsService $yearlyTotals,
+        protected AccountSummaryService $accountSummaries,
     ) {}
 
     /**
@@ -110,6 +112,42 @@ class RecordManagementService
         }
 
         return collect($lines)->map(fn (string $v, string $k) => "$k: $v")->values()->all();
+    }
+
+    /**
+     * Summarize the records matching the search and filters like an account summary: income,
+     * expense, transfers in and out, and net. When only accounts and a date range filter the
+     * records, the totals come from the stored account totals; any other filter needs the
+     * records themselves.
+     *
+     * @param  array<string, mixed>  $filters
+     * @return array{income: float, expense: float, transfer_in: float, transfer_out: float, net: float, record_count: int}
+     */
+    public function summarize(?string $search, array $filters, string $timezone): array
+    {
+        $count = $this->recordRepository->countMatching($search, filters: $filters);
+        $from = $filters['date_from'] ?? null;
+        $to = $filters['date_to'] ?? null;
+        $storedOnly = ! $search
+            && empty($filters['type']) && empty($filters['category_ids'])
+            && ($filters['amount_min'] ?? '') === '' && ($filters['amount_max'] ?? '') === ''
+            && (($from && $to) || (! $from && ! $to));
+
+        if ($storedOnly) {
+            $accountIds = ! empty($filters['account_ids']) ? $filters['account_ids'] : Account::query()->pluck('id')->all();
+            $flows = $this->accountSummaries->flowsOfAccounts(
+                $accountIds,
+                $from ? CarbonImmutable::parse($from, $timezone)->startOfDay() : null,
+                $to ? CarbonImmutable::parse($to, $timezone)->endOfDay() : null,
+            );
+
+            return [...$flows, 'record_count' => $count];
+        }
+
+        $flows = $this->recordRepository->flows($search, $filters);
+        $net = round($flows['income'] - $flows['expense'] + $flows['transfer_in'] - $flows['transfer_out'], 2);
+
+        return [...$flows, 'net' => $net];
     }
 
     /**

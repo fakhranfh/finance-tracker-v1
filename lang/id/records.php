@@ -15,6 +15,16 @@ return [
         'transfer' => 'Transfer',
     ],
 
+    'summary' => [
+        'income' => 'Total pemasukan',
+        'expense' => 'Total pengeluaran',
+        'transfer' => 'Transfer',
+        'transfer_in' => 'Masuk',
+        'transfer_out' => 'Keluar',
+        'net' => 'Bersih',
+        'records' => ':count catatan',
+    ],
+
     'table' => [
         'recorded_at' => 'Tanggal',
         'type' => 'Jenis',
@@ -36,6 +46,14 @@ return [
     ],
 
     'filters' => [
+        'period' => 'Periode',
+        'all_time' => 'Semua waktu',
+        'periods' => [
+            'this_month' => 'Bulan ini',
+            'last_month' => 'Bulan lalu',
+            'last_30_days' => '30 hari terakhir',
+            'this_year' => 'Tahun ini',
+        ],
         'type' => 'Jenis',
         'all_types' => 'Semua jenis',
         'category' => 'Kategori',

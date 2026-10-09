@@ -121,6 +121,7 @@ export function fillMultiSelect(dropdown, options, { checked = false } = {}) {
  *  - defaultSort: { key, direction } (optional initial sort)
  *  - routes: { index, destroy, bulkDestroy, generate }
  *  - row(item, { lockedId }) => { cells, editUrl, locked }
+ *  - onLoaded(query) called after each load with the search, sort and filter query string
  */
 export function createTable(config) {
     const { ids, routes } = config;
@@ -264,6 +265,7 @@ export function createTable(config) {
         selectAll.updateBulkBar();
 
         tableSkeleton.hide();
+        config.onLoaded?.(exportQuery());
     }
 
     const reload = () => load();

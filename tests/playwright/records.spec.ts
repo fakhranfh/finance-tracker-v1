@@ -41,6 +41,15 @@ test.describe('Manage Records', () => {
         await expect(page).toHaveURL('/records');
         await expect(page.getByRole('heading', { name: 'Manage Records' })).toBeVisible();
         await expect(page.getByRole('table')).toBeVisible();
+        await expect(page.getByText('Total income')).toBeVisible();
+        await expect(page.getByText('Total expense')).toBeVisible();
+
+        await page.getByLabel('Period').selectOption('this_year');
+        await expect(page.getByLabel('From date')).toHaveValue(`${new Date().getFullYear()}-01-01`);
+        await expect(page.getByLabel('To date')).toHaveValue(`${new Date().getFullYear()}-12-31`);
+        await page.getByLabel('From date').fill(`${new Date().getFullYear()}-02-01`);
+        await page.getByLabel('From date').dispatchEvent('change');
+        await expect(page.getByLabel('Period')).toHaveValue('');
 
         await page.getByRole('link', { name: 'Add record' }).click();
         await expect(page).toHaveURL('/records/create');

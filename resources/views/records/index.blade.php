@@ -69,6 +69,40 @@
 
     <div data-flash-success class="mb-6 hidden rounded-lg border border-success/20 bg-success/10 px-4 py-3 font-body text-sm text-success"></div>
 
+    <div id="records-summary" class="mb-6" data-records-label="{{ __('records.summary.records', ['count' => ':count']) }}">
+        <x-organisms.records-summary-skeleton id="records-summary-skeleton" />
+
+        <div id="records-summary-results" class="hidden">
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div class="rounded-lg border border-outline-variant bg-surface p-5">
+                <p class="font-body text-body-sm text-on-surface-variant">{{ __('records.summary.income') }}</p>
+                <p class="mt-2 font-heading text-headline-sm font-bold text-success" data-summary-value="income"></p>
+            </div>
+
+            <div class="rounded-lg border border-outline-variant bg-surface p-5">
+                <p class="font-body text-body-sm text-on-surface-variant">{{ __('records.summary.expense') }}</p>
+                <p class="mt-2 font-heading text-headline-sm font-bold text-error" data-summary-value="expense"></p>
+            </div>
+
+            <div class="rounded-lg border border-outline-variant bg-surface p-5">
+                <p class="font-body text-body-sm text-on-surface-variant">{{ __('records.summary.transfer') }}</p>
+                <p class="mt-2 font-heading text-headline-sm font-bold text-on-surface">
+                    {{ __('records.summary.transfer_in') }}: <span data-summary-value="transfer_in"></span>
+                </p>
+                <p class="mt-2 font-heading text-headline-sm font-bold text-on-surface">
+                    {{ __('records.summary.transfer_out') }}: <span data-summary-value="transfer_out"></span>
+                </p>
+            </div>
+
+            <div class="rounded-lg border border-outline-variant bg-surface p-5">
+                <p class="font-body text-body-sm text-on-surface-variant">{{ __('records.summary.net') }}</p>
+                <p class="mt-2 font-heading text-headline-sm font-bold text-on-surface" data-summary-value="net"></p>
+                <p class="mt-1 font-body text-body-sm text-on-surface-variant" data-summary-value="record_count"></p>
+            </div>
+        </div>
+        </div>
+    </div>
+
     <x-molecules.table-toolbar
         id="records-table-toolbar"
         :search-placeholder="__('records.table.search')"

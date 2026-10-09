@@ -42,6 +42,17 @@ class RecordController extends Controller
         ]);
     }
 
+    public function summary(Request $request): JsonResponse
+    {
+        return response()->json([
+            'data' => $this->recordManagementService->summarize(
+                $request->string('search')->value() ?: null,
+                $request->validate(RecordFilterRules::rules()),
+                $request->user()?->timezone ?: config('app.timezone', 'UTC'),
+            ),
+        ]);
+    }
+
     public function export(Request $request, string $format): SymfonyResponse
     {
         return $this->recordManagementService->export(

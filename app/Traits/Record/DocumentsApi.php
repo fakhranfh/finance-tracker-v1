@@ -24,6 +24,28 @@ trait DocumentsApi
     )]
     private function documentIndexEndpoint(): void {}
 
+    #[OA\Get(
+        path: '/records/summary',
+        summary: 'Summarize records',
+        description: 'Income, expense, transfers in and out, net and record count (computed like the account summary: stored account totals when only accounts and a date range filter, the records otherwise) for the records matching the search and filters.',
+        tags: ['Records'],
+        parameters: [
+            new OA\Parameter(name: 'search', in: 'query', required: false, schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'type[]', in: 'query', required: false, schema: new OA\Schema(type: 'array', items: new OA\Items(type: 'string', enum: ['income', 'expense', 'transfer']))),
+            new OA\Parameter(name: 'account_ids[]', in: 'query', required: false, schema: new OA\Schema(type: 'array', items: new OA\Items(type: 'integer'))),
+            new OA\Parameter(name: 'category_ids[]', in: 'query', required: false, schema: new OA\Schema(type: 'array', items: new OA\Items(type: 'string'))),
+            new OA\Parameter(name: 'date_from', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date')),
+            new OA\Parameter(name: 'date_to', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date')),
+            new OA\Parameter(name: 'amount_min', in: 'query', required: false, schema: new OA\Schema(type: 'number')),
+            new OA\Parameter(name: 'amount_max', in: 'query', required: false, schema: new OA\Schema(type: 'number')),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'Totals of the matching records'),
+            new OA\Response(response: 422, description: 'Validation error'),
+        ]
+    )]
+    private function documentSummaryEndpoint(): void {}
+
     #[OA\Post(
         path: '/records',
         summary: 'Create a record',

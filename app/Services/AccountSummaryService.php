@@ -131,6 +131,33 @@ class AccountSummaryService
     }
 
     /**
+     * Summed flows of several accounts over a date range (all time when $start is null), from
+     * the stored totals. A transfer between two of the accounts counts for both, so the
+     * record counts are left for the caller.
+     *
+     * @param  array<int, int>  $accountIds
+     * @return array{income: float, expense: float, transfer_in: float, transfer_out: float, net: float}
+     */
+    public function flowsOfAccounts(array $accountIds, ?CarbonImmutable $start, ?CarbonImmutable $end): array
+    {
+        $sum = ['income' => 0.0, 'expense' => 0.0, 'transfer_in' => 0.0, 'transfer_out' => 0.0];
+
+        foreach ($accountIds as $accountId) {
+            $flows = $start === null || $end === null
+                ? $this->allTime($accountId)
+                : $this->summaries->totalsInRange($accountId, $start, $end);
+
+            foreach ($sum as $key => $value) {
+                $sum[$key] = round($value + $flows[$key], 2);
+            }
+        }
+
+        $net = round($sum['income'] - $sum['expense'] + $sum['transfer_in'] - $sum['transfer_out'], 2);
+
+        return [...$sum, 'net' => $net];
+    }
+
+    /**
      * @param  array{income: float, expense: float, transfer_in: float, transfer_out: float, record_count: int}  $flows
      * @return array{income: float, expense: float, transfer_in: float, transfer_out: float, net: float, record_count: int}
      */

@@ -44,6 +44,7 @@ export const routes = {
         destroy: (id) => endpoint(`/records/${id}`),
         bulkDestroy: endpoint('/records'),
         generate: endpoint('/records/generate'),
+        summary: endpoint('/records/summary'),
         export: (format) => endpoint(`/records/export/${format}`),
     },
     categories: {

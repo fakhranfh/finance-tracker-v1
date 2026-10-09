@@ -3,6 +3,8 @@ import { getAll } from '../shared/http.js';
 import { routes } from '../routes.js';
 import { formatDateTime } from '../shared/datetime.js';
 import { formatMoney } from '../shared/money.js';
+import { createRecordsSummary } from './summary.js';
+import { createPeriodPreset } from './period.js';
 
 const typeLabels = JSON.parse(document.getElementById('records-table')?.dataset.typeLabels ?? '{}');
 const uncategorized = document.getElementById('records-table')?.dataset.uncategorized ?? '';
@@ -35,6 +37,7 @@ async function loadOptions() {
 }
 
 await loadOptions();
+createPeriodPreset();
 
 const table = createTable({
     ids: {
@@ -50,6 +53,7 @@ const table = createTable({
         account_ids: [...document.querySelectorAll('#generate-accounts input[type="checkbox"]:checked')].map((checkbox) => Number(checkbox.value)),
     }),
     defaultSort: { key: 'recorded_at', direction: 'desc' },
+    onLoaded: createRecordsSummary(),
     filtersId: 'records-filters',
     flashKey: 'records-flash-success',
     selectionKey: 'records-table-selection',

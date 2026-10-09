@@ -87,6 +87,36 @@ class RecordRepository implements RecordRepositoryInterface
         return $query->count();
     }
 
+    public function flows(?string $search = null, array $filters = []): array
+    {
+        $query = Record::query();
+
+        $this->applySearch($query, $search);
+        $this->applyFilters($query, $filters);
+
+        $accountIds = array_map('intval', $filters['account_ids'] ?? []);
+        $in = $accountIds === [] ? '' : ' and to_account_id in ('.implode(',', $accountIds).')';
+        $out = $accountIds === [] ? '' : ' and account_id in ('.implode(',', $accountIds).')';
+
+        $row = $query->toBase()->reorder()
+            ->selectRaw(
+                "coalesce(sum(case when type = 'income' then amount end), 0) as income,
+                 coalesce(sum(case when type = 'expense' then amount end), 0) as expense,
+                 coalesce(sum(case when type = 'transfer'{$out} then amount end), 0) as transfer_out,
+                 coalesce(sum(case when type = 'transfer'{$in} then amount end), 0) as transfer_in,
+                 count(*) as record_count",
+            )
+            ->first();
+
+        return [
+            'income' => round((float) $row->income, 2),
+            'expense' => round((float) $row->expense, 2),
+            'transfer_in' => round((float) $row->transfer_in, 2),
+            'transfer_out' => round((float) $row->transfer_out, 2),
+            'record_count' => (int) $row->record_count,
+        ];
+    }
+
     /**
      * Bulk deletes skip model events, so describe what they removed for the caller to apply.
      *

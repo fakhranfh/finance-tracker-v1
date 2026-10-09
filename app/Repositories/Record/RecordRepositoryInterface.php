@@ -61,6 +61,16 @@ interface RecordRepositoryInterface
     public function countMatching(?string $search = null, ?int $exceptId = null, array $filters = []): int;
 
     /**
+     * Income, expense, transfers in and out, and record count of the records matching the search
+     * and filters. With an account filter transfers are counted from the point of view of those
+     * accounts; without one every transfer counts both in and out.
+     *
+     * @param  array<string, mixed>  $filters
+     * @return array{income: float, expense: float, transfer_in: float, transfer_out: float, record_count: int}
+     */
+    public function flows(?string $search = null, array $filters = []): array;
+
+    /**
      * Create a new record.
      *
      * @param  array<string, mixed>  $data
