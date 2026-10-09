@@ -2,7 +2,7 @@
 <html lang="{{ app()->getLocale() }}">
 <head>
     <meta charset="utf-8">
-    <title>{{ __('records.title') }}</title>
+    <title>{{ __('records.export_title') }}</title>
     <style>
         body { font-family: DejaVu Sans, sans-serif; font-size: 10px; color: #222; }
         h1 { font-size: 14px; margin: 0 0 8px; }
@@ -13,7 +13,14 @@
     </style>
 </head>
 <body>
-    <h1>{{ __('records.title') }}</h1>
+    <h1>{{ __('records.export_title') }}</h1>
+    @if (! empty($filterLines))
+        <div style="margin: 0 0 14px; padding: 6px 8px; border: 1px solid #ccc; background: #fafafa;">
+            @foreach ($filterLines as $line)
+                <div style="margin: 0 0 2px;">{{ $line }}</div>
+            @endforeach
+        </div>
+    @endif
     <table>
         <thead>
             <tr>

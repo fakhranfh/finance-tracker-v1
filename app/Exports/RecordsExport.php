@@ -12,7 +12,6 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use PhpOffice\PhpSpreadsheet\Style\Border;
-use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 class RecordsExport implements FromGenerator, ShouldAutoSize, WithColumnFormatting, WithHeadings, WithMapping, WithStyles
@@ -20,12 +19,14 @@ class RecordsExport implements FromGenerator, ShouldAutoSize, WithColumnFormatti
     /**
      * @param  LazyCollection<int, Record>  $records
      * @param  array<int, string>  $headings
+     * @param  array<int, string>  $filterLines
      */
     public function __construct(
         private readonly LazyCollection $records,
         private readonly array $headings,
         private readonly string $timezone,
         private readonly string $dateFormat,
+        private readonly array $filterLines = [],
     ) {}
 
     public function generator(): Generator
@@ -34,11 +35,13 @@ class RecordsExport implements FromGenerator, ShouldAutoSize, WithColumnFormatti
     }
 
     /**
-     * @return array<int, string>
+     * @return array<int, array<int, string>>
      */
     public function headings(): array
     {
-        return $this->headings;
+        $filters = array_map(fn (string $line) => [$line], $this->filterLines);
+
+        return [[__('records.export_title')], ...$filters, [], $this->headings];
     }
 
     /**
@@ -62,7 +65,7 @@ class RecordsExport implements FromGenerator, ShouldAutoSize, WithColumnFormatti
      */
     public function columnFormats(): array
     {
-        return ['E' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1];
+        return ['E' => '"Rp" #,##0.00'];
     }
 
     /**
@@ -70,9 +73,24 @@ class RecordsExport implements FromGenerator, ShouldAutoSize, WithColumnFormatti
      */
     public function styles(Worksheet $sheet): array
     {
-        $sheet->getStyle($sheet->calculateWorksheetDimension())
+        $headingRow = count($this->filterLines) + 3;
+        $sheet->mergeCells('A1:F1');
+
+        foreach (array_keys($this->filterLines) as $i) {
+            $sheet->mergeCells('A'.($i + 2).':F'.($i + 2));
+        }
+
+        if ($this->filterLines !== []) {
+            $sheet->getStyle('A2:F'.(count($this->filterLines) + 1))
+                ->getBorders()->getOutline()->setBorderStyle(Border::BORDER_THIN);
+        }
+
+        $sheet->getStyle('A'.$headingRow.':'.$sheet->getHighestColumn().$sheet->getHighestRow())
             ->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
 
-        return [1 => ['font' => ['bold' => true]]];
+        return [
+            1 => ['font' => ['bold' => true, 'size' => 14]],
+            $headingRow => ['font' => ['bold' => true]],
+        ];
     }
 }

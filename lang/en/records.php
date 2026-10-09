@@ -2,6 +2,7 @@
 
 return [
     'title' => 'Manage Records',
+    'export_title' => 'Record List',
     'subtitle' => 'Track your income, expenses and transfers between accounts.',
     'create' => 'Add record',
     'edit' => 'Edit record',
@@ -45,6 +46,7 @@ return [
         'select_all' => 'Select all',
         'deselect_all' => 'Deselect all',
         'clear' => 'Clear filters',
+        'search_label' => 'Search',
         'date_from' => 'From date',
         'date_to' => 'To date',
         'amount_min' => 'Min amount',

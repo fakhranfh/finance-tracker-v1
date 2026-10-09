@@ -2,6 +2,7 @@
 
 return [
     'title' => 'Kelola Catatan',
+    'export_title' => 'Daftar Catatan',
     'subtitle' => 'Catat pemasukan, pengeluaran, dan transfer antar akun.',
     'create' => 'Tambah catatan',
     'edit' => 'Ubah catatan',
@@ -45,6 +46,7 @@ return [
         'select_all' => 'Pilih semua',
         'deselect_all' => 'Hapus semua pilihan',
         'clear' => 'Hapus semua filter',
+        'search_label' => 'Pencarian',
         'date_from' => 'Dari tanggal',
         'date_to' => 'Sampai tanggal',
         'amount_min' => 'Nominal minimum',

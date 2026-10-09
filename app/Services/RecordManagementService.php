@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Enums\RecordType;
 use App\Exports\RecordsExport;
+use App\Models\Account;
 use App\Models\Record;
 use App\Repositories\Record\RecordRepositoryInterface;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -53,13 +54,51 @@ class RecordManagementService
             __('records.table.amount'),
             __('records.table.note'),
         ];
+        $filterLines = $this->filterLines($search, $filters);
         $filename = 'records-'.now()->format('Ymd-His').'.'.$format;
 
         return $format === 'pdf'
-            ? Pdf::loadView('records.export', ['records' => $records->all(), 'headings' => $headings, 'timezone' => $timezone, 'dateFormat' => self::EXPORT_DATE_FORMAT])
+            ? Pdf::loadView('records.export', ['records' => $records->all(), 'headings' => $headings, 'filterLines' => $filterLines, 'timezone' => $timezone, 'dateFormat' => self::EXPORT_DATE_FORMAT])
                 ->setPaper('a4', 'landscape')
                 ->download($filename)
-            : Excel::download(new RecordsExport($records, $headings, $timezone, self::EXPORT_DATE_FORMAT), $filename);
+            : Excel::download(new RecordsExport($records, $headings, $timezone, self::EXPORT_DATE_FORMAT, $filterLines), $filename);
+    }
+
+    /**
+     * Describe the active search and filters as "Label: value" lines for the export header.
+     *
+     * @param  array<string, mixed>  $filters
+     * @return array<int, string>
+     */
+    private function filterLines(?string $search, array $filters): array
+    {
+        $money = fn (string $v): string => 'Rp '.number_format((float) $v, 2, ',', '.');
+        $lines = [];
+
+        if ($search) {
+            $lines[__('records.filters.search_label')] = $search;
+        }
+        if (! empty($filters['type'])) {
+            $lines[__('records.filters.type')] = collect($filters['type'])
+                ->map(fn (string $t) => RecordType::from($t)->label())->implode(', ');
+        }
+        if (! empty($filters['account_ids'])) {
+            $lines[__('records.filters.account')] = Account::whereIn('id', $filters['account_ids'])->pluck('name')->implode(', ');
+        }
+        if (! empty($filters['date_from'])) {
+            $lines[__('records.filters.date_from')] = $filters['date_from'];
+        }
+        if (! empty($filters['date_to'])) {
+            $lines[__('records.filters.date_to')] = $filters['date_to'];
+        }
+        if (isset($filters['amount_min']) && $filters['amount_min'] !== '') {
+            $lines[__('records.filters.amount_min')] = $money((string) $filters['amount_min']);
+        }
+        if (isset($filters['amount_max']) && $filters['amount_max'] !== '') {
+            $lines[__('records.filters.amount_max')] = $money((string) $filters['amount_max']);
+        }
+
+        return collect($lines)->map(fn (string $v, string $k) => "$k: $v")->values()->all();
     }
 
     /**

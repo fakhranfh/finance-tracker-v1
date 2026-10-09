@@ -47,3 +47,18 @@ it('writes xlsx dates in the user timezone', function () {
 
     expect($sheet)->toContain('02 Oct 2026, 03:00');
 });
+
+it('lists the active filters above the xlsx table', function () {
+    Record::factory()->create(['type' => 'income']);
+
+    $content = $this->actingAs(User::factory()->create())->get('/api/records/export/xlsx?type[]=income&amount_min=1000')->streamedContent();
+    $path = tempnam(sys_get_temp_dir(), 'x');
+    file_put_contents($path, $content);
+    $zip = new ZipArchive;
+    $zip->open($path);
+    $strings = $zip->getFromName('xl/sharedStrings.xml');
+    $zip->close();
+    unlink($path);
+
+    expect($strings)->toContain('Rp 1.000,00');
+});
