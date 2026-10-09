@@ -72,6 +72,8 @@ return [
     ],
 
     'summary' => [
+        'title' => 'Account summary',
+        'not_found' => 'This account could not be found.',
         'subtitle' => 'Income, expense, and transfers for this account.',
         'range' => 'Period',
         'from' => 'From',

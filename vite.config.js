@@ -21,6 +21,8 @@ export default defineConfig({
                 'resources/js/accounts/form.js',
                 'resources/js/records/index.js',
                 'resources/js/records/form.js',
+                'resources/js/categories/index.js',
+                'resources/js/categories/form.js',
             ],
             refresh: true,
             fonts: [

@@ -31,6 +31,10 @@ class StoreRecordRequest extends FormRequest
                 Rule::requiredIf($this->input('type') === RecordType::Transfer->value),
                 'nullable', 'integer', 'different:account_id', 'exists:accounts,id',
             ],
+            'category_id' => [
+                'nullable', 'integer',
+                Rule::exists('categories', 'id')->where('type', $this->input('type')),
+            ],
             'amount' => ['required', 'numeric', 'decimal:0,2', 'gt:0', 'max:9999999999.99'],
             'note' => ['nullable', 'string'],
             'recorded_at' => ['required', 'date'],

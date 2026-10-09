@@ -183,3 +183,9 @@ it('sets the balance directly without adding a record when adjusting by balance'
     expect($target->fresh()->last_balance)->toEqual('250.00');
     $this->assertDatabaseCount('records', 0);
 });
+
+it('renders the account summary page without looking the account up server-side', function () {
+    $actor = User::factory()->create();
+
+    $this->actingAs($actor)->get('/accounts/999/summary')->assertOk();
+});

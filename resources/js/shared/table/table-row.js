@@ -12,7 +12,7 @@ const ICON_DELETE =
  * mobile card collapse. Labels are read from the tbody's data-label-* attributes.
  *
  * render({ id, cells, editUrl, onDelete, locked }):
- *   cells    text for each data column (first is emphasised)
+ *   cells    text (or a DOM node, e.g. an icon) for each data column (first is emphasised)
  *   locked   row can't be selected or deleted (e.g. the current user)
  */
 export function createTableRow({ tbody, selection, selectAll }) {
@@ -42,7 +42,11 @@ export function createTableRow({ tbody, selection, selectAll }) {
             cells.forEach((value, index) => {
                 const cell = row.children[index + offset];
                 cell.dataset.label = headerLabels[index + offset] ?? '';
-                cell.textContent = value;
+                if (value instanceof Node) {
+                    cell.replaceChildren(value);
+                } else {
+                    cell.textContent = value;
+                }
                 // Mobile: the action icons sit in a band above the first value, so push that value below them.
                 // Margin, not padding: the table's mobile styles already set the cell's padding.
                 if (index === 0) {

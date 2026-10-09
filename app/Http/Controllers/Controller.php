@@ -16,6 +16,7 @@ use OpenApi\Attributes as OA;
 #[OA\Tag(name: 'Auth', description: 'Authentication endpoints')]
 #[OA\Tag(name: 'Profile', description: 'Authenticated user profile endpoints')]
 #[OA\Tag(name: 'Accounts', description: 'Account endpoints')]
+#[OA\Tag(name: 'Categories', description: 'Record category endpoints')]
 #[OA\Schema(
     schema: 'User',
     properties: [

@@ -45,6 +45,18 @@ function render({ totals }) {
     setValue('record_count', recordsLabel.replace(':count', totals.record_count));
 }
 
+async function loadAccountName() {
+    const { ok, data } = await get(routes.accounts.show(accountId));
+    const title = document.getElementById('account-name');
+
+    title.textContent = ok ? data.data.name : title.dataset.notFound;
+    document.title = ok ? `${data.data.name} - ${document.title}` : document.title;
+    document.getElementById('account-name-skeleton').classList.add('hidden');
+    title.classList.remove('hidden');
+}
+
+loadAccountName();
+
 const recordsTable = createTable({
     ids: {
         table: 'account-records-table',
@@ -74,6 +86,7 @@ const recordsTable = createTable({
         cells: [
             formatDateTime(item.recorded_at),
             typeLabels[item.type] ?? item.type,
+            item.type === 'transfer' ? '' : (item.category ?? root.dataset.uncategorized),
             item.to_account ? `${item.account} → ${item.to_account}` : item.account,
             `${SIGNS[item.type]}${formatMoney(item.amount)}`,
             item.note ?? '',

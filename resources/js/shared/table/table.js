@@ -73,6 +73,44 @@ export function createMultiSelectFilter(dropdown) {
 }
 
 /**
+ * Fills a multi-select dropdown (see <x-molecules.multi-select>) with options loaded client-side,
+ * mirroring the markup the Blade component renders. Call before createMultiSelectFilter / createTable.
+ *
+ * options: [{ value, label }]
+ */
+export function fillMultiSelect(dropdown, options, { checked = false } = {}) {
+    const name = dropdown.querySelector('[data-filter-multi-search]')?.name.replace(/_search$/, '');
+    const list = dropdown.querySelector('.overflow-y-auto');
+
+    list.replaceChildren(
+        ...options.map(({ value, label }) => {
+            const row = document.createElement('label');
+            row.className =
+                'flex cursor-pointer items-center gap-3 rounded px-2 py-2 font-body text-sm text-on-surface hover:bg-surface-container';
+            row.dataset.filterMultiRow = '';
+            row.dataset.searchText = label.toLowerCase();
+
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.name = `${name}[]`;
+            checkbox.id = `${dropdown.id}-${value}`;
+            checkbox.value = value;
+            checkbox.checked = checked;
+            checkbox.dataset.tableFilter = '';
+            checkbox.className =
+                'h-4 w-4 cursor-pointer rounded border-outline-variant text-primary focus:outline-none focus:ring-2 focus:ring-primary/20';
+
+            const text = document.createElement('span');
+            text.textContent = label;
+
+            row.append(checkbox, text);
+
+            return row;
+        }),
+    );
+}
+
+/**
  * Wires up a full server-driven table (load, search, sort, per-page,
  * pagination, selection, row/bulk delete, generate) from one config object.
  *

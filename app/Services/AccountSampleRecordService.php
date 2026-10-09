@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\RecordType;
 use App\Jobs\GenerateAccountRecords;
 use App\Models\Account;
+use App\Models\Category;
 use App\Models\Record;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
@@ -72,6 +73,7 @@ class AccountSampleRecordService
             $attributes = [
                 'type' => $type,
                 'account_id' => $account->id,
+                'category_id' => Category::randomIdOfType($type),
                 'recorded_at' => fake()->dateTimeBetween($start, $end),
             ];
 

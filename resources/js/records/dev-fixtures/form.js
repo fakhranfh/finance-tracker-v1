@@ -22,10 +22,15 @@ export function recordFormFixture() {
     const type = randomItem(['income', 'expense', 'transfer']);
     const [accountId, toAccountId] = [...accountIds].sort(() => Math.random() - 0.5);
 
+    const categoryIds = [...document.querySelectorAll('#category_id option')]
+        .filter((option) => option.value && option.dataset.type === type)
+        .map((option) => option.value);
+
     return {
         type,
         account_id: accountId ?? '',
         to_account_id: type === 'transfer' ? (toAccountId ?? '') : '',
+        category_id: categoryIds.length > 0 ? randomItem(categoryIds) : '',
         amount: randomInt(1, 500) * 1000,
         note: randomItem(NOTES),
         recorded_at: toDateTimeLocal(),

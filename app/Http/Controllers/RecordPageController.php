@@ -3,8 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Enums\RecordType;
-use App\Models\Account;
-use Illuminate\Support\Collection;
 use Illuminate\View\View;
 
 class RecordPageController extends Controller
@@ -12,38 +10,22 @@ class RecordPageController extends Controller
     public function index(): View
     {
         $typeLabels = $this->typeLabels();
-        $accounts = Account::query()->orderBy('name')->get(['id', 'name']);
 
         return view('records.index', [
             'typeLabels' => $typeLabels,
-            'hasAccounts' => Account::query()->exists(),
-            'accounts' => $accounts,
-            'accountOptions' => $this->accountOptions($accounts),
             'tableHeaders' => $this->tableHeaders(),
-            'filterConfig' => $this->filterConfig($typeLabels, $accounts),
+            'filterConfig' => $this->filterConfig($typeLabels),
         ]);
     }
 
     public function create(): View
     {
-        return view('records.form', $this->formData(null));
+        return view('records.form', ['id' => null, 'typeLabels' => $this->typeLabels()]);
     }
 
     public function edit(int $id): View
     {
-        return view('records.form', $this->formData($id));
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private function formData(?int $id): array
-    {
-        return [
-            'id' => $id,
-            'typeLabels' => $this->typeLabels(),
-            'accounts' => Account::query()->orderBy('name')->get(['id', 'name']),
-        ];
+        return view('records.form', ['id' => $id, 'typeLabels' => $this->typeLabels()]);
     }
 
     /**
@@ -55,13 +37,14 @@ class RecordPageController extends Controller
     }
 
     /**
-     * @return array<int, array<string, mixed>>
+     * @return array<int, array<string, mixed>|string>
      */
     private function tableHeaders(): array
     {
         return [
             ['label' => __('records.table.recorded_at'), 'sort' => 'recorded_at'],
             ['label' => __('records.table.type'), 'sort' => 'type'],
+            __('records.table.category'),
             __('records.table.account'),
             ['label' => __('records.table.amount'), 'sort' => 'amount'],
             ['label' => __('records.table.note'), 'sort' => 'note'],
@@ -70,25 +53,13 @@ class RecordPageController extends Controller
     }
 
     /**
-     * @param  Collection<int, Account>  $accounts
-     * @return array<int, array{value: int, label: string, searchText: string}>
-     */
-    private function accountOptions(Collection $accounts): array
-    {
-        return $accounts
-            ->map(fn (Account $account) => ['value' => $account->id, 'label' => $account->name, 'searchText' => mb_strtolower($account->name)])
-            ->values()
-            ->all();
-    }
-
-    /**
-     * Filter bar definition consumed by the table organism.
+     * Filter bar definition consumed by the table organism. The account and category options
+     * are loaded from the API by the page's JS.
      *
      * @param  array<string, string>  $typeLabels
-     * @param  Collection<int, Account>  $accounts
      * @return array<int, array<string, mixed>>
      */
-    private function filterConfig(array $typeLabels, Collection $accounts): array
+    private function filterConfig(array $typeLabels): array
     {
         return [
             [
@@ -114,7 +85,18 @@ class RecordPageController extends Controller
                 'searchPlaceholder' => __('records.filters.search_accounts'),
                 'selectAllLabel' => __('records.filters.select_all'),
                 'deselectAllLabel' => __('records.filters.deselect_all'),
-                'options' => $this->accountOptions($accounts),
+                'options' => [],
+            ],
+            [
+                'type' => 'multi',
+                'key' => 'category_ids',
+                'label' => __('records.filters.category'),
+                'allLabel' => __('records.filters.all_categories'),
+                'selectedTemplate' => __('records.filters.categories_selected', ['count' => ':count']),
+                'searchPlaceholder' => __('records.filters.search_categories'),
+                'selectAllLabel' => __('records.filters.select_all'),
+                'deselectAllLabel' => __('records.filters.deselect_all'),
+                'options' => [],
             ],
             ['type' => 'date', 'key' => 'date_from', 'label' => __('records.filters.date_from')],
             ['type' => 'date', 'key' => 'date_to', 'label' => __('records.filters.date_to')],

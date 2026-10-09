@@ -1,6 +1,6 @@
 @extends('layouts.dashboard')
 
-@section('title', $account->name)
+@section('title', __('accounts.summary.title'))
 
 @section('content')
     <div class="mb-6 flex items-start justify-between gap-4">
@@ -8,18 +8,21 @@
             <a href="{{ route('accounts.index') }}" class="font-body text-body-sm text-on-surface-variant hover:underline">
                 &larr; {{ __('accounts.back') }}
             </a>
-            <h1 class="mt-2 font-heading text-headline-md font-bold text-on-surface">{{ $account->name }}</h1>
+            <h1 class="mt-2 font-heading text-headline-md font-bold text-on-surface">
+                <x-atoms.skeleton id="account-name-skeleton" class="h-8 w-48" />
+                <span id="account-name" class="hidden" data-not-found="{{ __('accounts.summary.not_found') }}"></span>
+            </h1>
             <p class="mt-1 font-body text-body-md text-on-surface-variant">{{ __('accounts.summary.subtitle') }}</p>
         </div>
 
-        <x-atoms.button href="{{ route('accounts.edit', $account->id) }}" variant="secondary" class="shrink-0">
+        <x-atoms.button href="{{ route('accounts.edit', $id) }}" variant="secondary" class="shrink-0">
             {{ __('accounts.actions.edit') }}
         </x-atoms.button>
     </div>
 
-    <div class="max-sm:pb-20" id="account-summary" data-account-id="{{ $account->id }}" data-records-label="{{ __('accounts.summary.records', ['count' => ':count']) }}" data-type-labels="{{ json_encode($typeLabels) }}">
+    <div class="max-sm:pb-20" id="account-summary" data-account-id="{{ $id }}" data-records-label="{{ __('accounts.summary.records', ['count' => ':count']) }}" data-type-labels="{{ json_encode($typeLabels) }}" data-uncategorized="{{ __('records.fields.no_category') }}">
         <div data-summary-filter-inline class="mb-6 hidden sm:block">
-            <form id="account-summary-filter" method="GET" action="{{ route('accounts.summary', $account) }}" class="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end">
+            <form id="account-summary-filter" method="GET" action="{{ route('accounts.summary', $id) }}" class="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end">
                 @include('accounts.partials.summary-filter-fields', ['presets' => $presets, 'range' => $range])
             </form>
         </div>

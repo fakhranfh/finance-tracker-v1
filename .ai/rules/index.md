@@ -11,6 +11,7 @@ Before planning or editing, find the row whose globs match the file's path and r
 | ** | .ai/rules/e2e-testing.md |
 | resources/js/**, resources/views/** | .ai/rules/form-validation-errors.md |
 | resources/js/**, resources/views/** | .ai/rules/formatting.md |
+| ** | .ai/rules/full-output.md |
 | ** | .ai/rules/general.md |
 | ** | .ai/rules/graphify.md |
 | resources/js/** | .ai/rules/http-client.md |

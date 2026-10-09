@@ -2,6 +2,7 @@
 
 namespace App\Exports;
 
+use App\Enums\RecordType;
 use App\Models\Record;
 use Generator;
 use Illuminate\Support\LazyCollection;
@@ -53,6 +54,7 @@ class RecordsExport implements FromGenerator, ShouldAutoSize, WithColumnFormatti
         return [
             $row->recorded_at->timezone($this->timezone)->format($this->dateFormat),
             $row->type->label(),
+            $row->category->name ?? ($row->type === RecordType::Transfer ? '' : __('records.fields.no_category')),
             $row->account->name,
             $row->toAccount->name ?? '',
             (float) $row->amount,
@@ -65,7 +67,7 @@ class RecordsExport implements FromGenerator, ShouldAutoSize, WithColumnFormatti
      */
     public function columnFormats(): array
     {
-        return ['E' => '"Rp" #,##0.00'];
+        return ['F' => '"Rp" #,##0.00'];
     }
 
     /**
@@ -74,14 +76,14 @@ class RecordsExport implements FromGenerator, ShouldAutoSize, WithColumnFormatti
     public function styles(Worksheet $sheet): array
     {
         $headingRow = count($this->filterLines) + 3;
-        $sheet->mergeCells('A1:F1');
+        $sheet->mergeCells('A1:G1');
 
         foreach (array_keys($this->filterLines) as $i) {
-            $sheet->mergeCells('A'.($i + 2).':F'.($i + 2));
+            $sheet->mergeCells('A'.($i + 2).':G'.($i + 2));
         }
 
         if ($this->filterLines !== []) {
-            $sheet->getStyle('A2:F'.(count($this->filterLines) + 1))
+            $sheet->getStyle('A2:G'.(count($this->filterLines) + 1))
                 ->getBorders()->getOutline()->setBorderStyle(Border::BORDER_THIN);
         }
 

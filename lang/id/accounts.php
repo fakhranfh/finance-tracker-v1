@@ -72,6 +72,8 @@ return [
     ],
 
     'summary' => [
+        'title' => 'Ringkasan akun',
+        'not_found' => 'Akun ini tidak ditemukan.',
         'subtitle' => 'Pemasukan, pengeluaran, dan transfer untuk akun ini.',
         'range' => 'Periode',
         'from' => 'Dari',

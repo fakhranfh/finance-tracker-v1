@@ -21,21 +21,20 @@
     </div>
 
     <div class="w-full rounded-lg border border-outline-variant bg-surface p-6">
-        @if ($accounts->isEmpty())
+        <x-organisms.record-form-skeleton id="record-form-skeleton" />
+
+        <div id="record-no-accounts" class="hidden">
             <p class="mb-4 font-body text-body-md text-on-surface-variant">
                 {{ __('records.no_accounts') }}
             </p>
             <x-atoms.button href="{{ route('accounts.create') }}">
                 {{ __('accounts.create') }}
             </x-atoms.button>
-        @else
-        @if ($id)
-            <x-organisms.record-form-skeleton id="record-form-skeleton" />
-        @endif
+        </div>
 
         <form
             id="record-form"
-            @class(['space-y-5', 'hidden' => $id])
+            class="hidden space-y-5"
             novalidate
             @if ($id) data-item-id="{{ $id }}" @endif
             data-success-message="{{ $id ? __('records.flash.updated') : __('records.flash.created') }}"
@@ -61,9 +60,6 @@
                 </x-atoms.label>
                 <x-atoms.select name="account_id" required>
                     <option value="">{{ __('records.fields.select_account') }}</option>
-                    @foreach ($accounts as $account)
-                        <option value="{{ $account->id }}">{{ $account->name }}</option>
-                    @endforeach
                 </x-atoms.select>
                 <x-atoms.form-error for="account_id" />
             </div>
@@ -72,11 +68,16 @@
                 <x-atoms.label for="to_account_id">{{ __('records.fields.to_account') }}</x-atoms.label>
                 <x-atoms.select name="to_account_id">
                     <option value="">{{ __('records.fields.select_account') }}</option>
-                    @foreach ($accounts as $account)
-                        <option value="{{ $account->id }}">{{ $account->name }}</option>
-                    @endforeach
                 </x-atoms.select>
                 <x-atoms.form-error for="to_account_id" />
+            </div>
+
+            <div class="space-y-1.5" data-category-field>
+                <x-atoms.label for="category_id">{{ __('records.fields.category') }}</x-atoms.label>
+                <x-atoms.select name="category_id">
+                    <option value="">{{ __('records.fields.no_category') }}</option>
+                </x-atoms.select>
+                <x-atoms.form-error for="category_id" />
             </div>
 
             <x-molecules.form-group name="amount" type="number" :label="__('records.fields.amount')" step="1" min="1" required />
@@ -92,7 +93,6 @@
                 </x-atoms.button>
             </div>
         </form>
-        @endif
     </div>
 @endsection
 

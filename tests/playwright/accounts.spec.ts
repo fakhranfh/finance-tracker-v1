@@ -106,6 +106,23 @@ test.describe('Manage Accounts', () => {
         await expect(modal.locator('#reorder-accounts-list li').first()).toContainText('Order B');
     });
 
+    test('shows the account name on the summary page', async ({ page }) => {
+        const { email, password } = seedUser();
+        const name = `Summary ${Date.now()}`;
+
+        await login(page, email, password);
+        await page.goto('/accounts/create');
+        await page.getByLabel('Name', { exact: true }).fill(name);
+        await page.getByLabel('Balance', { exact: true }).fill('1000');
+        await page.getByRole('button', { name: 'Save' }).click();
+        await expect(page).toHaveURL('/accounts');
+
+        await page.getByRole('row', { name: new RegExp(name) }).getByRole('link', { name: 'View' }).click();
+
+        await expect(page).toHaveURL(/\/accounts\/\d+\/summary$/);
+        await expect(page.getByRole('heading', { name })).toBeVisible();
+    });
+
     test('redirects a guest to login', async ({ page }) => {
         await page.goto('/accounts');
 

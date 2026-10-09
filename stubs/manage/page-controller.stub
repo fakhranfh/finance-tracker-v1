@@ -8,7 +8,12 @@ class __Model__PageController extends Controller
 {
     public function index(): View
     {
-        return view('__slug__.index');
+        $tableHeaders = [
+__tableHeaders__
+            __('__slug__.table.actions'),
+        ];
+
+        return view('__slug__.index', ['tableHeaders' => $tableHeaders]);
     }
 
     public function create(): View

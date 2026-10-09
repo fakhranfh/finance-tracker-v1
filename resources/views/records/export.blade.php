@@ -34,6 +34,7 @@
                 <tr>
                     <td>{{ $record->recorded_at->timezone($timezone)->format($dateFormat) }}</td>
                     <td>{{ $record->type->label() }}</td>
+                    <td>{{ $record->category?->name ?? ($record->type->value === 'transfer' ? '' : __('records.fields.no_category')) }}</td>
                     <td>{{ $record->account->name }}</td>
                     <td>{{ $record->toAccount?->name }}</td>
                     <td class="amount">Rp {{ number_format((float) $record->amount, 2, ',', '.') }}</td>

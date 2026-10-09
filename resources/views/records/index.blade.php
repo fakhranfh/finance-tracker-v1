@@ -14,22 +14,20 @@
 
         <div class="grid w-full grid-cols-[6rem_1fr] items-center gap-3 sm:flex sm:w-auto">
             @if (app()->isLocal())
-                @if ($accounts->isNotEmpty())
-                    <div class="relative col-span-2 sm:col-auto">
-                        <x-molecules.multi-select
-                            id="generate-accounts"
-                            name="account_ids"
-                            :options="$accountOptions"
-                            :all-label="__('records.actions.generate_accounts_summary', ['count' => 0])"
-                            :selected-template="__('records.actions.generate_accounts_summary', ['count' => ':count'])"
-                            :search-placeholder="__('records.filters.search_accounts')"
-                            :select-all-label="__('records.filters.select_all')"
-                            :deselect-all-label="__('records.filters.deselect_all')"
-                            :checked="true"
-                            summary-class="flex cursor-pointer list-none items-center justify-between gap-2 rounded-lg border border-outline-variant px-3 py-2 font-body text-sm text-on-surface"
-                        />
-                    </div>
-                @endif
+                <div id="generate-accounts-wrapper" class="relative col-span-2 hidden sm:col-auto">
+                    <x-molecules.multi-select
+                        id="generate-accounts"
+                        name="account_ids"
+                        :options="[]"
+                        :all-label="__('records.actions.generate_accounts_summary', ['count' => 0])"
+                        :selected-template="__('records.actions.generate_accounts_summary', ['count' => ':count'])"
+                        :search-placeholder="__('records.filters.search_accounts')"
+                        :select-all-label="__('records.filters.select_all')"
+                        :deselect-all-label="__('records.filters.deselect_all')"
+                        :checked="true"
+                        summary-class="flex cursor-pointer list-none items-center justify-between gap-2 rounded-lg border border-outline-variant px-3 py-2 font-body text-sm text-on-surface"
+                    />
+                </div>
                 <x-atoms.input
                     type="number"
                     name="generate-count"
@@ -56,22 +54,18 @@
             <x-atoms.button type="button" variant="secondary" data-export-format="pdf">
                 {{ __('records.actions.export_pdf') }}
             </x-atoms.button>
-            @if ($hasAccounts)
-                <x-atoms.button href="{{ route('records.create') }}" class="col-span-2 sm:col-auto">
-                    {{ __('records.create') }}
-                </x-atoms.button>
-            @endif
+            <x-atoms.button href="{{ route('records.create') }}" id="add-record" class="col-span-2 sm:col-auto" hidden>
+                {{ __('records.create') }}
+            </x-atoms.button>
         </div>
     </div>
 
-    @unless ($hasAccounts)
-        <div class="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-warning/20 bg-warning/10 px-4 py-3 font-body text-sm text-on-surface">
-            <span>{{ __('records.no_accounts') }}</span>
-            <x-atoms.button href="{{ route('accounts.create') }}">
-                {{ __('accounts.create') }}
-            </x-atoms.button>
-        </div>
-    @endunless
+    <div id="records-no-accounts" class="mb-6 hidden flex-wrap items-center justify-between gap-3 rounded-lg border border-warning/20 bg-warning/10 px-4 py-3 font-body text-sm text-on-surface">
+        <span>{{ __('records.no_accounts') }}</span>
+        <x-atoms.button href="{{ route('accounts.create') }}">
+            {{ __('accounts.create') }}
+        </x-atoms.button>
+    </div>
 
     <div data-flash-success class="mb-6 hidden rounded-lg border border-success/20 bg-success/10 px-4 py-3 font-body text-sm text-success"></div>
 
@@ -92,6 +86,7 @@
         <x-organisms.table
             id="records-table"
             data-type-labels="{{ json_encode($typeLabels) }}"
+            data-uncategorized="{{ __('records.fields.no_category') }}"
             :headers="$tableHeaders"
             :filters="$filterConfig"
             filters-id="records-filters"

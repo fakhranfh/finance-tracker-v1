@@ -45,6 +45,31 @@ async function request(url, { method = 'GET', payload } = {}) {
 
 export const get = (url) => request(url, { method: 'GET' });
 
+/**
+ * GET every page of a paginated list endpoint and return all items.
+ * Resolves to null when any page request fails.
+ */
+export async function getAll(url) {
+    const separator = url.includes('?') ? '&' : '?';
+    const items = [];
+    let page = 1;
+    let lastPage = 1;
+
+    do {
+        const { ok, data } = await get(`${url}${separator}per_page=100&page=${page}`);
+
+        if (!ok) {
+            return null;
+        }
+
+        items.push(...data.data);
+        lastPage = data.meta?.last_page ?? 1;
+        page += 1;
+    } while (page <= lastPage);
+
+    return items;
+}
+
 export const post = (url, payload) => request(url, { method: 'POST', payload });
 
 export const put = (url, payload) => request(url, { method: 'PUT', payload });

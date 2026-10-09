@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Enums\RecordType;
-use App\Models\Account;
 use App\Services\AccountSummaryService;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -28,7 +27,7 @@ class AccountPageController extends Controller
     public function summary(Request $request, int $id): View
     {
         return view('accounts.summary', [
-            'account' => Account::query()->findOrFail($id),
+            'id' => $id,
             'presets' => $this->presetOptions(),
             'typeLabels' => $this->typeLabels(),
             'tableHeaders' => $this->recordTableHeaders(),
@@ -73,6 +72,7 @@ class AccountPageController extends Controller
         return [
             ['label' => __('records.table.recorded_at'), 'sort' => 'recorded_at'],
             ['label' => __('records.table.type'), 'sort' => 'type'],
+            __('records.table.category'),
             __('records.table.account'),
             ['label' => __('records.table.amount'), 'sort' => 'amount'],
             ['label' => __('records.table.note'), 'sort' => 'note'],

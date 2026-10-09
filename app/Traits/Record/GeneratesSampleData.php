@@ -4,6 +4,7 @@ namespace App\Traits\Record;
 
 use App\Enums\RecordType;
 use App\Models\Account;
+use App\Models\Category;
 use App\Models\Record;
 use Illuminate\Support\Collection;
 
@@ -32,7 +33,7 @@ trait GeneratesSampleData
         return $types->map(function (RecordType $type) use ($accountIds) {
             $accountId = $accountIds === [] ? null : fake()->randomElement($accountIds);
 
-            $attributes = ['type' => $type];
+            $attributes = ['type' => $type, 'category_id' => Category::randomIdOfType($type)];
 
             if ($accountId !== null) {
                 $attributes['account_id'] = $accountId;

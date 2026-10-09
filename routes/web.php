@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AccountPageController;
 use App\Http\Controllers\Auth\AuthPageController;
+use App\Http\Controllers\CategoryPageController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\ProfilePageController;
 use App\Http\Controllers\RecordPageController;
@@ -59,4 +60,8 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::get('/records', [RecordPageController::class, 'index'])->name('records.index');
     Route::get('/records/create', [RecordPageController::class, 'create'])->name('records.create');
     Route::get('/records/{id}/edit', [RecordPageController::class, 'edit'])->name('records.edit');
+
+    Route::get('/categories', [CategoryPageController::class, 'index'])->name('categories.index');
+    Route::get('/categories/create', [CategoryPageController::class, 'create'])->name('categories.create');
+    Route::get('/categories/{id}/edit', [CategoryPageController::class, 'edit'])->name('categories.edit');
 });

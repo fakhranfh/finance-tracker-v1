@@ -1,7 +1,7 @@
 import { hideSnackbar } from '../shared/error-snackbar.js';
 import { clearFieldErrors, showFieldErrors, showGenericError, validateForm } from '../shared/field-errors.js';
 import { setButtonLoading, hideSkeleton } from '../shared/loading-state.js';
-import { get, post, put } from '../shared/http.js';
+import { get, getAll, post, put } from '../shared/http.js';
 import { routes } from '../routes.js';
 import { toDateTimeLocal } from '../shared/datetime.js';
 import { wireDevTools } from './dev-tools.js';
@@ -20,6 +20,40 @@ function syncType() {
     form.querySelector('[data-transfer-only]').classList.toggle('hidden', !isTransfer);
     form.elements.namedItem('to_account_id').required = isTransfer;
     label.textContent = isTransfer ? label.dataset.transfer : label.dataset.default;
+
+    // Categories share the record's type; transfers have none.
+    const category = form.elements.namedItem('category_id');
+    form.querySelector('[data-category-field]').classList.toggle('hidden', isTransfer);
+    [...category.options].forEach((option) => {
+        option.hidden = option.value !== '' && option.dataset.type !== form.elements.type.value;
+    });
+    if (isTransfer || category.selectedOptions[0]?.hidden) {
+        category.value = '';
+    }
+}
+
+/** Fills the account and category selects from the API; resolves to whether any account exists. */
+async function loadOptions() {
+    const [accounts, categories] = await Promise.all([
+        getAll(`${routes.accounts.index}?sort=name`),
+        getAll(`${routes.categories.index}?sort=name`),
+    ]);
+
+    ['account_id', 'to_account_id'].forEach((field) => {
+        form.elements.namedItem(field).append(...(accounts ?? []).map((account) => new Option(account.name, account.id)));
+    });
+
+    form.elements.namedItem('category_id').append(
+        ...(categories ?? []).map((category) => {
+            const option = new Option(category.name, category.id);
+            option.dataset.type = category.type;
+
+            return option;
+        }),
+    );
+    syncType();
+
+    return (accounts ?? []).length > 0;
 }
 
 async function loadItem() {
@@ -29,6 +63,8 @@ async function loadItem() {
         form.elements.type.value = data.data.type;
         form.elements.namedItem('account_id').value = data.data.account_id;
         form.elements.namedItem('to_account_id').value = data.data.to_account_id ?? '';
+        syncType();
+        form.elements.namedItem('category_id').value = data.data.category_id ?? '';
         form.elements.namedItem('amount').value = data.data.amount ?? '';
         form.elements.namedItem('note').value = data.data.note ?? '';
         form.elements.namedItem('recorded_at').value = toDateTimeLocal(data.data.recorded_at);
@@ -38,7 +74,6 @@ async function loadItem() {
         form.querySelector('[type="submit"]')?.setAttribute('disabled', '');
     }
 
-    hideSkeleton('record-form', 'record-form-skeleton');
 }
 
 if (form) {
@@ -46,9 +81,20 @@ if (form) {
     form.querySelectorAll('input[name="type"]').forEach((radio) => radio.addEventListener('change', syncType));
     syncType();
 
-    if (itemId) {
-        loadItem();
-    }
+    loadOptions().then(async (hasAccounts) => {
+        if (!hasAccounts) {
+            document.getElementById('record-form-skeleton')?.classList.add('hidden');
+            document.getElementById('record-no-accounts')?.classList.remove('hidden');
+
+            return;
+        }
+
+        if (itemId) {
+            await loadItem();
+        }
+
+        hideSkeleton('record-form', 'record-form-skeleton');
+    });
 
     form.addEventListener('submit', async (event) => {
         event.preventDefault();
@@ -69,6 +115,7 @@ if (form) {
             type: form.elements.type.value,
             account_id: form.elements.namedItem('account_id').value,
             to_account_id: form.elements.type.value === 'transfer' ? form.elements.namedItem('to_account_id').value : null,
+            category_id: form.elements.type.value === 'transfer' ? null : form.elements.namedItem('category_id').value || null,
             amount: form.elements.namedItem('amount').value,
             note: form.elements.namedItem('note').value,
             recorded_at: new Date(form.elements.namedItem('recorded_at').value).toISOString(),

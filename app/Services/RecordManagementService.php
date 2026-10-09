@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\RecordType;
 use App\Exports\RecordsExport;
 use App\Models\Account;
+use App\Models\Category;
 use App\Models\Record;
 use App\Repositories\Record\RecordRepositoryInterface;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -49,6 +50,7 @@ class RecordManagementService
         $headings = [
             __('records.table.recorded_at'),
             __('records.table.type'),
+            __('records.table.category'),
             __('records.fields.from_account'),
             __('records.fields.to_account'),
             __('records.table.amount'),
@@ -84,6 +86,15 @@ class RecordManagementService
         }
         if (! empty($filters['account_ids'])) {
             $lines[__('records.filters.account')] = Account::whereIn('id', $filters['account_ids'])->pluck('name')->implode(', ');
+        }
+        if (! empty($filters['category_ids'])) {
+            $names = Category::whereIn('id', array_filter($filters['category_ids'], 'is_numeric'))->pluck('name');
+
+            if (in_array('none', $filters['category_ids'], true)) {
+                $names->push(__('records.fields.no_category'));
+            }
+
+            $lines[__('records.filters.category')] = $names->implode(', ');
         }
         if (! empty($filters['date_from'])) {
             $lines[__('records.filters.date_from')] = $filters['date_from'];
@@ -168,7 +179,7 @@ class RecordManagementService
     }
 
     /**
-     * Only transfers have a destination account.
+     * Only transfers have a destination account, and transfers have no category (validation allows none).
      *
      * @param  array<string, mixed>  $data
      * @return array<string, mixed>

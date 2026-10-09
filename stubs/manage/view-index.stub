@@ -2,13 +2,6 @@
 
 @section('title', __('__slug__.title'))
 
-@php
-    $tableHeaders = [
-__tableHeaders__
-        __('__slug__.table.actions'),
-    ];
-@endphp
-
 @section('content')
     <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>

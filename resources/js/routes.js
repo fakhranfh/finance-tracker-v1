@@ -46,6 +46,15 @@ export const routes = {
         generate: endpoint('/records/generate'),
         export: (format) => endpoint(`/records/export/${format}`),
     },
+    categories: {
+        index: endpoint('/categories'),
+        show: (id) => endpoint(`/categories/${id}`),
+        store: endpoint('/categories'),
+        update: (id) => endpoint(`/categories/${id}`),
+        destroy: (id) => endpoint(`/categories/${id}`),
+        bulkDestroy: endpoint('/categories'),
+        generate: endpoint('/categories/generate'),
+    },
     pages: {
         home: '/',
         login: '/login',
@@ -59,5 +68,8 @@ export const routes = {
         records: '/records',
         recordCreate: '/records/create',
         recordEdit: (id) => `/records/${id}/edit`,
+        categories: '/categories',
+        categoryCreate: '/categories/create',
+        categoryEdit: (id) => `/categories/${id}/edit`,
     },
 };

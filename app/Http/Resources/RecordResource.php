@@ -28,6 +28,8 @@ class RecordResource extends JsonResource
             'account' => $record->account->name,
             'to_account_id' => $record->to_account_id,
             'to_account' => $record->toAccount?->name,
+            'category_id' => $record->category_id,
+            'category' => $record->category?->name,
             'amount' => $record->amount,
             'note' => $record->note,
             'recorded_at' => $record->recorded_at->toIso8601String(),

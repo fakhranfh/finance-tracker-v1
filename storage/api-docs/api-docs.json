@@ -305,6 +305,293 @@
                 }
             }
         },
+        "/categories": {
+            "get": {
+                "tags": [
+                    "Categories"
+                ],
+                "summary": "List categories",
+                "operationId": "6b86366d1ae9290bec19e0ff245bdc49",
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "direction",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "asc",
+                                "desc"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 10
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated list of categories"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Categories"
+                ],
+                "summary": "Create a category",
+                "operationId": "def7e1e920f2e85244171dd5a6a07c1c",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Groceries"
+                                    },
+                                    "type": {
+                                        "description": "Cannot change once records use the category.",
+                                        "type": "string",
+                                        "example": "expense",
+                                        "enum": [
+                                            "income",
+                                            "expense"
+                                        ]
+                                    },
+                                    "color": {
+                                        "description": "Hex color, e.g. #2563EB.",
+                                        "type": "string",
+                                        "example": "#2563EB"
+                                    },
+                                    "icon": {
+                                        "description": "One of the keys in config/category.php.",
+                                        "type": "string",
+                                        "example": "tag"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Category created"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Categories"
+                ],
+                "summary": "Bulk delete categories",
+                "operationId": "de8e46563941001896a81c3f9ffdd9d0",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "ids": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "all": {
+                                        "type": "boolean"
+                                    },
+                                    "search": {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "Categories deleted"
+                    }
+                }
+            }
+        },
+        "/categories/{id}": {
+            "get": {
+                "tags": [
+                    "Categories"
+                ],
+                "summary": "Show a category",
+                "operationId": "8742a150548ebbc79e3d50b0bf47002a",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The category"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Categories"
+                ],
+                "summary": "Update a category",
+                "operationId": "9e4b8d7888605dcfdc58ad6545822e90",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Groceries"
+                                    },
+                                    "type": {
+                                        "description": "Cannot change once records use the category.",
+                                        "type": "string",
+                                        "example": "expense",
+                                        "enum": [
+                                            "income",
+                                            "expense"
+                                        ]
+                                    },
+                                    "color": {
+                                        "description": "Hex color, e.g. #2563EB.",
+                                        "type": "string",
+                                        "example": "#2563EB"
+                                    },
+                                    "icon": {
+                                        "description": "One of the keys in config/category.php.",
+                                        "type": "string",
+                                        "example": "tag"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Category updated"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Categories"
+                ],
+                "summary": "Delete a category",
+                "description": "Its records are kept, uncategorised.",
+                "operationId": "84bbd8ed4c82b3e735e9a99a2037f461",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Category deleted"
+                    }
+                }
+            }
+        },
+        "/categories/generate": {
+            "post": {
+                "tags": [
+                    "Categories"
+                ],
+                "summary": "Generate sample categories (local environment only)",
+                "operationId": "2ed058cf6ef1f7d158e2ebaa780b8a4c",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "count": {
+                                        "type": "integer",
+                                        "example": 10,
+                                        "maximum": 50,
+                                        "minimum": 1
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The generated categories"
+                    },
+                    "404": {
+                        "description": "Not available outside the local environment"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                }
+            }
+        },
         "/forgot-password": {
             "post": {
                 "tags": [
@@ -1112,6 +1399,10 @@
         {
             "name": "Accounts",
             "description": "Account endpoints"
+        },
+        {
+            "name": "Categories",
+            "description": "Record category endpoints"
         },
         {
             "name": "Records",

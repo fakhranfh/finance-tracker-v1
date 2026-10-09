@@ -2,6 +2,7 @@
 
 namespace App\Repositories\Record;
 
+use App\Enums\RecordType;
 use App\Models\Record;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -13,12 +14,12 @@ class RecordRepository implements RecordRepositoryInterface
 {
     public function find(int $id): ?Record
     {
-        return Record::query()->with(['account', 'toAccount'])->find($id);
+        return Record::query()->with(['account', 'toAccount', 'category'])->find($id);
     }
 
     public function paginate(int $perPage, ?string $search = null, ?string $sort = null, string $direction = 'asc', array $filters = []): LengthAwarePaginator
     {
-        $query = Record::query()->with(['account', 'toAccount']);
+        $query = Record::query()->with(['account', 'toAccount', 'category']);
 
         $this->applySearch($query, $search);
         $this->applyFilters($query, $filters);
@@ -30,7 +31,7 @@ class RecordRepository implements RecordRepositoryInterface
 
     public function export(?string $search = null, ?string $sort = null, string $direction = 'asc', array $filters = []): LazyCollection
     {
-        $query = Record::query()->with(['account', 'toAccount']);
+        $query = Record::query()->with(['account', 'toAccount', 'category']);
 
         $this->applySearch($query, $search);
         $this->applyFilters($query, $filters);
@@ -134,7 +135,8 @@ class RecordRepository implements RecordRepositoryInterface
         $query->where(function ($inner) use ($search): void {
             $inner->where('note', 'like', "%{$search}%")
                 ->orWhereHas('account', fn (Builder $q) => $q->where('name', 'like', "%{$search}%"))
-                ->orWhereHas('toAccount', fn (Builder $q) => $q->where('name', 'like', "%{$search}%"));
+                ->orWhereHas('toAccount', fn (Builder $q) => $q->where('name', 'like', "%{$search}%"))
+                ->orWhereHas('category', fn (Builder $q) => $q->where('name', 'like', "%{$search}%"));
         });
     }
 
@@ -151,22 +153,41 @@ class RecordRepository implements RecordRepositoryInterface
             ->when($filters['account_ids'] ?? [], fn (Builder $q, array $accountIds) => $q->where(fn (Builder $inner) => $inner
                 ->whereIn('account_id', $accountIds)
                 ->orWhereIn('to_account_id', $accountIds)))
+            ->when($filters['category_ids'] ?? [], fn (Builder $q, array $categoryIds) => $this->applyCategoryFilter($q, $categoryIds))
             ->when($filters['date_from'] ?? null, fn (Builder $q, string $from) => $q->whereDate('recorded_at', '>=', $from))
             ->when($filters['date_to'] ?? null, fn (Builder $q, string $to) => $q->whereDate('recorded_at', '<=', $to))
             ->when($filters['amount_min'] ?? null, fn (Builder $q, string $min) => $q->where('amount', '>=', $min))
             ->when($filters['amount_max'] ?? null, fn (Builder $q, string $max) => $q->where('amount', '<=', $max));
     }
 
+    /**
+     * "none" matches income and expense records without a category (transfers never have one).
+     *
+     * @param  Builder<Record>  $query
+     * @param  array<int, int|string>  $categoryIds
+     */
+    private function applyCategoryFilter(Builder $query, array $categoryIds): void
+    {
+        $uncategorized = in_array('none', $categoryIds, true);
+        $ids = array_values(array_filter($categoryIds, fn ($id) => $id !== 'none'));
+
+        $query->where(fn (Builder $inner) => $inner
+            ->when($ids !== [], fn (Builder $q) => $q->whereIn('category_id', $ids))
+            ->when($uncategorized, fn (Builder $q) => $q->orWhere(fn (Builder $none) => $none
+                ->whereNull('category_id')
+                ->where('type', '!=', RecordType::Transfer->value))));
+    }
+
     public function create(array $data): Record
     {
-        return Record::query()->create($data)->load(['account', 'toAccount']);
+        return Record::query()->create($data)->load(['account', 'toAccount', 'category']);
     }
 
     public function update(Record $record, array $data): Record
     {
         $record->update($data);
 
-        return $record->load(['account', 'toAccount']);
+        return $record->load(['account', 'toAccount', 'category']);
     }
 
     public function delete(Record $record): void

@@ -6,6 +6,7 @@ return [
         'dashboard' => 'Dashboard',
         'accounts' => 'Manage Accounts',
         'records' => 'Manage Records',
+        'categories' => 'Manage Categories',
     ],
     'topbar' => [
         'toggle_sidebar' => 'Toggle sidebar',
