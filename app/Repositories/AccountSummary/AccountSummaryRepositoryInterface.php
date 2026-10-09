@@ -22,6 +22,30 @@ interface AccountSummaryRepositoryInterface
     public function totalsAllFromSnapshot(int $accountId): ?array;
 
     /**
+     * Like totalsAllFromSnapshot for several accounts in one pass; accounts without a snapshot are left out.
+     *
+     * @param  array<int, int>  $accountIds
+     * @return array<int, array{income: float, expense: float, transfer_in: float, transfer_out: float, record_count: int}>
+     */
+    public function totalsAllFromSnapshotMany(array $accountIds): array;
+
+    /**
+     * Like totalsAllFromTotals for several accounts in one pass; accounts with no totals are left out.
+     *
+     * @param  array<int, int>  $accountIds
+     * @return array<int, array{income: float, expense: float, transfer_in: float, transfer_out: float, record_count: int}>
+     */
+    public function totalsAllFromTotalsMany(array $accountIds): array;
+
+    /**
+     * Like totalsInRange for several accounts in one pass, keyed by account ID.
+     *
+     * @param  array<int, int>  $accountIds
+     * @return array<int, array{income: float, expense: float, transfer_in: float, transfer_out: float, record_count: int}>
+     */
+    public function totalsInRangeMany(array $accountIds, CarbonImmutable $start, CarbonImmutable $end): array;
+
+    /**
      * Flow totals of the account over all its records, from its yearly totals or else its
      * monthly totals. Null when it has neither.
      *

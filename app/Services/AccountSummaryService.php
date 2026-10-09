@@ -131,6 +131,34 @@ class AccountSummaryService
     }
 
     /**
+     * allTime for several accounts, with one query per source instead of one per account.
+     *
+     * @param  array<int, int>  $accountIds
+     * @return array<int, array{income: float, expense: float, transfer_in: float, transfer_out: float, net: float, record_count: int}>
+     */
+    private function allTimeMany(array $accountIds): array
+    {
+        $flows = $this->summaries->totalsAllFromSnapshotMany($accountIds);
+        $flows += $this->summaries->totalsAllFromTotalsMany(array_values(array_diff($accountIds, array_keys($flows))));
+
+        $stale = [];
+        foreach (array_diff($accountIds, array_keys($flows)) as $accountId) {
+            $flows[$accountId] = $this->summaries->totalsAllFromRecords($accountId);
+
+            if ($flows[$accountId]['record_count'] > 0) {
+                $stale[] = $accountId;
+            }
+        }
+
+        // Nothing stored yet: have the job fill the snapshot and the totals for next time.
+        if ($stale !== []) {
+            SyncRecordEffects::request($stale, null, null, true);
+        }
+
+        return array_map($this->withNet(...), $flows);
+    }
+
+    /**
      * Summed flows of several accounts over a date range (all time when $start is null), from
      * the stored totals. A transfer between two of the accounts counts for both, so the
      * record counts are left for the caller.
@@ -142,11 +170,12 @@ class AccountSummaryService
     {
         $sum = ['income' => 0.0, 'expense' => 0.0, 'transfer_in' => 0.0, 'transfer_out' => 0.0];
 
-        foreach ($accountIds as $accountId) {
-            $flows = $start === null || $end === null
-                ? $this->allTime($accountId)
-                : $this->summaries->totalsInRange($accountId, $start, $end);
+        $accountIds = array_values(array_unique($accountIds));
+        $perAccount = $start === null || $end === null
+            ? $this->allTimeMany($accountIds)
+            : $this->summaries->totalsInRangeMany($accountIds, $start, $end);
 
+        foreach ($perAccount as $flows) {
             foreach ($sum as $key => $value) {
                 $sum[$key] = round($value + $flows[$key], 2);
             }

@@ -9,6 +9,10 @@ class AccountSummaryRepository implements AccountSummaryRepositoryInterface
 {
     private const CHUNK_SIZE = 500;
 
+    private const TOTALS_SELECT = 'account_id, coalesce(sum(income), 0) as income, coalesce(sum(expense), 0) as expense,
+        coalesce(sum(transfer_in), 0) as transfer_in, coalesce(sum(transfer_out), 0) as transfer_out,
+        coalesce(sum(record_count), 0) as record_count';
+
     public function totalsAll(int $accountId): array
     {
         return $this->bucketFlows($accountId, null, null);
@@ -48,6 +52,75 @@ class AccountSummaryRepository implements AccountSummaryRepositoryInterface
         }
 
         return null;
+    }
+
+    public function totalsAllFromSnapshotMany(array $accountIds): array
+    {
+        $snapshots = [];
+
+        foreach (DB::table('account_balance_snapshots')->whereIn('account_id', $accountIds)->orderBy('last_record_id')->get() as $snapshot) {
+            $snapshots[(int) $snapshot->account_id] = $snapshot;
+        }
+
+        if ($snapshots === []) {
+            return [];
+        }
+
+        $tails = array_fill_keys(array_keys($snapshots), ['income' => 0.0, 'expense' => 0.0, 'transfer_in' => 0.0, 'transfer_out' => 0.0, 'record_count' => 0]);
+        $ids = array_keys($snapshots);
+        $records = DB::table('records')
+            ->where(fn ($query) => $query->whereIn('account_id', $ids)->orWhereIn('to_account_id', $ids))
+            ->where('id', '>', min(array_map(fn ($snapshot) => (int) $snapshot->last_record_id, $snapshots)))
+            ->get(['id', 'type', 'account_id', 'to_account_id', 'amount']);
+
+        foreach ($records as $record) {
+            foreach (array_unique([(int) $record->account_id, (int) $record->to_account_id]) as $accountId) {
+                if (! isset($snapshots[$accountId]) || $record->id <= $snapshots[$accountId]->last_record_id) {
+                    continue;
+                }
+
+                $amount = (float) $record->amount;
+                $isSource = (int) $record->account_id === $accountId;
+                $key = match (true) {
+                    $record->type === 'income' && $isSource => 'income',
+                    $record->type === 'expense' && $isSource => 'expense',
+                    $record->type === 'transfer' && $isSource => 'transfer_out',
+                    $record->type === 'transfer' => 'transfer_in',
+                    default => null,
+                };
+
+                if ($key !== null) {
+                    $tails[$accountId][$key] += $amount;
+                }
+                $tails[$accountId]['record_count']++;
+            }
+        }
+
+        $flows = [];
+        foreach ($snapshots as $accountId => $snapshot) {
+            $flows[$accountId] = $this->sum($this->flows($snapshot), $tails[$accountId]);
+        }
+
+        return $flows;
+    }
+
+    public function totalsAllFromTotalsMany(array $accountIds): array
+    {
+        $flows = [];
+
+        foreach (['account_yearly_totals', 'account_monthly_totals'] as $table) {
+            $missing = array_values(array_diff($accountIds, array_keys($flows)));
+
+            if ($missing === []) {
+                break;
+            }
+
+            foreach (DB::table($table)->whereIn('account_id', $missing)->groupBy('account_id')->selectRaw('count(*) as row_count, '.self::TOTALS_SELECT)->get() as $row) {
+                $flows[(int) $row->account_id] = $this->flows($row);
+            }
+        }
+
+        return $flows;
     }
 
     public function totalsAllFromRecords(int $accountId): array
@@ -143,6 +216,13 @@ class AccountSummaryRepository implements AccountSummaryRepositoryInterface
 
     public function totalsInRange(int $accountId, CarbonImmutable $start, CarbonImmutable $end): array
     {
+        return $this->totalsInRangeMany([$accountId], $start, $end)[$accountId];
+    }
+
+    public function totalsInRangeMany(array $accountIds, CarbonImmutable $start, CarbonImmutable $end): array
+    {
+        $accountIds = array_values(array_unique($accountIds));
+
         // Whole months are those of the totals timezone, so the range is cut along its month borders.
         $timezone = $this->totalsTimezone();
         $start = $start->setTimezone($timezone);
@@ -153,7 +233,7 @@ class AccountSummaryRepository implements AccountSummaryRepositoryInterface
         $next = $end->addMicrosecond()->startOfMonth();
 
         if ($first->greaterThanOrEqualTo($next)) {
-            return $this->recordFlows($accountId, $start, $end, true);
+            return $this->recordFlowsMany($accountIds, $start, $end, true);
         }
 
         // Whole years are [$yearFrom, $yearTo): inside the whole months, so they come from the yearly totals.
@@ -162,25 +242,26 @@ class AccountSummaryRepository implements AccountSummaryRepositoryInterface
         $lastMonth = $next->subMonthNoOverflow();
 
         if ($yearFrom->lessThan($yearTo)) {
-            $parts = [$this->yearFlows($accountId, $yearFrom->year, $yearTo->year - 1)];
+            $parts = [$this->yearFlowsMany($accountIds, $yearFrom->year, $yearTo->year - 1)];
 
             if ($first->lessThan($yearFrom)) {
-                $parts[] = $this->bucketFlows($accountId, $first->toDateString(), $yearFrom->subMonthNoOverflow()->toDateString());
+                $parts[] = $this->bucketFlowsMany($accountIds, $first->toDateString(), $yearFrom->subMonthNoOverflow()->toDateString());
             }
 
             if ($yearTo->lessThanOrEqualTo($lastMonth)) {
-                $parts[] = $this->bucketFlows($accountId, $yearTo->toDateString(), $lastMonth->toDateString());
+                $parts[] = $this->bucketFlowsMany($accountIds, $yearTo->toDateString(), $lastMonth->toDateString());
             }
 
-            $months = $this->sum(...$parts);
+            $months = $this->sumMany($accountIds, ...$parts);
         } else {
-            $months = $this->bucketFlows($accountId, $first->toDateString(), $lastMonth->toDateString());
+            $months = $this->bucketFlowsMany($accountIds, $first->toDateString(), $lastMonth->toDateString());
         }
 
-        return $this->sum(
-            $this->recordFlows($accountId, $start, $first, false),
+        return $this->sumMany(
+            $accountIds,
+            $this->recordFlowsMany($accountIds, $start, $first, false),
             $months,
-            $this->recordFlows($accountId, $next, $end, true),
+            $this->recordFlowsMany($accountIds, $next, $end, true),
         );
     }
 
@@ -268,58 +349,115 @@ class AccountSummaryRepository implements AccountSummaryRepositoryInterface
      */
     private function bucketFlows(int $accountId, ?string $fromMonth, ?string $toMonth): array
     {
-        $row = DB::table('account_monthly_totals')
-            ->where('account_id', $accountId)
+        return $this->bucketFlowsMany([$accountId], $fromMonth, $toMonth)[$accountId];
+    }
+
+    /**
+     * @param  array<int, int>  $accountIds
+     * @return array<int, array{income: float, expense: float, transfer_in: float, transfer_out: float, record_count: int}>
+     */
+    private function bucketFlowsMany(array $accountIds, ?string $fromMonth, ?string $toMonth): array
+    {
+        $rows = DB::table('account_monthly_totals')
+            ->whereIn('account_id', $accountIds)
             ->when($fromMonth, fn ($query, $from) => $query->where('month', '>=', $from))
             ->when($toMonth, fn ($query, $to) => $query->where('month', '<=', $to))
-            ->selectRaw(
-                'coalesce(sum(income), 0) as income, coalesce(sum(expense), 0) as expense,
-                 coalesce(sum(transfer_in), 0) as transfer_in, coalesce(sum(transfer_out), 0) as transfer_out,
-                 coalesce(sum(record_count), 0) as record_count',
-            )
-            ->first();
+            ->groupBy('account_id')
+            ->selectRaw(self::TOTALS_SELECT)
+            ->get();
 
-        return $this->flows($row);
+        return $this->byAccount($accountIds, $rows);
     }
 
     /**
-     * Flows of the yearly totals whose year falls within [$fromYear, $toYear].
+     * @param  array<int, int>  $accountIds
+     * @return array<int, array{income: float, expense: float, transfer_in: float, transfer_out: float, record_count: int}>
      */
-    private function yearFlows(int $accountId, int $fromYear, int $toYear): array
+    private function yearFlowsMany(array $accountIds, int $fromYear, int $toYear): array
     {
-        $row = DB::table('account_yearly_totals')
-            ->where('account_id', $accountId)
+        $rows = DB::table('account_yearly_totals')
+            ->whereIn('account_id', $accountIds)
             ->whereBetween('year', [$fromYear, $toYear])
-            ->selectRaw(
-                'coalesce(sum(income), 0) as income, coalesce(sum(expense), 0) as expense,
-                 coalesce(sum(transfer_in), 0) as transfer_in, coalesce(sum(transfer_out), 0) as transfer_out,
-                 coalesce(sum(record_count), 0) as record_count',
-            )
-            ->first();
+            ->groupBy('account_id')
+            ->selectRaw(self::TOTALS_SELECT)
+            ->get();
 
-        return $this->flows($row);
+        return $this->byAccount($accountIds, $rows);
     }
 
     /**
-     * Flows of the records recorded from $from (inclusive) to $to, which is inclusive or exclusive.
+     * Flows of the records recorded from $from (inclusive) to $to, which is inclusive or exclusive,
+     * per account: one query for the source side and one for the destination side of transfers.
+     *
+     * @param  array<int, int>  $accountIds
+     * @return array<int, array{income: float, expense: float, transfer_in: float, transfer_out: float, record_count: int}>
      */
-    private function recordFlows(int $accountId, CarbonImmutable $from, CarbonImmutable $to, bool $toInclusive): array
+    private function recordFlowsMany(array $accountIds, CarbonImmutable $from, CarbonImmutable $to, bool $toInclusive): array
     {
-        $row = DB::table('records')
-            ->where(fn ($query) => $query->where('account_id', $accountId)->orWhere('to_account_id', $accountId))
+        $inRange = fn ($query) => $query
             ->where('recorded_at', '>=', $from->utc())
-            ->where('recorded_at', $toInclusive ? '<=' : '<', $to->utc())
-            ->selectRaw(
-                "coalesce(sum(case when type = 'income' and account_id = ? then amount end), 0) as income,
-                 coalesce(sum(case when type = 'expense' and account_id = ? then amount end), 0) as expense,
-                 coalesce(sum(case when type = 'transfer' and account_id = ? then amount end), 0) as transfer_out,
-                 coalesce(sum(case when type = 'transfer' and to_account_id = ? then amount end), 0) as transfer_in,
-                 count(*) as record_count",
-                [$accountId, $accountId, $accountId, $accountId],
-            )
-            ->first();
+            ->where('recorded_at', $toInclusive ? '<=' : '<', $to->utc());
 
-        return $this->flows($row);
+        $out = DB::table('records')
+            ->whereIn('account_id', $accountIds)
+            ->tap($inRange)
+            ->groupBy('account_id')
+            ->selectRaw(
+                "account_id,
+                 coalesce(sum(case when type = 'income' then amount end), 0) as income,
+                 coalesce(sum(case when type = 'expense' then amount end), 0) as expense,
+                 coalesce(sum(case when type = 'transfer' then amount end), 0) as transfer_out,
+                 0 as transfer_in,
+                 count(*) as record_count",
+            )
+            ->get();
+
+        $in = DB::table('records')
+            ->whereIn('to_account_id', $accountIds)
+            ->whereColumn('to_account_id', '!=', 'account_id')
+            ->tap($inRange)
+            ->groupBy('to_account_id')
+            ->selectRaw(
+                "to_account_id as account_id, 0 as income, 0 as expense, 0 as transfer_out,
+                 coalesce(sum(case when type = 'transfer' then amount end), 0) as transfer_in,
+                 count(*) as record_count",
+            )
+            ->get();
+
+        return $this->sumMany($accountIds, $this->byAccount($accountIds, $out), $this->byAccount($accountIds, $in));
+    }
+
+    /**
+     * @param  array<int, int>  $accountIds
+     * @param  iterable<object>  $rows  Rows with an account_id and the flow columns.
+     * @return array<int, array{income: float, expense: float, transfer_in: float, transfer_out: float, record_count: int}>
+     */
+    private function byAccount(array $accountIds, iterable $rows): array
+    {
+        $empty = ['income' => 0.0, 'expense' => 0.0, 'transfer_in' => 0.0, 'transfer_out' => 0.0, 'record_count' => 0];
+        $flows = array_fill_keys($accountIds, $empty);
+
+        foreach ($rows as $row) {
+            $flows[(int) $row->account_id] = $this->flows($row);
+        }
+
+        return $flows;
+    }
+
+    /**
+     * @param  array<int, int>  $accountIds
+     * @param  array<int, array{income: float, expense: float, transfer_in: float, transfer_out: float, record_count: int}>  ...$parts
+     * @return array<int, array{income: float, expense: float, transfer_in: float, transfer_out: float, record_count: int}>
+     */
+    private function sumMany(array $accountIds, array ...$parts): array
+    {
+        $sums = [];
+
+        foreach ($accountIds as $accountId) {
+            $sums[$accountId] = $this->sum(...array_map(fn (array $part) => $part[$accountId], $parts));
+        }
+
+        return $sums;
     }
 
     /**
