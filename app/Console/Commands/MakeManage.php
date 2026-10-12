@@ -217,7 +217,7 @@ class MakeManage extends Command
             '__openApiProps__' => $lines(fn ($f) => "new OA\\Property(property: '{$f['name']}', {$this->openApiType($f)}),", '                    '),
             '__tableHeaders__' => $headers,
             '__colspan__' => (string) (count($this->fields) + 3),
-            '__formSkeletonRows__' => implode("\n", array_map(fn () => '    <x-atoms.skeleton class="h-10 w-full" />', $this->fields)),
+            '__formSkeletonRows__' => implode("\n", array_map(fn ($f) => $this->formSkeletonRow($f), $this->fields)),
             '__rowCells__' => implode("\n", $rowCells),
             '__formFields__' => implode("\n", array_map(fn ($f, $i) => $this->formField($f, $slug, $i === 0), $this->fields, array_keys($this->fields))),
             '__formLoad__' => $lines(fn ($f) => $f['type'] === 'boolean'
@@ -374,6 +374,27 @@ class MakeManage extends Command
         $extra .= $first ? ' autofocus' : '';
 
         return "{$indent}<x-molecules.form-group name=\"{$f['name']}\" type=\"{$type}\" :label=\"{$label}\"{$extra} />";
+    }
+
+    /**
+     * Skeleton row mirroring the real input from formField(): checkbox + label for
+     * booleans, otherwise label + input.
+     *
+     * @param  Field  $f
+     */
+    private function formSkeletonRow(array $f): string
+    {
+        if ($f['type'] === 'boolean') {
+            return "    <div class=\"flex items-center gap-2\">\n"
+                ."        <x-atoms.skeleton class=\"h-4 w-4\" />\n"
+                ."        <x-atoms.skeleton class=\"h-4 w-32\" />\n"
+                .'    </div>';
+        }
+
+        return "    <div class=\"space-y-1.5\">\n"
+            ."        <x-atoms.skeleton class=\"h-4 w-24\" />\n"
+            ."        <x-atoms.skeleton class=\"h-10 w-full\" />\n"
+            .'    </div>';
     }
 
     /**

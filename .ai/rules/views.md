@@ -17,6 +17,9 @@ Always structure UI using Atomic Design principles: atoms (buttons, inputs, labe
 ## Always use skeleton loading
 Every view that renders content must have a corresponding skeleton loading state. Never inline skeleton markup inside the view it belongs to; always define it in a separate Blade component file (e.g. `resources/views/components/atoms/skeleton.blade.php` or a dedicated `*-skeleton.blade.php` component per organism/template) and include it via `<x-.../>`.
 
+## Form skeletons must mirror their inputs
+A form skeleton (`*-form-skeleton.blade.php`, shown in edit mode while the record loads) must match the real form field by field, in the same order: each `x-molecules.form-group` (label + input) becomes `<div class="space-y-1.5">` with a label bar (`h-4 w-24`) and an input bar (`h-10 w-full`); each checkbox row becomes `<div class="flex items-center gap-2">` with a `h-4 w-4` box and a label bar (`h-4 w-32`); other control types (select, textarea, radio group) get a bar matching their real height. The submit button bar (`h-11 w-32`) stays last. Never use a fixed count of identical bars. When a field is added, removed or changed in the form, update its skeleton in the same change. `make:manage` generates this from the field types (`formSkeletonRow()`), and `stubs/manage` must stay in sync.
+
 ## Every page must be multilingual (English + Indonesian)
 Every page must support multiple languages, starting with English and Bahasa Indonesia. Default the locale to English.
 

@@ -19,6 +19,8 @@ php artisan make:manage Product --fields="name:string,description:text?,price:de
 
 The command generates the model, migration, factory, repository (+ interface and binding), service, form requests, API resource, API controller (+ `DocumentsApi` and `GeneratesSampleData` traits), page controller, routes (`web.php`, `api.php`, `resources/js/routes.js`), Blade views and skeletons, JS (`index`, `form`, dev-tools, autofill fixture), EN/ID lang files, sidebar/dashboard nav entry, Vite input, a Pest feature test and a Playwright spec.
 
+The generated `*-form-skeleton` mirrors the form inputs (label + input per field, checkbox row for booleans). If you add or change fields by hand afterwards, update the skeleton too (see the "Form skeletons must mirror their inputs" rule in `views.md`).
+
 ## After generating
 - Run `php artisan migrate`, `vendor/bin/pint --dirty`, `npm run build`, and the Pest + Playwright tests.
 - Pass `--label-id`/`--labels-id` when generating; otherwise translate the entity name and field labels in `lang/id/<slug>.php` and the nav entry in `lang/id/dashboard.php` by hand (fallback output is English, e.g. `Product` -> `Produk`, `Name` -> `Nama`, `Kelola Products` -> `Kelola Produk`). Never leave English entity names in the Indonesian lang files.
