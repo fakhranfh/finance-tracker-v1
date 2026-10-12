@@ -4,11 +4,13 @@ import { setButtonLoading, hideSkeleton } from '../shared/loading-state.js';
 import { get, getAll, post, put } from '../shared/http.js';
 import { routes } from '../routes.js';
 import { toDateTimeLocal } from '../shared/datetime.js';
+import { searchableSelect } from '../shared/searchable-select.js';
 import { wireDevTools } from './dev-tools.js';
 import { recordFormFixture } from './dev-fixtures/form.js';
 
 const form = document.getElementById('record-form');
 const itemId = form?.dataset.itemId;
+const categorySelect = form ? searchableSelect(form.elements.namedItem('category_id')) : null;
 
 wireDevTools(form, recordFormFixture);
 document.querySelector('[data-dev-autofill]')?.addEventListener('click', () => syncType());
@@ -30,6 +32,7 @@ function syncType() {
     if (isTransfer || category.selectedOptions[0]?.hidden) {
         category.value = '';
     }
+    categorySelect.refresh();
 }
 
 /** Fills the account and category selects from the API; resolves to whether any account exists. */

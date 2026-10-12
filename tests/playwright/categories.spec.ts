@@ -76,7 +76,8 @@ test.describe('Manage Categories', () => {
 
         await page.goto('/records/create');
         await page.getByLabel('Account', { exact: true }).selectOption({ label: 'E2E Cash' });
-        await page.getByLabel('Category', { exact: true }).selectOption({ label: name });
+        await page.getByLabel('Category', { exact: true }).fill(name.slice(-8));
+        await page.getByRole('option', { name }).click();
         await page.getByLabel('Amount', { exact: true }).fill('5000');
         await page.getByLabel('Note', { exact: true }).fill(note);
         await page.getByRole('button', { name: 'Save' }).click();
