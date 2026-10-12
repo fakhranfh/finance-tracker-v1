@@ -5,6 +5,7 @@ return [
     'subtitle' => 'Track what you are saving up for.',
     'create' => 'Add goal',
     'edit' => 'Edit goal',
+    'show' => 'Goal details',
     'back' => 'Back to goals',
 
     'table' => [
@@ -46,6 +47,18 @@ return [
         'note' => 'Note',
     ],
 
+    'show_page' => [
+        'progress' => 'Progress',
+        'target_amount' => 'Target Amount',
+        'saved_amount' => 'Saved Amount',
+        'remaining' => 'Remaining',
+        'desired_date' => 'Desired Date',
+        'status' => 'Status',
+        'color' => 'Color',
+        'note' => 'Note',
+        'not_found' => 'This goal could not be found.',
+    ],
+
     'icons' => [
         'flag' => 'Goal',
         'home' => 'Home',
@@ -58,6 +71,7 @@ return [
     ],
 
     'actions' => [
+        'view' => 'View',
         'edit' => 'Edit',
         'delete' => 'Delete',
         'save' => 'Save',

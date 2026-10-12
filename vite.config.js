@@ -26,6 +26,7 @@ export default defineConfig({
                 'resources/js/categories/form.js',
                 'resources/js/goals/index.js',
                 'resources/js/goals/form.js',
+                'resources/js/goals/show.js',
             ],
             refresh: true,
             fonts: [

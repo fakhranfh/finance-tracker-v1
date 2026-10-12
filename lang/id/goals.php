@@ -5,6 +5,7 @@ return [
     'subtitle' => 'Pantau tabungan untuk hal yang ingin kamu beli.',
     'create' => 'Tambah target',
     'edit' => 'Ubah target',
+    'show' => 'Detail target',
     'back' => 'Kembali ke daftar target',
 
     'table' => [
@@ -46,6 +47,18 @@ return [
         'note' => 'Catatan',
     ],
 
+    'show_page' => [
+        'progress' => 'Progres',
+        'target_amount' => 'Jumlah Target',
+        'saved_amount' => 'Jumlah Terkumpul',
+        'remaining' => 'Sisa',
+        'desired_date' => 'Tanggal Diinginkan',
+        'status' => 'Status',
+        'color' => 'Warna',
+        'note' => 'Catatan',
+        'not_found' => 'Target ini tidak ditemukan.',
+    ],
+
     'icons' => [
         'flag' => 'Target',
         'home' => 'Rumah',
@@ -58,6 +71,7 @@ return [
     ],
 
     'actions' => [
+        'view' => 'Lihat',
         'edit' => 'Ubah',
         'delete' => 'Hapus',
         'save' => 'Simpan',

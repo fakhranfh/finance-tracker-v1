@@ -83,6 +83,7 @@ export const routes = {
         categoryEdit: (id) => `/categories/${id}/edit`,
         goals: '/goals',
         goalCreate: '/goals/create',
+        goalShow: (id) => `/goals/${id}`,
         goalEdit: (id) => `/goals/${id}/edit`,
     },
 };

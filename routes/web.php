@@ -68,5 +68,6 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
 
     Route::get('/goals', [GoalPageController::class, 'index'])->name('goals.index');
     Route::get('/goals/create', [GoalPageController::class, 'create'])->name('goals.create');
+    Route::get('/goals/{id}', [GoalPageController::class, 'show'])->whereNumber('id')->name('goals.show');
     Route::get('/goals/{id}/edit', [GoalPageController::class, 'edit'])->name('goals.edit');
 });

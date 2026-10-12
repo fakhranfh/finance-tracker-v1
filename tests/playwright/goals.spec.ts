@@ -49,7 +49,14 @@ test.describe('Manage Goals', () => {
         await expect(row.locator('select')).toHaveValue('paused');
         await expect(row.locator('td svg.size-6')).toBeVisible();
 
-        await row.getByRole('link', { name: 'Edit' }).click();
+        await row.getByRole('link', { name: 'View' }).click();
+        await expect(page).toHaveURL(/\/goals\/\d+$/);
+        await expect(page.getByRole('heading', { name: 'Goal details' })).toBeVisible();
+        await expect(page.getByRole('heading', { name: mainValue })).toBeVisible();
+        await expect(page.getByText('Mar 15, 2027')).toBeVisible();
+        await expect(page.getByText('E2E Note')).toBeVisible();
+        await page.getByRole('link', { name: 'Edit' }).click();
+
         await expect(page.getByLabel('Name', { exact: true })).toHaveValue(mainValue);
         await expect(page.getByLabel('Saved Amount', { exact: true })).toHaveValue('2.500.000');
         await expect(page.getByLabel('Paused', { exact: true })).toBeChecked();
@@ -74,6 +81,12 @@ test.describe('Manage Goals', () => {
 
     test('redirects a guest to login', async ({ page }) => {
         await page.goto('/goals');
+
+        await expect(page).toHaveURL(/\/login$/);
+    });
+
+    test('redirects a guest from the goal detail page to login', async ({ page }) => {
+        await page.goto('/goals/1');
 
         await expect(page).toHaveURL(/\/login$/);
     });

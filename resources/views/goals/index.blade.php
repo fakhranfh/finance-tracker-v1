@@ -73,6 +73,7 @@
                     'clearSelection' => __('goals.table.clear_selection'),
                     'expand' => __('goals.table.show_more'),
                     'collapse' => __('goals.table.show_less'),
+                    'view' => __('goals.actions.view'),
                     'edit' => __('goals.actions.edit'),
                     'delete' => __('goals.actions.delete'),
                 ],

@@ -105,6 +105,7 @@ createTable({
             iconNode(item.icon, item.color),
             item.note ?? '',
         ],
+        viewUrl: routes.pages.goalShow(item.id),
         editUrl: routes.pages.goalEdit(item.id),
         locked: false,
     }),
