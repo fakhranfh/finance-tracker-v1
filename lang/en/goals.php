@@ -12,6 +12,7 @@ return [
         'target_amount' => 'Target Amount',
         'saved_amount' => 'Saved Amount',
         'desired_date' => 'Desired Date',
+        'status' => 'Status',
         'color' => 'Color',
         'icon' => 'Icon',
         'note' => 'Note',
@@ -28,11 +29,18 @@ return [
         'clear_selection' => 'Clear selection',
     ],
 
+    'statuses' => [
+        'active' => 'Active',
+        'paused' => 'Paused',
+        'reached' => 'Reached',
+    ],
+
     'fields' => [
         'name' => 'Name',
         'target_amount' => 'Target Amount',
         'saved_amount' => 'Saved Amount',
         'desired_date' => 'Desired Date',
+        'status' => 'Status',
         'color' => 'Color',
         'icon' => 'Icon',
         'note' => 'Note',

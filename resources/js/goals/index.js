@@ -5,6 +5,7 @@ import { routes } from '../routes.js';
 
 const table = document.getElementById('goals-table');
 const icons = JSON.parse(table?.dataset.icons ?? '{}');
+const statusLabels = JSON.parse(table?.dataset.statusLabels ?? '{}');
 
 function iconNode(name, color) {
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -63,6 +64,7 @@ createTable({
             formatMoney(item.target_amount),
             formatMoney(item.saved_amount),
             formatDate(item.desired_date),
+            statusLabels[item.status] ?? item.status ?? '',
             colorNode(item.color ?? ''),
             iconNode(item.icon, item.color),
             item.note ?? '',

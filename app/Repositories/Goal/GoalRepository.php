@@ -19,7 +19,7 @@ class GoalRepository implements GoalRepositoryInterface
 
         $this->applySearch($query, $search);
 
-        $sortable = ['name', 'target_amount', 'saved_amount', 'desired_date', 'created_at'];
+        $sortable = ['name', 'target_amount', 'saved_amount', 'desired_date', 'status', 'created_at'];
         $direction = $direction === 'desc' ? 'desc' : 'asc';
 
         if ($sort && in_array($sort, $sortable, true)) {

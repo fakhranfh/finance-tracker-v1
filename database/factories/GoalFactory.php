@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\GoalStatus;
 use App\Models\Goal;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -27,6 +28,7 @@ class GoalFactory extends Factory
             'desired_date' => fake()->dateTimeBetween('+1 month', '+2 years')->format('Y-m-d'),
             'color' => $sample['color'],
             'icon' => $sample['icon'],
+            'status' => fake()->randomElement(GoalStatus::cases()),
             'note' => fake()->boolean() ? $sample['note'] : null,
         ];
     }

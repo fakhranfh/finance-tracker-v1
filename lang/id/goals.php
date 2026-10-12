@@ -12,6 +12,7 @@ return [
         'target_amount' => 'Target Dana',
         'saved_amount' => 'Sudah Terkumpul',
         'desired_date' => 'Tanggal Diinginkan',
+        'status' => 'Status',
         'color' => 'Warna',
         'icon' => 'Ikon',
         'note' => 'Catatan',
@@ -28,11 +29,18 @@ return [
         'clear_selection' => 'Batalkan pilihan',
     ],
 
+    'statuses' => [
+        'active' => 'Aktif',
+        'paused' => 'Dijeda',
+        'reached' => 'Tercapai',
+    ],
+
     'fields' => [
         'name' => 'Nama',
         'target_amount' => 'Target Dana',
         'saved_amount' => 'Sudah Terkumpul',
         'desired_date' => 'Tanggal Diinginkan',
+        'status' => 'Status',
         'color' => 'Warna',
         'icon' => 'Ikon',
         'note' => 'Catatan',

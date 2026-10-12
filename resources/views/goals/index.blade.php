@@ -60,6 +60,7 @@
         <x-organisms.table
             id="goals-table"
             data-icons="{{ json_encode($icons) }}"
+            data-status-labels="{{ json_encode($statusLabels) }}"
             :headers="$tableHeaders"
             :config="[
                 'labels' => [

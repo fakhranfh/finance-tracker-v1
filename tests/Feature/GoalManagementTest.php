@@ -15,7 +15,7 @@ it('lists goals via the api', function () {
     $response = $this->actingAs($actor)->getJson('/api/goals');
 
     $response->assertOk();
-    $response->assertJsonStructure(['data' => [['id', 'name', 'target_amount', 'saved_amount', 'desired_date', 'color', 'icon', 'note', 'created_at']]]);
+    $response->assertJsonStructure(['data' => [['id', 'name', 'target_amount', 'saved_amount', 'desired_date', 'color', 'icon', 'status', 'note', 'created_at']]]);
     expect($response->json('data'))->toHaveCount(3);
 });
 
@@ -40,11 +40,13 @@ it('creates a goal via the api', function () {
         'desired_date' => '2026-01-15',
         'color' => '#2563EB',
         'icon' => 'flag',
+        'status' => 'paused',
         'note' => 'Sample note',
     ]);
 
     $response->assertStatus(201);
     $response->assertJsonPath('data.name', 'Sample name');
+    $response->assertJsonPath('data.status', 'paused');
     $this->assertDatabaseHas('goals', ['name' => 'Sample name']);
 });
 
@@ -58,6 +60,7 @@ it('creates a goal without a note', function () {
         'desired_date' => '2026-12-31',
         'color' => '#2563EB',
         'icon' => 'flag',
+        'status' => 'active',
     ])->assertStatus(201)->assertJsonPath('data.note', null);
 });
 
@@ -71,10 +74,11 @@ it('rejects invalid goal amounts, color and icon', function () {
         'desired_date' => 'not-a-date',
         'color' => 'blue',
         'icon' => 'unknown',
+        'status' => 'done',
     ]);
 
     $response->assertStatus(422);
-    $response->assertJsonValidationErrors(['target_amount', 'saved_amount', 'desired_date', 'color', 'icon']);
+    $response->assertJsonValidationErrors(['target_amount', 'saved_amount', 'desired_date', 'color', 'icon', 'status']);
 });
 
 it('returns the desired date as a plain calendar date', function () {
@@ -90,7 +94,7 @@ it('rejects creating a goal with missing required fields', function () {
     $response = $this->actingAs($actor)->postJson('/api/goals', []);
 
     $response->assertStatus(422);
-    $response->assertJsonValidationErrors(['name', 'target_amount', 'saved_amount', 'desired_date', 'color', 'icon']);
+    $response->assertJsonValidationErrors(['name', 'target_amount', 'saved_amount', 'desired_date', 'color', 'icon', 'status']);
 });
 
 it('shows a goal via the api', function () {
@@ -114,11 +118,13 @@ it('updates a goal via the api', function () {
         'desired_date' => '2026-02-20',
         'color' => '#10B981',
         'icon' => 'home',
+        'status' => 'reached',
         'note' => 'Updated note',
     ]);
 
     $response->assertOk();
     $response->assertJsonPath('data.name', 'Updated name');
+    $response->assertJsonPath('data.status', 'reached');
 });
 
 it('deletes a goal via the api', function () {

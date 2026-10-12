@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Goal;
 
+use App\Enums\GoalStatus;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -30,6 +31,7 @@ class StoreGoalRequest extends FormRequest
             'desired_date' => ['required', 'date_format:Y-m-d'],
             'color' => ['required', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'icon' => ['required', 'string', Rule::in(array_keys(config('goal.icons')))],
+            'status' => ['required', Rule::enum(GoalStatus::class)],
             'note' => ['nullable', 'string', 'max:1000'],
         ];
     }

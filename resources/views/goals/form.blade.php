@@ -39,6 +39,16 @@
             <x-molecules.form-group name="saved_amount" type="number" :label="__('goals.fields.saved_amount')" step="0.01" min="0" value="0" data-calculator required />
             <x-molecules.form-group name="desired_date" type="date" :label="__('goals.fields.desired_date')" required />
 
+            <div class="space-y-1.5">
+                <x-atoms.label for="status">{{ __('goals.fields.status') }}</x-atoms.label>
+                <x-atoms.select name="status" required>
+                    @foreach ($statuses as $status)
+                        <option value="{{ $status->value }}" @selected($status === \App\Enums\GoalStatus::Active)>{{ $status->label() }}</option>
+                    @endforeach
+                </x-atoms.select>
+                <x-atoms.form-error for="status" />
+            </div>
+
             <fieldset class="space-y-2">
                 <legend class="font-body text-body-sm font-medium text-on-surface">{{ __('goals.fields.color') }}</legend>
                 <div class="flex items-center gap-3">

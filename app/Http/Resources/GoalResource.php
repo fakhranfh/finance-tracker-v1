@@ -29,6 +29,7 @@ class GoalResource extends JsonResource
             'desired_date' => $goal->desired_date,
             'color' => $goal->color,
             'icon' => $goal->icon,
+            'status' => $goal->status->value,
             'note' => $goal->note,
             'created_at' => $goal->created_at?->toIso8601String(),
         ];

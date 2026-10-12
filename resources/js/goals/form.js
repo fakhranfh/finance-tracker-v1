@@ -33,6 +33,7 @@ async function loadItem() {
         form.elements.namedItem('desired_date').value = data.data.desired_date ?? '';
         form.elements.namedItem('color').value = data.data.color ?? '';
         form.elements.namedItem('icon').value = data.data.icon ?? '';
+        form.elements.namedItem('status').value = data.data.status ?? 'active';
         form.elements.namedItem('note').value = data.data.note ?? '';
         syncColorLabel();
     } else {
@@ -70,6 +71,7 @@ if (form) {
             desired_date: form.elements.namedItem('desired_date').value,
             color: form.elements.namedItem('color').value,
             icon: form.elements.namedItem('icon').value,
+            status: form.elements.namedItem('status').value,
             note: form.elements.namedItem('note').value || null,
         };
 

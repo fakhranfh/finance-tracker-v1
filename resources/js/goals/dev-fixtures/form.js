@@ -6,6 +6,7 @@
  */
 
 const ICONS = ['flag', 'home', 'transport', 'cart', 'briefcase', 'education', 'heart', 'gift'];
+const STATUSES = ['active', 'paused', 'reached'];
 const WORDS = ['alpha', 'bravo', 'cedar', 'delta', 'ember', 'flint', 'grove', 'harbor', 'indigo', 'jasper'];
 
 function randomItem(items) {
@@ -35,6 +36,7 @@ export function goalFormFixture() {
         desired_date: futureDate(randomInt(30, 730)),
         color: `#${randomInt(0, 0xffffff).toString(16).padStart(6, '0')}`,
         icon: randomItem(ICONS),
+        status: randomItem(STATUSES),
         note: randomWords(8),
     };
 }

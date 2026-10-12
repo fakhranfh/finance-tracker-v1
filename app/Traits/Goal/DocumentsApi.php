@@ -38,6 +38,7 @@ trait DocumentsApi
                     new OA\Property(property: 'desired_date', type: 'string', format: 'date', example: '2026-12-31'),
                     new OA\Property(property: 'color', type: 'string', example: '#2563EB'),
                     new OA\Property(property: 'icon', type: 'string', example: 'flag'),
+                    new OA\Property(property: 'status', type: 'string', enum: ['active', 'paused', 'reached'], example: 'active'),
                     new OA\Property(property: 'note', type: 'string', nullable: true, example: 'Dana liburan akhir tahun'),
                 ]
             )
@@ -76,6 +77,7 @@ trait DocumentsApi
                     new OA\Property(property: 'desired_date', type: 'string', format: 'date', example: '2026-12-31'),
                     new OA\Property(property: 'color', type: 'string', example: '#2563EB'),
                     new OA\Property(property: 'icon', type: 'string', example: 'flag'),
+                    new OA\Property(property: 'status', type: 'string', enum: ['active', 'paused', 'reached'], example: 'active'),
                     new OA\Property(property: 'note', type: 'string', nullable: true, example: 'Dana liburan akhir tahun'),
                 ]
             )
