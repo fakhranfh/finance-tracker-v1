@@ -30,7 +30,6 @@
             class="hidden"
             data-item-id="{{ $id }}"
             data-icons="{{ json_encode($icons) }}"
-            data-status-labels="{{ json_encode($statusLabels) }}"
             data-estimate-reached="{{ __('goals.show_page.estimate_reached') }}"
             data-estimate-unknown="{{ __('goals.show_page.estimate_unknown') }}"
             data-reached-set="{{ __('goals.flash.reached_set') }}"

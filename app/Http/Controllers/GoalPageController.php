@@ -33,10 +33,9 @@ class GoalPageController extends Controller
 
     public function show(int $id): View
     {
-        $statusLabels = collect(GoalStatus::cases())->mapWithKeys(fn (GoalStatus $status) => [$status->value => $status->label()]);
-        $fields = ['estimated_completion', 'desired_date', 'status', 'color', 'note'];
+        $fields = ['estimated_completion', 'desired_date', 'note'];
 
-        return view('goals.show', ['id' => $id, 'icons' => config('goal.icons'), 'statusLabels' => $statusLabels, 'fields' => $fields]);
+        return view('goals.show', ['id' => $id, 'icons' => config('goal.icons'), 'fields' => $fields]);
     }
 
     public function edit(int $id): View

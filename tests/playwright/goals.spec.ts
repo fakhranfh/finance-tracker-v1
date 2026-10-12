@@ -58,16 +58,14 @@ test.describe('Manage Goals', () => {
         await expect(page.getByText('Estimated Completion')).toBeVisible();
         await expect(page.getByText('Remaining')).toHaveCount(0);
 
-        await page.getByRole('button', { name: 'Add saved amount' }).click();
-        await page.getByLabel('Amount to add', { exact: true }).fill('500000');
-        await page.getByRole('dialog').getByRole('button', { name: 'Save' }).click();
-        await expect(page.getByText('Saved amount updated.')).toBeVisible();
-        await expect(page.getByText(/3\.000\.000/).first()).toBeVisible();
+        await expect(page.getByRole('button', { name: 'Add saved amount' })).toBeHidden();
+        await expect(page.getByRole('button', { name: 'Set as reached' })).toBeHidden();
+        await expect(page.getByRole('button', { name: 'Delete' })).toBeHidden();
 
         await page.getByRole('link', { name: 'Edit' }).click();
 
         await expect(page.getByLabel('Name', { exact: true })).toHaveValue(mainValue);
-        await expect(page.getByLabel('Saved Amount', { exact: true })).toHaveValue('3.000.000');
+        await expect(page.getByLabel('Saved Amount', { exact: true })).toHaveValue('2.500.000');
         await expect(page.getByLabel('Paused', { exact: true })).toBeChecked();
         await page.getByLabel('Name', { exact: true }).fill(`${mainValue} Edited`);
         await page.getByRole('button', { name: 'Save' }).click();

@@ -9,7 +9,6 @@ import { routes } from '../routes.js';
 
 const root = document.getElementById('goal-show');
 const icons = JSON.parse(root?.dataset.icons ?? '{}');
-const statusLabels = JSON.parse(root?.dataset.statusLabels ?? '{}');
 
 let goal = null;
 
@@ -27,22 +26,6 @@ function iconNode(name, color) {
     svg.innerHTML = icons[name] ?? '';
 
     return svg;
-}
-
-function colorNode(color) {
-    const wrapper = document.createElement('span');
-    wrapper.className = 'inline-flex items-center gap-2';
-
-    const swatch = document.createElement('span');
-    swatch.className = 'size-4 rounded-full border border-outline-variant';
-    swatch.style.backgroundColor = color;
-
-    const hex = document.createElement('span');
-    hex.textContent = color.toUpperCase();
-
-    wrapper.append(swatch, hex);
-
-    return wrapper;
 }
 
 /** Projects when the goal is reached from the average saving pace since it was created. */
@@ -86,13 +69,13 @@ function render(current) {
     field('saved_amount').textContent = formatMoney(current.saved_amount);
     field('estimated_completion').textContent = estimateText(current);
     field('desired_date').textContent = formatDate(current.desired_date);
-    field('status').textContent = statusLabels[current.status] ?? current.status;
-    field('color').replaceChildren(colorNode(current.color));
     field('note').textContent = current.note || '-';
 
     const locked = current.status === 'reached';
     document.getElementById('goal-edit-link').classList.toggle('!hidden', locked);
-    ['set-reached-open', 'add-saved-open'].forEach((id) => document.getElementById(id).classList.toggle('!hidden', locked));
+    const paused = current.status === 'paused';
+    ['set-reached-open', 'add-saved-open'].forEach((id) => document.getElementById(id).classList.toggle('!hidden', locked || paused));
+    document.getElementById('delete-goal-open').classList.toggle('!hidden', paused);
     document.getElementById('goal-locked-notice').classList.toggle('hidden', !locked);
 }
 
