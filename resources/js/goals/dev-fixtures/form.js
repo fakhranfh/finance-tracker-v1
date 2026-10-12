@@ -5,9 +5,19 @@
  * Per .ai/rules/dev-autofill.md.
  */
 
-const ICONS = ['flag', 'home', 'transport', 'cart', 'briefcase', 'education', 'heart', 'gift'];
 const STATUSES = ['active', 'paused', 'reached'];
-const WORDS = ['alpha', 'bravo', 'cedar', 'delta', 'ember', 'flint', 'grove', 'harbor', 'indigo', 'jasper'];
+
+// Mirrors config('goal.samples') so autofill matches the dev-only "Generate" data.
+const SAMPLES = [
+    { name: 'Laptop Baru', target: 15000000, icon: 'briefcase', color: '#2563EB', note: 'Untuk bekerja dan belajar.' },
+    { name: 'Liburan Akhir Tahun', target: 8000000, icon: 'flag', color: '#F97316', note: 'Tiket dan penginapan.' },
+    { name: 'Motor Baru', target: 25000000, icon: 'transport', color: '#7C3AED', note: 'Uang muka motor.' },
+    { name: 'Dana Pernikahan', target: 50000000, icon: 'heart', color: '#EC4899', note: 'Gedung dan katering.' },
+    { name: 'Renovasi Rumah', target: 30000000, icon: 'home', color: '#10B981', note: 'Dapur dan kamar mandi.' },
+    { name: 'Kuliah S2', target: 40000000, icon: 'education', color: '#0EA5E9', note: 'Biaya semester pertama.' },
+    { name: 'Kado Orang Tua', target: 3000000, icon: 'gift', color: '#F59E0B', note: '' },
+    { name: 'Belanja Elektronik', target: 6000000, icon: 'cart', color: '#EF4444', note: '' },
+];
 
 function randomItem(items) {
     return items[Math.floor(Math.random() * items.length)];
@@ -15,10 +25,6 @@ function randomItem(items) {
 
 function randomInt(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
-function randomWords(count = 2) {
-    return Array.from({ length: count }, () => randomItem(WORDS)).join(' ');
 }
 
 function futureDate(days) {
@@ -29,14 +35,16 @@ function futureDate(days) {
 }
 
 export function goalFormFixture() {
+    const sample = randomItem(SAMPLES);
+
     return {
-        name: randomWords(2),
-        target_amount: String(randomInt(1, 100) * 1000000),
-        saved_amount: String(randomInt(0, 10) * 100000),
+        name: sample.name,
+        target_amount: String(sample.target),
+        saved_amount: String(randomInt(0, sample.target / 100000) * 100000),
         desired_date: futureDate(randomInt(30, 730)),
-        color: `#${randomInt(0, 0xffffff).toString(16).padStart(6, '0')}`,
-        icon: randomItem(ICONS),
+        color: sample.color,
+        icon: sample.icon,
         status: randomItem(STATUSES),
-        note: randomWords(8),
+        note: sample.note,
     };
 }
