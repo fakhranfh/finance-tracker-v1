@@ -80,7 +80,7 @@
                 <x-atoms.form-error for="category_id" />
             </div>
 
-            <x-molecules.form-group name="amount" type="number" :label="__('records.fields.amount')" step="1" min="1" required />
+            <x-molecules.form-group name="amount" type="text" inputmode="decimal" :label="__('records.fields.amount')" data-money required />
             <x-molecules.form-group name="recorded_at" type="datetime-local" :label="__('records.fields.recorded_at')" required />
             <x-molecules.form-group name="note" type="text" :label="__('records.fields.note')" />
 

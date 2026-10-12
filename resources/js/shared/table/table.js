@@ -1,5 +1,6 @@
 import { get } from '../http.js';
 import { openModal } from '../modal.js';
+import '../money-input.js';
 import { TableSelection } from './table-selection.js';
 import { createTableSelectAll } from './table-select-all.js';
 import { createTableRow } from './table-row.js';

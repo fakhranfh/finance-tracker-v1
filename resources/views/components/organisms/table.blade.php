@@ -40,7 +40,7 @@
                 @case('number')
                     <div>
                         <label for="{{ $filter['id'] }}" class="{{ $filterLabelClass }}">{{ $filter['label'] }}</label>
-                        <x-atoms.input type="number" name="{{ $filter['key'] }}" id="{{ $filter['id'] }}" min="0" step="0.01" inputmode="decimal" data-table-filter />
+                        <x-atoms.input type="text" name="{{ $filter['key'] }}" id="{{ $filter['id'] }}" inputmode="decimal" data-money data-table-filter />
                     </div>
                     @break
             @endswitch

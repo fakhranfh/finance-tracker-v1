@@ -3,6 +3,7 @@ import { clearFieldErrors, showFieldErrors, showGenericError, validateForm } fro
 import { setButtonLoading, hideSkeleton } from '../shared/loading-state.js';
 import { get, post, put } from '../shared/http.js';
 import { routes } from '../routes.js';
+import '../shared/money-input.js';
 import '../shared/calculator/calculator.js';
 import { wireDevTools } from './dev-tools.js';
 import { goalFormFixture } from './dev-fixtures/form.js';

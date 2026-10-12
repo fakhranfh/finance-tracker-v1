@@ -35,8 +35,8 @@
             @csrf
 
             <x-molecules.form-group name="name" type="text" :label="__('goals.fields.name')" required autofocus />
-            <x-molecules.form-group name="target_amount" type="number" :label="__('goals.fields.target_amount')" step="0.01" min="0.01" data-calculator required />
-            <x-molecules.form-group name="saved_amount" type="number" :label="__('goals.fields.saved_amount')" step="0.01" min="0" value="0" data-calculator required />
+            <x-molecules.form-group name="target_amount" type="text" inputmode="decimal" :label="__('goals.fields.target_amount')" data-money data-calculator required />
+            <x-molecules.form-group name="saved_amount" type="text" inputmode="decimal" :label="__('goals.fields.saved_amount')" value="0" data-money data-calculator required />
             <x-molecules.form-group name="desired_date" type="date" :label="__('goals.fields.desired_date')" required />
 
             <div class="space-y-1.5">

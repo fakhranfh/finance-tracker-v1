@@ -51,7 +51,7 @@ test.describe('Manage Goals', () => {
 
         await row.getByRole('link', { name: 'Edit' }).click();
         await expect(page.getByLabel('Name', { exact: true })).toHaveValue(mainValue);
-        await expect(page.getByLabel('Saved Amount', { exact: true })).toHaveValue('2500000.00');
+        await expect(page.getByLabel('Saved Amount', { exact: true })).toHaveValue('2.500.000');
         await expect(page.getByLabel('Status', { exact: true })).toHaveValue('paused');
         await page.getByLabel('Status', { exact: true }).selectOption('reached');
         await page.getByLabel('Name', { exact: true }).fill(`${mainValue} Edited`);

@@ -122,11 +122,11 @@
                     @endforeach
                 </x-atoms.select>
                 <x-atoms.input
-                    type="number"
+                    type="text"
+                    inputmode="decimal"
+                    data-money
                     name="generate-amount"
                     id="account-generate-amount"
-                    min="1"
-                    step="any"
                     placeholder="{{ __('records.actions.generate_amount_random') }}"
                     class="!w-40"
                     aria-label="{{ __('records.actions.generate_amount') }}"
