@@ -56,6 +56,15 @@ export const routes = {
         bulkDestroy: endpoint('/categories'),
         generate: endpoint('/categories/generate'),
     },
+    goals: {
+        index: endpoint('/goals'),
+        show: (id) => endpoint(`/goals/${id}`),
+        store: endpoint('/goals'),
+        update: (id) => endpoint(`/goals/${id}`),
+        destroy: (id) => endpoint(`/goals/${id}`),
+        bulkDestroy: endpoint('/goals'),
+        generate: endpoint('/goals/generate'),
+    },
     pages: {
         home: '/',
         login: '/login',
@@ -72,5 +81,8 @@ export const routes = {
         categories: '/categories',
         categoryCreate: '/categories/create',
         categoryEdit: (id) => `/categories/${id}/edit`,
+        goals: '/goals',
+        goalCreate: '/goals/create',
+        goalEdit: (id) => `/goals/${id}/edit`,
     },
 };

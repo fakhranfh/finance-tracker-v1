@@ -12,6 +12,9 @@ All money shown in the UI is Indonesian Rupiah: format it with `formatMoney()` f
 ## Dates and times are "dd MMM yyyy, HH:mm"
 All dates/times shown in the UI use `formatDateTime()` from `resources/js/shared/datetime.js` (24-hour, viewer timezone, month name in the page locale, e.g. "02 Okt 2026, 14:30"). Never call `toLocaleDateString()`/`toLocaleString()` directly.
 
+## Date-only values use formatDate()
+A calendar date with no time (e.g. a goal's desired date, `YYYY-MM-DD`) uses `formatDate()` from `resources/js/shared/datetime.js` ("02 Okt 2026"), never `formatDateTime()`, which would add a time and shift the day by timezone.
+
 ## Timestamp inputs
 Timestamp fields use `<input type="datetime-local">`: convert API values with `toDateTimeLocal()` and send them as ISO via `toISOString()`. The API returns ISO 8601.
 

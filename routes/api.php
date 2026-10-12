@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\Auth\RegisterController;
 use App\Http\Controllers\Api\Auth\ResetPasswordController;
 use App\Http\Controllers\Api\Auth\VerificationNotificationController;
 use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\Api\GoalController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\RecordController;
 use App\Http\Middleware\EnsureLocalEnvironment;
@@ -78,6 +79,14 @@ Route::middleware('web')->name('api.')->group(function (): void {
             ->parameters(['categories' => 'category'])
             ->except('create', 'edit')
             ->names('categories');
+        Route::delete('/goals', [GoalController::class, 'bulkDestroy'])->name('goals.bulk-destroy');
+        Route::post('/goals/generate', [GoalController::class, 'generate'])
+            ->middleware(EnsureLocalEnvironment::class)
+            ->name('goals.generate');
+        Route::resource('goals', GoalController::class)
+            ->parameters(['goals' => 'goal'])
+            ->except('create', 'edit')
+            ->names('goals');
         Route::post('/logout', LogoutController::class)->name('logout');
     });
 

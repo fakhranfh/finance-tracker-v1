@@ -10,6 +10,8 @@ use App\Repositories\AccountSummary\AccountSummaryRepository;
 use App\Repositories\AccountSummary\AccountSummaryRepositoryInterface;
 use App\Repositories\Category\CategoryRepository;
 use App\Repositories\Category\CategoryRepositoryInterface;
+use App\Repositories\Goal\GoalRepository;
+use App\Repositories\Goal\GoalRepositoryInterface;
 use App\Repositories\Record\RecordRepository;
 use App\Repositories\Record\RecordRepositoryInterface;
 use App\Repositories\User\UserRepository;
@@ -28,6 +30,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        $this->app->bind(GoalRepositoryInterface::class, GoalRepository::class);
         $this->app->bind(CategoryRepositoryInterface::class, CategoryRepository::class);
         $this->app->bind(RecordRepositoryInterface::class, RecordRepository::class);
         $this->app->bind(AccountRepositoryInterface::class, AccountRepository::class);

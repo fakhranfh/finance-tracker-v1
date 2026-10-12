@@ -6,6 +6,7 @@ return [
         ['label' => 'dashboard.nav.accounts', 'route' => 'accounts.index', 'active' => 'accounts.*', 'icon' => 'cube'],
         ['label' => 'dashboard.nav.records', 'route' => 'records.index', 'active' => 'records.*', 'icon' => 'cube'],
         ['label' => 'dashboard.nav.categories', 'route' => 'categories.index', 'active' => 'categories.*', 'icon' => 'tag'],
+        ['label' => 'dashboard.nav.goals', 'route' => 'goals.index', 'active' => 'goals.*', 'icon' => 'cube'],
     ],
 
     'icons' => [

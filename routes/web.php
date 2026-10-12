@@ -3,6 +3,7 @@
 use App\Http\Controllers\AccountPageController;
 use App\Http\Controllers\Auth\AuthPageController;
 use App\Http\Controllers\CategoryPageController;
+use App\Http\Controllers\GoalPageController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\ProfilePageController;
 use App\Http\Controllers\RecordPageController;
@@ -64,4 +65,8 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::get('/categories', [CategoryPageController::class, 'index'])->name('categories.index');
     Route::get('/categories/create', [CategoryPageController::class, 'create'])->name('categories.create');
     Route::get('/categories/{id}/edit', [CategoryPageController::class, 'edit'])->name('categories.edit');
+
+    Route::get('/goals', [GoalPageController::class, 'index'])->name('goals.index');
+    Route::get('/goals/create', [GoalPageController::class, 'create'])->name('goals.create');
+    Route::get('/goals/{id}/edit', [GoalPageController::class, 'edit'])->name('goals.edit');
 });

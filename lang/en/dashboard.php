@@ -7,6 +7,7 @@ return [
         'accounts' => 'Manage Accounts',
         'records' => 'Manage Records',
         'categories' => 'Manage Categories',
+        'goals' => 'Manage Goals',
     ],
     'topbar' => [
         'toggle_sidebar' => 'Toggle sidebar',

@@ -7,6 +7,7 @@ return [
         'accounts' => 'Kelola Akun',
         'records' => 'Kelola Catatan',
         'categories' => 'Kelola Kategori',
+        'goals' => 'Kelola Target',
     ],
     'topbar' => [
         'toggle_sidebar' => 'Tampilkan/sembunyikan sidebar',
