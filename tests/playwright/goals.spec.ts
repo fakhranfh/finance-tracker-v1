@@ -37,7 +37,7 @@ test.describe('Manage Goals', () => {
         await page.getByLabel('Desired Date', { exact: true }).fill('2027-03-15');
         await page.locator('input[name="color"]').fill('#10b981');
         await page.getByTitle('Home').click();
-        await page.getByLabel('Status', { exact: true }).selectOption('paused');
+        await page.getByLabel('Paused', { exact: true }).check();
         await page.getByLabel('Note', { exact: true }).fill('E2E Note');
         await page.getByRole('button', { name: 'Save' }).click();
 
@@ -46,22 +46,26 @@ test.describe('Manage Goals', () => {
         const row = page.getByRole('row', { name: new RegExp(mainValue) });
         await expect(row).toBeVisible();
         await expect(row).toContainText('Mar 15, 2027');
-        await expect(row).toContainText('Paused');
+        await expect(row.locator('select')).toHaveValue('paused');
         await expect(row.locator('td svg.size-6')).toBeVisible();
 
         await row.getByRole('link', { name: 'Edit' }).click();
         await expect(page.getByLabel('Name', { exact: true })).toHaveValue(mainValue);
         await expect(page.getByLabel('Saved Amount', { exact: true })).toHaveValue('2.500.000');
-        await expect(page.getByLabel('Status', { exact: true })).toHaveValue('paused');
-        await page.getByLabel('Status', { exact: true }).selectOption('reached');
+        await expect(page.getByLabel('Paused', { exact: true })).toBeChecked();
+        await page.getByLabel('Reached', { exact: true }).check();
         await page.getByLabel('Name', { exact: true }).fill(`${mainValue} Edited`);
         await page.getByRole('button', { name: 'Save' }).click();
 
         await expect(page).toHaveURL('/goals');
         const editedRow = page.getByRole('row', { name: new RegExp(`${mainValue} Edited`) });
         await expect(editedRow).toBeVisible();
-        await expect(editedRow).toContainText('Reached');
-        await editedRow.getByRole('button', { name: 'Delete' }).click();
+        await expect(editedRow.locator('select')).toHaveValue('reached');
+
+        await editedRow.locator('select').selectOption('active');
+        await page.reload();
+        await expect(page.getByRole('row', { name: new RegExp(`${mainValue} Edited`) }).locator('select')).toHaveValue('active');
+        await page.getByRole('row', { name: new RegExp(`${mainValue} Edited`) }).getByRole('button', { name: 'Delete' }).click();
         await expect(page.getByText('Are you sure you want to delete this goal?')).toBeVisible();
         await page.locator('#confirm-delete-goal').click();
 

@@ -1,10 +1,12 @@
 import { createTable } from '../shared/table/table.js';
 import { formatDate } from '../shared/datetime.js';
 import { formatMoney } from '../shared/money.js';
+import { put } from '../shared/http.js';
 import { routes } from '../routes.js';
 
 const table = document.getElementById('goals-table');
 const icons = JSON.parse(table?.dataset.icons ?? '{}');
+const statusError = document.querySelector('[data-status-error]');
 const statusLabels = JSON.parse(table?.dataset.statusLabels ?? '{}');
 
 function iconNode(name, color) {
@@ -37,6 +39,40 @@ function colorNode(color) {
     return wrapper;
 }
 
+/** Inline status dropdown: saves the goal with the new status and reverts the choice if that fails. */
+function statusNode(item) {
+    const select = document.createElement('select');
+    select.className =
+        'rounded-md border border-outline-variant bg-surface px-2 py-1 font-body text-body-sm text-on-surface focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-50';
+    select.setAttribute('aria-label', item.name);
+
+    Object.entries(statusLabels).forEach(([value, label]) => select.append(new Option(label, value)));
+    select.value = item.status;
+
+    select.addEventListener('change', async () => {
+        select.disabled = true;
+        statusError?.classList.add('hidden');
+
+        try {
+            const { ok } = await put(routes.goals.update(item.id), { ...item, status: select.value });
+
+            if (ok) {
+                item.status = select.value;
+            } else {
+                select.value = item.status;
+                statusError?.classList.remove('hidden');
+            }
+        } catch {
+            select.value = item.status;
+            statusError?.classList.remove('hidden');
+        } finally {
+            select.disabled = false;
+        }
+    });
+
+    return select;
+}
+
 createTable({
     ids: {
         table: 'goals-table',
@@ -64,7 +100,7 @@ createTable({
             formatMoney(item.target_amount),
             formatMoney(item.saved_amount),
             formatDate(item.desired_date),
-            statusLabels[item.status] ?? item.status ?? '',
+            statusNode(item),
             colorNode(item.color ?? ''),
             iconNode(item.icon, item.color),
             item.note ?? '',

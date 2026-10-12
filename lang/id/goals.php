@@ -75,5 +75,6 @@ return [
         'updated' => 'Target berhasil diperbarui.',
         'deleted' => 'Target berhasil dihapus.',
         'generated' => 'Target palsu berhasil dibuat.',
+        'status_failed' => 'Status target gagal diperbarui. Silakan coba lagi.',
     ],
 ];

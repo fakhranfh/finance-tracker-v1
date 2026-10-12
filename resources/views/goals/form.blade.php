@@ -39,15 +39,18 @@
             <x-molecules.form-group name="saved_amount" type="text" inputmode="decimal" :label="__('goals.fields.saved_amount')" value="0" data-money data-calculator required />
             <x-molecules.form-group name="desired_date" type="date" :label="__('goals.fields.desired_date')" required />
 
-            <div class="space-y-1.5">
-                <x-atoms.label for="status">{{ __('goals.fields.status') }}</x-atoms.label>
-                <x-atoms.select name="status" required>
+            <fieldset class="space-y-2">
+                <legend class="font-body text-body-sm font-medium text-on-surface">{{ __('goals.fields.status') }}</legend>
+                <div class="flex flex-wrap gap-x-6 gap-y-2">
                     @foreach ($statuses as $status)
-                        <option value="{{ $status->value }}" @selected($status === \App\Enums\GoalStatus::Active)>{{ $status->label() }}</option>
+                        <label class="flex cursor-pointer items-center gap-2 font-body text-body-md text-on-surface">
+                            <input type="radio" name="status" value="{{ $status->value }}" @checked($status === \App\Enums\GoalStatus::Active)>
+                            {{ $status->label() }}
+                        </label>
                     @endforeach
-                </x-atoms.select>
+                </div>
                 <x-atoms.form-error for="status" />
-            </div>
+            </fieldset>
 
             <fieldset class="space-y-2">
                 <legend class="font-body text-body-sm font-medium text-on-surface">{{ __('goals.fields.color') }}</legend>

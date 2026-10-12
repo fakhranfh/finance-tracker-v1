@@ -42,6 +42,7 @@
     </div>
 
     <div data-flash-success class="mb-6 hidden rounded-lg border border-success/20 bg-success/10 px-4 py-3 font-body text-sm text-success"></div>
+    <div data-status-error role="alert" class="mb-6 hidden rounded-lg border border-error/20 bg-error/10 px-4 py-3 font-body text-sm text-error">{{ __('goals.flash.status_failed') }}</div>
 
     <x-molecules.table-toolbar
         id="goals-table-toolbar"

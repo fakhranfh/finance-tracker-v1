@@ -75,5 +75,6 @@ return [
         'updated' => 'Goal updated successfully.',
         'deleted' => 'Goal deleted successfully.',
         'generated' => 'Fake goals generated successfully.',
+        'status_failed' => 'Could not update the goal status. Please try again.',
     ],
 ];
