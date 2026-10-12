@@ -1094,6 +1094,14 @@ class ProductService
 }
 ```
 
+### 8. One model per repository
+
+A repository wraps exactly one Eloquent model: `Repositories/{Model}/{Model}Repository.php` only queries and writes `{Model}`. Never add methods that read or write a second model (e.g. a `GoalRepository` with `paginateSavings()` / `addSaving()` for `GoalSaving`). Give the second model its own repository (+ interface and binding in `AppServiceProvider`) and its own service, e.g. `GoalSavingRepository` + `GoalSavingService`.
+
+- Loading a related model through a relation on the owning model (`with(['category'])`) is fine; querying or persisting the related model is not.
+- When a change must touch two models atomically (e.g. adding a saving also raises `goals.saved_amount`), keep the write in the repository of the model being created or changed and move the parent through the model instance it receives (`$goal->increment(...)`), or orchestrate both repositories from a service inside `DB::transaction()`.
+- Services follow the same split: one service per model, calling other services or repositories for the rest.
+
 ---
 
 ## Testing
