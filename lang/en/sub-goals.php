@@ -1,0 +1,107 @@
+<?php
+
+return [
+    'title' => 'Sub goals',
+    'subtitle' => 'The steps needed to reach this goal.',
+    'create' => 'Add sub goal',
+    'edit' => 'Edit sub goals',
+    'back' => 'Back to sub goals',
+    'back_to_goal' => 'Back to goal',
+    'show' => 'Sub goal details',
+    'edit_one' => 'Edit sub goal',
+    'back_to_sub_goal' => 'Back to sub goal',
+    'summary' => ':done of :total sub goals done · :amount in total',
+
+    'table' => [
+        'name' => 'Name',
+        'target_amount' => 'Target Amount',
+        'saved_amount' => 'Saved Amount',
+        'desired_date' => 'Desired Date',
+        'is_done' => 'Status',
+        'done' => 'Done',
+        'not_done' => 'Not done',
+        'note' => 'Note',
+        'actions' => 'Actions',
+        'empty' => 'No sub goals found.',
+        'search' => 'Search by name or note...',
+        'per_page' => 'Items per page',
+        'selected' => 'selected',
+        'show_more' => 'Show more',
+        'show_less' => 'Show less',
+        'select_all_matching' => 'Select all :total sub goals',
+        'all_selected' => 'All :total sub goals selected.',
+        'clear_selection' => 'Clear selection',
+    ],
+
+    'fields' => [
+        'name' => 'Name',
+        'target_amount' => 'Target Amount',
+        'saved_amount' => 'Saved Amount',
+        'desired_date' => 'Desired Date',
+        'is_done' => 'Done',
+        'note' => 'Note',
+    ],
+
+    'item_form' => [
+        'amount_hint' => 'Amounts stay fixed here because the sub goals must add up to the goal target. Change them together in',
+    ],
+
+    'form' => [
+        'title' => 'Sub goals',
+        'hint' => 'Optional. Break the goal down into what must be achieved. Their target amounts must add up to the goal target amount, and their saved amounts become the goal saved amount.',
+        'edit' => 'Edit sub goals',
+        'remove' => 'Remove',
+        'totals' => 'Sub goals total :total of :target',
+    ],
+
+    'validation' => [
+        'desired_date_max' => 'The desired date cannot be later than the goal desired date (:date).',
+        'target_total' => 'The sub goals target amounts add up to :total, which must equal the goal target amount (:target).',
+        'saved_total' => 'The sub goals saved amounts add up to :total, which must equal the goal saved amount (:saved).',
+        'remove_with_savings' => 'A sub goal that already has savings cannot be removed.',
+    ],
+
+    'show_page' => [
+        'title' => 'Sub goals',
+        'empty' => 'No sub goals yet. Break this goal down into the things that must be achieved.',
+        'manage' => 'Manage sub goals',
+        'goal' => 'Goal',
+        'target_amount' => 'Target Amount',
+        'saved_amount' => 'Saved Amount',
+        'desired_date' => 'Desired Date',
+        'status' => 'Status',
+        'note' => 'Note',
+        'history_title' => 'Saving history',
+        'history_date' => 'Date',
+        'history_amount' => 'Amount',
+        'history_empty' => 'No savings for this sub goal yet.',
+        'mark_done' => 'Mark as done',
+        'mark_not_done' => 'Mark as not done',
+        'not_found' => 'This sub goal could not be found.',
+    ],
+
+    'actions' => [
+        'view' => 'View',
+        'edit' => 'Edit',
+        'delete' => 'Delete',
+        'save' => 'Save',
+        'cancel' => 'Cancel',
+        'confirm_delete' => 'Are you sure you want to delete this sub goal?',
+        'delete_selected' => 'Delete selected',
+        'confirm_bulk_delete' => 'Are you sure you want to delete the selected sub goals?',
+        'generate' => 'Generate',
+        'generate_count' => 'Number of sub goals to generate',
+        'autofill' => 'Autofill',
+    ],
+
+    'flash' => [
+        'created' => 'Sub goal created successfully.',
+        'updated' => 'Sub goals saved successfully.',
+        'updated_one' => 'Sub goal updated successfully.',
+        'deleted' => 'Sub goal deleted successfully.',
+        'generated' => 'Fake sub goals generated successfully.',
+        'marked_done' => 'Sub goal marked as done.',
+        'marked_not_done' => 'Sub goal marked as not done.',
+        'status_failed' => 'Could not update the sub goal. Please try again.',
+    ],
+];

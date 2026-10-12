@@ -21,6 +21,7 @@ trait DocumentsApi
             new OA\Parameter(name: 'sort', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['amount', 'created_at'])),
             new OA\Parameter(name: 'direction', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['asc', 'desc'])),
             new OA\Parameter(name: 'date_from', in: 'query', required: false, description: 'First day to include (Y-m-d, in the user timezone)', schema: new OA\Schema(type: 'string', format: 'date')),
+            new OA\Parameter(name: 'sub_goal_id', in: 'query', required: false, description: 'Only the savings of this sub goal', schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'date_to', in: 'query', required: false, description: 'Last day to include (Y-m-d, in the user timezone)', schema: new OA\Schema(type: 'string', format: 'date')),
         ],
         responses: [
@@ -41,6 +42,7 @@ trait DocumentsApi
             content: new OA\JsonContent(
                 properties: [
                     new OA\Property(property: 'amount', type: 'number', format: 'float', example: 500000),
+                    new OA\Property(property: 'sub_goal_id', type: 'integer', nullable: true, description: 'One of the sub goals of this goal the amount is saved for', example: null),
                 ]
             )
         ),
@@ -88,6 +90,7 @@ trait DocumentsApi
             content: new OA\JsonContent(
                 properties: [
                     new OA\Property(property: 'amount', type: 'number', format: 'float', example: 500000),
+                    new OA\Property(property: 'sub_goal_id', type: 'integer', nullable: true, description: 'One of the sub goals of this goal the amount is saved for', example: null),
                 ]
             )
         ),

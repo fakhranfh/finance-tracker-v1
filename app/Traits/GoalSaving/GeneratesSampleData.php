@@ -19,8 +19,10 @@ trait GeneratesSampleData
      */
     protected function generateSampleSavings(Goal $goal, int $count = 5): Collection
     {
+        $subGoalIds = $goal->subGoals()->pluck('id');
+
         return collect(range(1, $count))->map(
-            fn (): GoalSaving => $this->goalSavingService->addSaving($goal, fake()->numberBetween(1, 100) * 10000)
+            fn (): GoalSaving => $this->goalSavingService->addSaving($goal, fake()->numberBetween(1, 100) * 10000, $subGoalIds->isEmpty() ? null : $subGoalIds->random())
         );
     }
 }

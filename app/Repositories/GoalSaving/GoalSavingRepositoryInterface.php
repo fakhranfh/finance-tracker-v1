@@ -10,19 +10,19 @@ use Illuminate\Pagination\LengthAwarePaginator;
 interface GoalSavingRepositoryInterface
 {
     /**
-     * Paginate a goal's saving history, optionally sorted (newest first by default) and limited to a time range.
+     * Paginate a goal's saving history, optionally sorted (newest first by default) and limited to a time range and to the savings of one sub goal.
      */
-    public function paginate(Goal $goal, int $perPage, ?string $sort = null, string $direction = 'desc', ?CarbonInterface $from = null, ?CarbonInterface $to = null): LengthAwarePaginator;
+    public function paginate(Goal $goal, int $perPage, ?string $sort = null, string $direction = 'desc', ?CarbonInterface $from = null, ?CarbonInterface $to = null, ?int $subGoalId = null): LengthAwarePaginator;
 
     /**
-     * Record an amount in the goal's saving history and add it to the saved amount.
+     * Record an amount (optionally for one of the goal's sub goals) in the saving history and add it to the saved amount.
      */
-    public function create(Goal $goal, string|float|int $amount): GoalSaving;
+    public function create(Goal $goal, string|float|int $amount, ?int $subGoalId = null): GoalSaving;
 
     /**
-     * Change a saving's amount and move the goal's saved amount by the difference.
+     * Change a saving's amount and sub goal and move the goal's saved amount by the difference.
      */
-    public function update(Goal $goal, GoalSaving $saving, string|float|int $amount): GoalSaving;
+    public function update(Goal $goal, GoalSaving $saving, string|float|int $amount, ?int $subGoalId = null): GoalSaving;
 
     /**
      * Remove a saving and subtract it from the goal's saved amount.

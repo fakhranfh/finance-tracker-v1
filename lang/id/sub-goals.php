@@ -1,0 +1,107 @@
+<?php
+
+return [
+    'title' => 'Sub target',
+    'subtitle' => 'Hal-hal yang perlu dicapai untuk mewujudkan target ini.',
+    'create' => 'Tambah sub target',
+    'edit' => 'Ubah semua sub target',
+    'back' => 'Kembali ke daftar sub target',
+    'back_to_goal' => 'Kembali ke target',
+    'show' => 'Detail sub target',
+    'edit_one' => 'Ubah sub target',
+    'back_to_sub_goal' => 'Kembali ke sub target',
+    'summary' => ':done dari :total sub target selesai · total :amount',
+
+    'table' => [
+        'name' => 'Nama',
+        'target_amount' => 'Target Biaya',
+        'saved_amount' => 'Terkumpul',
+        'desired_date' => 'Tanggal Target',
+        'is_done' => 'Status',
+        'done' => 'Selesai',
+        'not_done' => 'Belum selesai',
+        'note' => 'Catatan',
+        'actions' => 'Aksi',
+        'empty' => 'Belum ada sub target.',
+        'search' => 'Cari nama atau catatan...',
+        'per_page' => 'Item per halaman',
+        'selected' => 'dipilih',
+        'show_more' => 'Tampilkan lebih banyak',
+        'show_less' => 'Tampilkan lebih sedikit',
+        'select_all_matching' => 'Pilih semua :total sub target',
+        'all_selected' => 'Semua :total sub target dipilih.',
+        'clear_selection' => 'Batalkan pilihan',
+    ],
+
+    'fields' => [
+        'name' => 'Nama',
+        'target_amount' => 'Target Biaya',
+        'saved_amount' => 'Terkumpul',
+        'desired_date' => 'Tanggal Target',
+        'is_done' => 'Selesai',
+        'note' => 'Catatan',
+    ],
+
+    'item_form' => [
+        'amount_hint' => 'Jumlah dikunci di sini karena total sub target harus sama dengan target. Ubah bersama-sama lewat',
+    ],
+
+    'form' => [
+        'title' => 'Sub target',
+        'hint' => 'Opsional. Pecah target menjadi hal-hal yang perlu dicapai. Total target biayanya harus sama dengan target biaya target, dan jumlah terkumpulnya menjadi jumlah terkumpul target.',
+        'edit' => 'Ubah semua sub target',
+        'remove' => 'Hapus',
+        'totals' => 'Total sub target :total dari :target',
+    ],
+
+    'validation' => [
+        'desired_date_max' => 'Tanggal target tidak boleh melewati tanggal target goal (:date).',
+        'target_total' => 'Total target biaya sub target adalah :total, harus sama dengan target biaya target (:target).',
+        'saved_total' => 'Total terkumpul sub target adalah :total, harus sama dengan jumlah terkumpul target (:saved).',
+        'remove_with_savings' => 'Sub target yang sudah memiliki tabungan tidak bisa dihapus.',
+    ],
+
+    'show_page' => [
+        'title' => 'Sub target',
+        'empty' => 'Belum ada sub target. Pecah target ini menjadi hal-hal yang perlu dicapai.',
+        'manage' => 'Kelola sub target',
+        'goal' => 'Target',
+        'target_amount' => 'Target Biaya',
+        'saved_amount' => 'Terkumpul',
+        'desired_date' => 'Tanggal Target',
+        'status' => 'Status',
+        'note' => 'Catatan',
+        'history_title' => 'Riwayat tabungan',
+        'history_date' => 'Tanggal',
+        'history_amount' => 'Jumlah',
+        'history_empty' => 'Belum ada tabungan untuk sub target ini.',
+        'mark_done' => 'Tandai selesai',
+        'mark_not_done' => 'Tandai belum selesai',
+        'not_found' => 'Sub target ini tidak ditemukan.',
+    ],
+
+    'actions' => [
+        'view' => 'Lihat',
+        'edit' => 'Ubah',
+        'delete' => 'Hapus',
+        'save' => 'Simpan',
+        'cancel' => 'Batal',
+        'confirm_delete' => 'Yakin ingin menghapus sub target ini?',
+        'delete_selected' => 'Hapus yang dipilih',
+        'confirm_bulk_delete' => 'Yakin ingin menghapus sub target yang dipilih?',
+        'generate' => 'Generate',
+        'generate_count' => 'Jumlah sub target yang akan dibuat',
+        'autofill' => 'Isi otomatis',
+    ],
+
+    'flash' => [
+        'created' => 'Sub target berhasil ditambahkan.',
+        'updated' => 'Sub target berhasil diperbarui.',
+        'updated_one' => 'Sub target berhasil diperbarui.',
+        'deleted' => 'Sub target berhasil dihapus.',
+        'generated' => 'Sub target palsu berhasil dibuat.',
+        'marked_done' => 'Sub target ditandai selesai.',
+        'marked_not_done' => 'Sub target ditandai belum selesai.',
+        'status_failed' => 'Gagal memperbarui sub target. Silakan coba lagi.',
+    ],
+];

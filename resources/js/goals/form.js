@@ -1,12 +1,14 @@
 import { hideSnackbar } from '../shared/error-snackbar.js';
 import { clearFieldErrors, showFieldErrors, showGenericError, validateForm } from '../shared/field-errors.js';
 import { setButtonLoading, hideSkeleton } from '../shared/loading-state.js';
-import { get, post, put } from '../shared/http.js';
+import { get, getAll, post, put } from '../shared/http.js';
 import { routes } from '../routes.js';
 import '../shared/money-input.js';
 import '../shared/calculator/calculator.js';
 import { wireDevTools } from './dev-tools.js';
 import { goalFormFixture } from './dev-fixtures/form.js';
+import { subGoalFixtures } from './dev-fixtures/sub-goals.js';
+import { createSubGoalsField } from './sub-goals-field.js';
 
 const form = document.getElementById('goal-form');
 const itemId = form?.dataset.itemId;
@@ -22,6 +24,20 @@ function syncColorLabel() {
 
 colorInput?.addEventListener('input', syncColorLabel);
 wireDevTools(form, goalFormFixture);
+const subGoalsField = form ? createSubGoalsField({ form }) : null;
+
+// A new goal also gets sample sub goals that split the autofilled target and saved amount.
+document.querySelector('[data-dev-autofill]')?.addEventListener('click', () => {
+    if (!itemId) {
+        subGoalsField.fill(
+            subGoalFixtures({
+                target: form.elements.namedItem('target_amount').value,
+                saved: form.elements.namedItem('saved_amount').value,
+                desiredDate: form.elements.namedItem('desired_date').value,
+            }),
+        );
+    }
+});
 document.querySelector('[data-dev-autofill]')?.addEventListener('click', syncColorLabel);
 
 async function loadItem() {
@@ -45,6 +61,14 @@ async function loadItem() {
         form.querySelector('[type="submit"]')?.setAttribute('disabled', '');
     }
 
+    const subGoals = ok ? await getAll(routes.goals.subGoals(itemId)) : null;
+
+    if (subGoals) {
+        subGoalsField.load(subGoals);
+    } else {
+        subGoalsField.markUnloaded();
+    }
+
     hideSkeleton('goal-form', 'goal-form-skeleton');
 }
 
@@ -59,7 +83,7 @@ if (form) {
         clearFieldErrors(form);
         hideSnackbar();
 
-        const clientErrors = validateForm(form);
+        const clientErrors = { ...validateForm(form), ...subGoalsField.check() };
         if (Object.keys(clientErrors).length > 0) {
             showFieldErrors(form, clientErrors);
             return;
@@ -77,6 +101,7 @@ if (form) {
             icon: form.elements.namedItem('icon').value,
             status: form.elements.namedItem('status').value,
             note: form.elements.namedItem('note').value || null,
+            sub_goals: subGoalsField.payload(),
         };
 
         try {

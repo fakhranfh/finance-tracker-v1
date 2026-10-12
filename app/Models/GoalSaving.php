@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 /**
  * One amount added to a goal's saved amount, kept as history.
  */
-#[Fillable(['goal_id', 'amount'])]
+#[Fillable(['goal_id', 'sub_goal_id', 'amount'])]
 class GoalSaving extends Model
 {
     use HasUserTimezone;
@@ -33,5 +33,13 @@ class GoalSaving extends Model
     public function goal(): BelongsTo
     {
         return $this->belongsTo(Goal::class);
+    }
+
+    /**
+     * @return BelongsTo<SubGoal, $this>
+     */
+    public function subGoal(): BelongsTo
+    {
+        return $this->belongsTo(SubGoal::class);
     }
 }

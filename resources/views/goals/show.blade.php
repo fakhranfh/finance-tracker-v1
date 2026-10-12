@@ -64,6 +64,24 @@
                 @endforeach
             </dl>
 
+            <div
+                class="mt-6 border-t border-outline-variant pt-6"
+                id="goal-sub-goals"
+                data-summary-template="{{ __('sub-goals.summary', ['done' => ':done', 'total' => ':total', 'amount' => ':amount']) }}"
+                data-empty="{{ __('sub-goals.show_page.empty') }}"
+            >
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <h3 class="font-heading text-title-md font-bold text-on-surface">{{ __('sub-goals.show_page.title') }}</h3>
+                    <div class="flex flex-wrap items-center gap-3">
+                        <x-atoms.button href="{{ route('goals.sub-goals.index', $id) }}" id="manage-sub-goals-link" variant="secondary">
+                            {{ __('sub-goals.show_page.manage') }}
+                        </x-atoms.button>
+                    </div>
+                </div>
+
+                <p class="mt-3 font-body text-body-md text-on-surface-variant" data-sub-goals-summary></p>
+            </div>
+
             <div class="mt-6 border-t border-outline-variant pt-6">
                 <div class="flex flex-wrap items-center justify-between gap-3">
                     <h3 class="font-heading text-title-md font-bold text-on-surface">{{ __('goals.history.title') }}</h3>
@@ -89,7 +107,7 @@
 
                 <x-molecules.per-page-select :label="__('goals.table.per_page')" class="mt-3 justify-end max-sm:hidden" />
 
-                <div id="goal-savings-wrapper" class="mt-3 max-sm:pb-20">
+                <div id="goal-savings-wrapper" class="mt-3 max-sm:pb-20 [&[data-no-sub-goals]_td:nth-child(4)]:hidden [&[data-no-sub-goals]_th:nth-child(4)]:hidden">
                     <x-organisms.table
                         id="goal-savings-table"
                         :headers="$savingHeaders"
@@ -192,6 +210,14 @@
         <form id="edit-saving-form" novalidate class="space-y-5" data-invalid-message="{{ __('goals.actions.add_saved_invalid') }}">
             <x-molecules.form-group name="saving_amount" type="text" inputmode="decimal" :label="__('goals.history.amount')" data-money required />
 
+            <div class="hidden space-y-1.5" data-sub-goal-field>
+                <x-atoms.label for="saving_amount_sub_goal">{{ __('goals.history.sub_goal') }}</x-atoms.label>
+                <x-atoms.select name="sub_goal_id" id="saving_amount_sub_goal">
+                    <option value="">{{ __('goals.history.no_sub_goal') }}</option>
+                </x-atoms.select>
+                <x-atoms.form-error for="sub_goal_id" />
+            </div>
+
             <div class="flex justify-end gap-3">
                 <x-atoms.button type="button" variant="secondary" data-modal-close>
                     {{ __('goals.actions.cancel') }}
@@ -206,6 +232,14 @@
     <x-organisms.modal id="add-saved-modal" :title="__('goals.actions.add_saved_title')">
         <form id="add-saved-form" novalidate class="space-y-5" data-invalid-message="{{ __('goals.actions.add_saved_invalid') }}">
             <x-molecules.form-group name="amount" type="text" inputmode="decimal" :label="__('goals.actions.add_saved_amount')" data-money required />
+
+            <div class="hidden space-y-1.5" data-sub-goal-field>
+                <x-atoms.label for="amount_sub_goal">{{ __('goals.history.sub_goal') }}</x-atoms.label>
+                <x-atoms.select name="sub_goal_id" id="amount_sub_goal">
+                    <option value="">{{ __('goals.history.no_sub_goal') }}</option>
+                </x-atoms.select>
+                <x-atoms.form-error for="sub_goal_id" />
+            </div>
 
             <div class="flex justify-end gap-3">
                 <x-atoms.button type="button" variant="secondary" data-modal-close>

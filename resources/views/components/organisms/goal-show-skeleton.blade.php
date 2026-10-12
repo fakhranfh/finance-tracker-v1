@@ -24,6 +24,11 @@
 
     <div class="mt-6 space-y-3 border-t border-outline-variant pt-6">
         <x-atoms.skeleton class="h-6 w-36" />
+        <x-atoms.skeleton class="h-5 w-64" />
+    </div>
+
+    <div class="mt-6 space-y-3 border-t border-outline-variant pt-6">
+        <x-atoms.skeleton class="h-6 w-36" />
         <x-atoms.skeleton class="h-5 w-full" />
         <x-atoms.skeleton class="h-5 w-full" />
     </div>

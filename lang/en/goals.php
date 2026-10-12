@@ -71,6 +71,8 @@ return [
         'date_to' => 'To date',
         'clear_filters' => 'Clear filters',
         'amount' => 'Amount',
+        'sub_goal' => 'Sub goal',
+        'no_sub_goal' => 'No sub goal',
         'edit_title' => 'Edit saving',
         'confirm_bulk_delete' => 'Are you sure you want to delete the selected savings? They will be subtracted from the saved amount.',
         'confirm_delete' => 'Are you sure you want to delete this saving? It will be subtracted from the saved amount.',

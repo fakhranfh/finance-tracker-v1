@@ -68,6 +68,8 @@ export const routes = {
         generateSavings: (id) => endpoint(`/goals/${id}/savings/generate`),
         bulkDestroySavings: (id) => endpoint(`/goals/${id}/savings`),
         saving: (id, savingId) => endpoint(`/goals/${id}/savings/${savingId}`),
+        subGoals: (id) => endpoint(`/goals/${id}/sub-goals`),
+        subGoal: (id, subGoalId) => endpoint(`/goals/${id}/sub-goals/${subGoalId}`),
     },
     pages: {
         home: '/',
@@ -89,5 +91,9 @@ export const routes = {
         goalCreate: '/goals/create',
         goalShow: (id) => `/goals/${id}`,
         goalEdit: (id) => `/goals/${id}/edit`,
+        goalSubGoalsEdit: (id) => `/goals/${id}/sub-goals/edit`,
+        goalSubGoalShow: (id, subGoalId) => `/goals/${id}/sub-goals/${subGoalId}`,
+        goalSubGoalEdit: (id, subGoalId) => `/goals/${id}/sub-goals/${subGoalId}/edit`,
+        goalSubGoals: (id) => `/goals/${id}/sub-goals`,
     },
 };

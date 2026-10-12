@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\GoalController;
 use App\Http\Controllers\Api\GoalSavingController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\RecordController;
+use App\Http\Controllers\Api\SubGoalController;
 use App\Http\Middleware\EnsureLocalEnvironment;
 use App\Http\Middleware\EnsureNoUsersExist;
 use Illuminate\Support\Facades\Route;
@@ -100,6 +101,14 @@ Route::middleware('web')->name('api.')->group(function (): void {
             ->parameters(['goals' => 'goal'])
             ->except('create', 'edit')
             ->names('goals');
+        Route::get('/goals/{goal}/sub-goals', [SubGoalController::class, 'index'])->name('goals.sub-goals.index');
+        Route::put('/goals/{goal}/sub-goals', [SubGoalController::class, 'sync'])->name('goals.sub-goals.sync');
+        Route::get('/goals/{goal}/sub-goals/{subGoal}', [SubGoalController::class, 'show'])
+            ->scopeBindings()
+            ->name('goals.sub-goals.show');
+        Route::put('/goals/{goal}/sub-goals/{subGoal}', [SubGoalController::class, 'update'])
+            ->scopeBindings()
+            ->name('goals.sub-goals.update');
         Route::post('/logout', LogoutController::class)->name('logout');
     });
 

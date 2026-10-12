@@ -724,6 +724,15 @@
                         }
                     },
                     {
+                        "name": "sub_goal_id",
+                        "in": "query",
+                        "description": "Only the savings of this sub goal",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
                         "name": "date_to",
                         "in": "query",
                         "description": "Last day to include (Y-m-d, in the user timezone)",
@@ -772,6 +781,12 @@
                                         "type": "number",
                                         "format": "float",
                                         "example": 500000
+                                    },
+                                    "sub_goal_id": {
+                                        "description": "One of the sub goals of this goal the amount is saved for",
+                                        "type": "integer",
+                                        "example": null,
+                                        "nullable": true
                                     }
                                 },
                                 "type": "object"
@@ -932,6 +947,12 @@
                                         "type": "number",
                                         "format": "float",
                                         "example": 500000
+                                    },
+                                    "sub_goal_id": {
+                                        "description": "One of the sub goals of this goal the amount is saved for",
+                                        "type": "integer",
+                                        "example": null,
+                                        "nullable": true
                                     }
                                 },
                                 "type": "object"
@@ -1095,6 +1116,45 @@
                                         "type": "string",
                                         "example": "Dana liburan akhir tahun",
                                         "nullable": true
+                                    },
+                                    "sub_goals": {
+                                        "description": "Optional. The steps needed to reach the goal. Their target_amount must add up to the goal target_amount and their saved amounts to the goal saved_amount. On update the list replaces the current sub goals: items with an id are kept, items without one are created, the rest are removed (not allowed for a sub goal that has savings); leave it out to keep them as they are.",
+                                        "type": "array",
+                                        "items": {
+                                            "properties": {
+                                                "id": {
+                                                    "description": "Update only: an existing sub goal of this goal; its saved amount is not changed here",
+                                                    "type": "integer",
+                                                    "nullable": true
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "Mas kawin"
+                                                },
+                                                "target_amount": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 5000000
+                                                },
+                                                "saved_amount": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 0,
+                                                    "nullable": true
+                                                },
+                                                "desired_date": {
+                                                    "description": "Not later than the goal desired_date",
+                                                    "type": "string",
+                                                    "format": "date",
+                                                    "nullable": true
+                                                },
+                                                "note": {
+                                                    "type": "string",
+                                                    "nullable": true
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
                                     }
                                 },
                                 "type": "object"
@@ -1236,6 +1296,45 @@
                                         "type": "string",
                                         "example": "Dana liburan akhir tahun",
                                         "nullable": true
+                                    },
+                                    "sub_goals": {
+                                        "description": "Optional. The steps needed to reach the goal. Their target_amount must add up to the goal target_amount and their saved amounts to the goal saved_amount. On update the list replaces the current sub goals: items with an id are kept, items without one are created, the rest are removed (not allowed for a sub goal that has savings); leave it out to keep them as they are.",
+                                        "type": "array",
+                                        "items": {
+                                            "properties": {
+                                                "id": {
+                                                    "description": "Update only: an existing sub goal of this goal; its saved amount is not changed here",
+                                                    "type": "integer",
+                                                    "nullable": true
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "Mas kawin"
+                                                },
+                                                "target_amount": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 5000000
+                                                },
+                                                "saved_amount": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 0,
+                                                    "nullable": true
+                                                },
+                                                "desired_date": {
+                                                    "description": "Not later than the goal desired_date",
+                                                    "type": "string",
+                                                    "format": "date",
+                                                    "nullable": true
+                                                },
+                                                "note": {
+                                                    "type": "string",
+                                                    "nullable": true
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
                                     }
                                 },
                                 "type": "object"
@@ -2078,6 +2177,263 @@
                     }
                 }
             }
+        },
+        "/goals/{id}/sub-goals": {
+            "get": {
+                "tags": [
+                    "Sub Goals"
+                ],
+                "summary": "List the sub goals of a goal (they are created and edited through the goal endpoints)",
+                "operationId": "2c9e3c7169cad2050f7f5fcdbf43f1fd",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "name",
+                                "target_amount",
+                                "saved_amount",
+                                "desired_date",
+                                "is_done",
+                                "note",
+                                "created_at"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "direction",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "asc",
+                                "desc"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 10
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated sub goals in data, plus summary (total, done, target_total, saved_total of all the goal sub goals)"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Sub Goals"
+                ],
+                "summary": "Replace the sub goals of a goal",
+                "description": "Items with an id are updated (their saved amount is kept, it follows the savings), items without one are created and the sub goals left out are removed (not allowed for a sub goal that has savings). The target amounts must add up to the goal target amount and the saved amounts to the goal saved amount; a desired_date cannot be later than the goal desired date.",
+                "operationId": "30e53758cc071d4a93c126ef513a655d",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "sub_goals": {
+                                        "type": "array",
+                                        "items": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "nullable": true
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "Mas kawin"
+                                                },
+                                                "target_amount": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 5000000
+                                                },
+                                                "saved_amount": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 0,
+                                                    "nullable": true
+                                                },
+                                                "desired_date": {
+                                                    "type": "string",
+                                                    "format": "date",
+                                                    "nullable": true
+                                                },
+                                                "note": {
+                                                    "type": "string",
+                                                    "nullable": true
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The sub goals in data, plus summary"
+                    },
+                    "403": {
+                        "description": "The goal is already reached and can no longer be changed"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                }
+            }
+        },
+        "/goals/{id}/sub-goals/{subGoalId}": {
+            "get": {
+                "tags": [
+                    "Sub Goals"
+                ],
+                "summary": "Show a sub goal",
+                "operationId": "e2626355631f963237b4026e362dd4b8",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "subGoalId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The sub goal"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Sub Goals"
+                ],
+                "summary": "Update a sub goal (name, desired date, note, done flag; its amounts change through the goal sub goals)",
+                "operationId": "55e13174c337c60ffc209045b94b9411",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "subGoalId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Mas kawin"
+                                    },
+                                    "desired_date": {
+                                        "description": "Not later than the goal desired date",
+                                        "type": "string",
+                                        "format": "date",
+                                        "nullable": true
+                                    },
+                                    "note": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "is_done": {
+                                        "type": "boolean",
+                                        "example": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Sub goal updated"
+                    },
+                    "403": {
+                        "description": "The goal is already reached and can no longer be changed"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                }
+            }
         }
     },
     "components": {
@@ -2126,6 +2482,10 @@
         {
             "name": "Categories",
             "description": "Record category endpoints"
+        },
+        {
+            "name": "Sub Goals",
+            "description": "Sub goal endpoints (the steps needed to reach a goal)"
         },
         {
             "name": "Goals",

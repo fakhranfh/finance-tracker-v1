@@ -16,6 +16,8 @@ use App\Repositories\GoalSaving\GoalSavingRepository;
 use App\Repositories\GoalSaving\GoalSavingRepositoryInterface;
 use App\Repositories\Record\RecordRepository;
 use App\Repositories\Record\RecordRepositoryInterface;
+use App\Repositories\SubGoal\SubGoalRepository;
+use App\Repositories\SubGoal\SubGoalRepositoryInterface;
 use App\Repositories\User\UserRepository;
 use App\Repositories\User\UserRepositoryInterface;
 use Illuminate\Auth\Notifications\ResetPassword;
@@ -32,6 +34,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        $this->app->bind(SubGoalRepositoryInterface::class, SubGoalRepository::class);
         $this->app->bind(GoalRepositoryInterface::class, GoalRepository::class);
         $this->app->bind(GoalSavingRepositoryInterface::class, GoalSavingRepository::class);
         $this->app->bind(CategoryRepositoryInterface::class, CategoryRepository::class);

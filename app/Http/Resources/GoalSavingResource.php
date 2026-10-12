@@ -24,6 +24,8 @@ class GoalSavingResource extends JsonResource
         return [
             'id' => $saving->id,
             'goal_id' => $saving->goal_id,
+            'sub_goal_id' => $saving->sub_goal_id,
+            'sub_goal_name' => $saving->subGoal?->name,
             'amount' => $saving->amount,
             'created_at' => $saving->created_at?->toIso8601String(),
         ];

@@ -83,4 +83,9 @@ function wire(input) {
     write(rawToDisplay(read()));
 }
 
-document.querySelectorAll('input[data-money]').forEach(wire);
+/** Formats every `input[data-money]` inside root (the whole page by default), e.g. rows added to a form later. */
+export function wireMoneyInputs(root = document) {
+    root.querySelectorAll('input[data-money]').forEach(wire);
+}
+
+wireMoneyInputs();

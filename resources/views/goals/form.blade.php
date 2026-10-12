@@ -95,6 +95,8 @@
 
             <x-molecules.form-group name="note" type="text" :label="__('goals.fields.note')" maxlength="1000" />
 
+            <x-organisms.sub-goals-field />
+
             <div class="flex items-center gap-3">
                 <x-atoms.button type="submit">
                     {{ __('goals.actions.save') }}

@@ -40,6 +40,19 @@ trait DocumentsApi
                     new OA\Property(property: 'icon', type: 'string', example: 'flag'),
                     new OA\Property(property: 'status', type: 'string', enum: ['active', 'paused', 'reached'], example: 'active'),
                     new OA\Property(property: 'note', type: 'string', nullable: true, example: 'Dana liburan akhir tahun'),
+                    new OA\Property(
+                        property: 'sub_goals',
+                        type: 'array',
+                        description: 'Optional. The steps needed to reach the goal. Their target_amount must add up to the goal target_amount and their saved amounts to the goal saved_amount. On update the list replaces the current sub goals: items with an id are kept, items without one are created, the rest are removed (not allowed for a sub goal that has savings); leave it out to keep them as they are.',
+                        items: new OA\Items(properties: [
+                            new OA\Property(property: 'id', type: 'integer', nullable: true, description: 'Update only: an existing sub goal of this goal; its saved amount is not changed here'),
+                            new OA\Property(property: 'name', type: 'string', example: 'Mas kawin'),
+                            new OA\Property(property: 'target_amount', type: 'number', format: 'float', example: 5000000),
+                            new OA\Property(property: 'saved_amount', type: 'number', format: 'float', nullable: true, example: 0),
+                            new OA\Property(property: 'desired_date', type: 'string', format: 'date', nullable: true, description: 'Not later than the goal desired_date'),
+                            new OA\Property(property: 'note', type: 'string', nullable: true),
+                        ])
+                    ),
                 ]
             )
         ),
@@ -79,6 +92,19 @@ trait DocumentsApi
                     new OA\Property(property: 'icon', type: 'string', example: 'flag'),
                     new OA\Property(property: 'status', type: 'string', enum: ['active', 'paused', 'reached'], example: 'active'),
                     new OA\Property(property: 'note', type: 'string', nullable: true, example: 'Dana liburan akhir tahun'),
+                    new OA\Property(
+                        property: 'sub_goals',
+                        type: 'array',
+                        description: 'Optional. The steps needed to reach the goal. Their target_amount must add up to the goal target_amount and their saved amounts to the goal saved_amount. On update the list replaces the current sub goals: items with an id are kept, items without one are created, the rest are removed (not allowed for a sub goal that has savings); leave it out to keep them as they are.',
+                        items: new OA\Items(properties: [
+                            new OA\Property(property: 'id', type: 'integer', nullable: true, description: 'Update only: an existing sub goal of this goal; its saved amount is not changed here'),
+                            new OA\Property(property: 'name', type: 'string', example: 'Mas kawin'),
+                            new OA\Property(property: 'target_amount', type: 'number', format: 'float', example: 5000000),
+                            new OA\Property(property: 'saved_amount', type: 'number', format: 'float', nullable: true, example: 0),
+                            new OA\Property(property: 'desired_date', type: 'string', format: 'date', nullable: true, description: 'Not later than the goal desired_date'),
+                            new OA\Property(property: 'note', type: 'string', nullable: true),
+                        ])
+                    ),
                 ]
             )
         ),

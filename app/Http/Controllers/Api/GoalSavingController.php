@@ -31,6 +31,7 @@ class GoalSavingController extends Controller
         $filters = $request->validate([
             'date_from' => ['nullable', 'date_format:Y-m-d'],
             'date_to' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:date_from'],
+            'sub_goal_id' => ['nullable', 'integer'],
         ]);
 
         return GoalSavingResource::collection($this->goalSavingService->paginate(
@@ -40,6 +41,7 @@ class GoalSavingController extends Controller
             $request->string('direction', 'desc')->value(),
             $filters['date_from'] ?? null,
             $filters['date_to'] ?? null,
+            isset($filters['sub_goal_id']) ? (int) $filters['sub_goal_id'] : null,
         ));
     }
 
@@ -47,7 +49,7 @@ class GoalSavingController extends Controller
     {
         abort_if($goal->status === GoalStatus::Reached, 403, __('goals.locked'));
 
-        $saving = $this->goalSavingService->updateSaving($goal, $saving, $request->validated('amount'));
+        $saving = $this->goalSavingService->updateSaving($goal, $saving, $request->validated('amount'), $request->validated('sub_goal_id'));
 
         return (new GoalSavingResource($saving))
             ->additional(['goal' => (new GoalResource($goal))->resolve()])
@@ -88,7 +90,7 @@ class GoalSavingController extends Controller
     {
         abort_if($goal->status === GoalStatus::Reached, 403, __('goals.locked'));
 
-        $saving = $this->goalSavingService->addSaving($goal, $request->validated('amount'));
+        $saving = $this->goalSavingService->addSaving($goal, $request->validated('amount'), $request->validated('sub_goal_id'));
 
         return (new GoalSavingResource($saving))
             ->additional(['goal' => (new GoalResource($goal))->resolve()])

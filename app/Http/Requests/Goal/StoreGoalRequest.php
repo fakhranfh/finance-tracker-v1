@@ -6,9 +6,12 @@ use App\Enums\GoalStatus;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 class StoreGoalRequest extends FormRequest
 {
+    use ValidatesSubGoals;
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -33,6 +36,23 @@ class StoreGoalRequest extends FormRequest
             'icon' => ['required', 'string', Rule::in(array_keys(config('goal.icons')))],
             'status' => ['required', Rule::enum(GoalStatus::class)],
             'note' => ['nullable', 'string', 'max:1000'],
+            ...$this->subGoalRules(null),
         ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return $this->subGoalMessages();
+    }
+
+    /**
+     * @return array<int, callable>
+     */
+    public function after(): array
+    {
+        return [fn (Validator $validator) => $this->validateSubGoalTotals($validator, null)];
     }
 }

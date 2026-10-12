@@ -2,11 +2,12 @@ import { hideSkeleton, setButtonLoading } from '../shared/loading-state.js';
 import { clearFieldErrors, showFieldErrors, showGenericError } from '../shared/field-errors.js';
 import { closeModal, openModal } from '../shared/modal.js';
 import '../shared/money-input.js';
-import { del, get, post, put } from '../shared/http.js';
+import { del, get, getAll, post, put } from '../shared/http.js';
 import { createTable } from '../shared/table/table.js';
 import { formatDate, formatDateTime } from '../shared/datetime.js';
 import { formatMoney } from '../shared/money.js';
 import { routes } from '../routes.js';
+import { fetchSubGoalSummary, summaryText } from '../sub-goals/summary.js';
 
 const root = document.getElementById('goal-show');
 const icons = JSON.parse(root?.dataset.icons ?? '{}');
@@ -14,6 +15,7 @@ const icons = JSON.parse(root?.dataset.icons ?? '{}');
 let goal = null;
 let savingsTable = null;
 let editingSavingId = null;
+let hasSubGoals = false;
 
 const field = (name) => root.querySelector(`[data-field="${name}"]`);
 
@@ -82,6 +84,33 @@ function render(current) {
     document.getElementById('goal-locked-notice').classList.toggle('hidden', !locked);
 }
 
+/** Fills the sub goal selects of the add / edit saving forms; the saving history only shows its sub goal column when the goal has sub goals. */
+async function loadSubGoalOptions() {
+    const subGoals = (await getAll(routes.goals.subGoals(goal.id))) ?? [];
+
+    hasSubGoals = subGoals.length > 0;
+    document.getElementById('goal-savings-wrapper').toggleAttribute('data-no-sub-goals', !hasSubGoals);
+
+    document.querySelectorAll('[data-sub-goal-field]').forEach((wrapper) => {
+        const select = wrapper.querySelector('select');
+
+        select.querySelectorAll('option[value]:not([value=""])').forEach((option) => option.remove());
+        subGoals.forEach((subGoal) => select.append(new Option(subGoal.name, subGoal.id)));
+        wrapper.classList.toggle('hidden', !hasSubGoals);
+    });
+}
+
+const subGoalValue = (form) => form.elements.namedItem('sub_goal_id').value || null;
+
+async function loadSubGoalSummary() {
+    const section = document.getElementById('goal-sub-goals');
+    const summary = await fetchSubGoalSummary(goal.id);
+
+    if (summary) {
+        section.querySelector('[data-sub-goals-summary]').textContent = summary.total > 0 ? summaryText(section.dataset.summaryTemplate, summary) : section.dataset.empty;
+    }
+}
+
 async function refreshGoal() {
     const { ok, data } = await get(routes.goals.show(goal.id));
 
@@ -103,6 +132,7 @@ function openEditSaving(saving) {
     editingSavingId = saving.id;
     clearFieldErrors(form);
     form.elements.namedItem('saving_amount').value = saving.amount;
+    form.elements.namedItem('sub_goal_id').value = saving.sub_goal_id ?? '';
     openModal('edit-saving-modal');
 }
 
@@ -123,7 +153,7 @@ async function editSaving(event) {
     setButtonLoading(submitButton, true);
 
     try {
-        const { ok, status, data } = await put(routes.goals.saving(goal.id, editingSavingId), { amount });
+        const { ok, status, data } = await put(routes.goals.saving(goal.id, editingSavingId), { amount, sub_goal_id: subGoalValue(form) });
 
         if (ok) {
             render(data.goal);
@@ -131,7 +161,7 @@ async function editSaving(event) {
             await savingsTable.reload();
             showFlash(root.dataset.savingUpdated);
         } else if (status === 422 && data.errors) {
-            showFieldErrors(form, { saving_amount: data.errors.amount ?? Object.values(data.errors)[0] });
+            showFieldErrors(form, { saving_amount: data.errors.amount ?? Object.values(data.errors)[0], ...(data.errors.sub_goal_id && { sub_goal_id: data.errors.sub_goal_id }) });
         } else {
             showGenericError(form, data.message ?? 'Something went wrong.', 'saving_amount');
         }
@@ -177,7 +207,7 @@ function createSavingsTable() {
         // A saving changes the goal's saved amount, so refresh the goal after a delete or generate.
         onDataChanged: refreshGoal,
         row: (item) => ({
-            cells: [formatDateTime(item.created_at), formatMoney(item.amount)],
+            cells: [formatDateTime(item.created_at), formatMoney(item.amount), item.sub_goal_name ?? '-'],
             onEdit: () => openEditSaving(item),
             readOnly: goal.status !== 'active',
             locked: goal.status !== 'active',
@@ -202,7 +232,7 @@ async function addSaved(event) {
     setButtonLoading(submitButton, true);
 
     try {
-        const { ok, status, data } = await post(routes.goals.savings(goal.id), { amount });
+        const { ok, status, data } = await post(routes.goals.savings(goal.id), { amount, sub_goal_id: subGoalValue(form) });
 
         if (ok) {
             render(data.goal);
@@ -214,7 +244,7 @@ async function addSaved(event) {
             flash.textContent = root.dataset.savedAdded;
             flash.classList.remove('hidden');
         } else if (status === 422 && data.errors) {
-            showFieldErrors(form, { amount: data.errors.amount ?? Object.values(data.errors)[0] });
+            showFieldErrors(form, { amount: data.errors.amount ?? Object.values(data.errors)[0], ...(data.errors.sub_goal_id && { sub_goal_id: data.errors.sub_goal_id }) });
         } else {
             showGenericError(form, data.message ?? 'Something went wrong.', 'amount');
         }
@@ -282,6 +312,8 @@ if (root) {
     if (ok) {
         render(data.data);
         savingsTable = createSavingsTable();
+        loadSubGoalSummary();
+        loadSubGoalOptions();
         revealMobileBarWhileTableInView();
         hideSkeleton('goal-show', 'goal-show-skeleton');
 

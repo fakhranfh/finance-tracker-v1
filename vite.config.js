@@ -27,6 +27,10 @@ export default defineConfig({
                 'resources/js/goals/index.js',
                 'resources/js/goals/form.js',
                 'resources/js/goals/show.js',
+                'resources/js/sub-goals/index.js',
+                'resources/js/sub-goals/form.js',
+                'resources/js/sub-goals/show.js',
+                'resources/js/sub-goals/item-form.js',
             ],
             refresh: true,
             fonts: [

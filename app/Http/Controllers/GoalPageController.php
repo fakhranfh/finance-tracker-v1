@@ -41,6 +41,7 @@ class GoalPageController extends Controller
         $savingHeaders = [
             ['label' => __('goals.history.date'), 'sort' => 'created_at'],
             ['label' => __('goals.history.amount'), 'sort' => 'amount'],
+            __('goals.history.sub_goal'),
             __('goals.table.actions'),
         ];
 

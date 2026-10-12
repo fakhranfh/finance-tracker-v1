@@ -17,6 +17,19 @@ return [
     ],
 
     /*
+    | Realistic sub goals (steps towards a goal) used by the factory and the dev-only "Generate" button.
+    */
+    'sub_goal_samples' => [
+        ['name' => 'Mas kawin', 'target' => 5000000, 'note' => 'Seperangkat alat salat dan perhiasan.'],
+        ['name' => 'Vendor katering', 'target' => 20000000, 'note' => null],
+        ['name' => 'Gedung pernikahan', 'target' => 15000000, 'note' => 'Uang muka gedung.'],
+        ['name' => 'Dekorasi dan pelaminan', 'target' => 7500000, 'note' => null],
+        ['name' => 'Fotografer dan videografer', 'target' => 6000000, 'note' => 'Paket pernikahan.'],
+        ['name' => 'Busana pengantin', 'target' => 4000000, 'note' => null],
+        ['name' => 'Undangan dan suvenir', 'target' => 2500000, 'note' => null],
+    ],
+
+    /*
     | Realistic goals used by the factory and the dev-only "Generate" button.
     */
     'samples' => [

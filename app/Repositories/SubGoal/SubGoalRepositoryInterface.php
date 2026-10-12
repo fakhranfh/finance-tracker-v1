@@ -1,0 +1,51 @@
+<?php
+
+namespace App\Repositories\SubGoal;
+
+use App\Models\Goal;
+use App\Models\SubGoal;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Pagination\LengthAwarePaginator;
+
+interface SubGoalRepositoryInterface
+{
+    /**
+     * Paginate a goal's sub goals, optionally filtered by search and sorted by column.
+     */
+    public function paginate(Goal $goal, int $perPage, ?string $search = null, ?string $sort = null, string $direction = 'asc'): LengthAwarePaginator;
+
+    /**
+     * Every sub goal of the goal.
+     *
+     * @return Collection<int, SubGoal>
+     */
+    public function getForGoal(Goal $goal): Collection;
+
+    /**
+     * Count a goal's sub goals, how many are done and their combined target and saved amount.
+     *
+     * @return array{total: int, done: int, target_total: string, saved_total: string}
+     */
+    public function summary(Goal $goal): array;
+
+    /**
+     * Delete the given sub goals of the goal.
+     *
+     * @param  array<int, int>  $ids
+     */
+    public function deleteMany(Goal $goal, array $ids): void;
+
+    /**
+     * Create a new sub goal for the goal.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public function create(Goal $goal, array $data): SubGoal;
+
+    /**
+     * Update an existing sub goal.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public function update(SubGoal $subGoal, array $data): SubGoal;
+}

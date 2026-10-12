@@ -70,6 +70,8 @@ return [
         'date_from' => 'Dari tanggal',
         'date_to' => 'Sampai tanggal',
         'clear_filters' => 'Hapus filter',
+        'sub_goal' => 'Sub target',
+        'no_sub_goal' => 'Tanpa sub target',
         'amount' => 'Jumlah',
         'edit_title' => 'Ubah tabungan',
         'confirm_bulk_delete' => 'Yakin ingin menghapus tabungan yang dipilih? Jumlahnya akan dikurangi dari jumlah terkumpul.',

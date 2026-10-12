@@ -40,4 +40,12 @@ class Goal extends Model
     {
         return $this->hasMany(GoalSaving::class);
     }
+
+    /**
+     * @return HasMany<SubGoal, $this>
+     */
+    public function subGoals(): HasMany
+    {
+        return $this->hasMany(SubGoal::class);
+    }
 }

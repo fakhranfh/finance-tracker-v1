@@ -7,6 +7,7 @@ use App\Http\Controllers\GoalPageController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\ProfilePageController;
 use App\Http\Controllers\RecordPageController;
+use App\Http\Controllers\SubGoalPageController;
 use App\Http\Middleware\EnsureNoUsersExist;
 use App\Models\User;
 use Illuminate\Auth\Notifications\ResetPassword;
@@ -70,4 +71,9 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::get('/goals/create', [GoalPageController::class, 'create'])->name('goals.create');
     Route::get('/goals/{id}', [GoalPageController::class, 'show'])->whereNumber('id')->name('goals.show');
     Route::get('/goals/{id}/edit', [GoalPageController::class, 'edit'])->name('goals.edit');
+
+    Route::get('/goals/{goalId}/sub-goals', [SubGoalPageController::class, 'index'])->whereNumber('goalId')->name('goals.sub-goals.index');
+    Route::get('/goals/{goalId}/sub-goals/edit', [SubGoalPageController::class, 'edit'])->whereNumber('goalId')->name('goals.sub-goals.edit');
+    Route::get('/goals/{goalId}/sub-goals/{id}/edit', [SubGoalPageController::class, 'editItem'])->whereNumber(['goalId', 'id'])->name('goals.sub-goals.edit-item');
+    Route::get('/goals/{goalId}/sub-goals/{id}', [SubGoalPageController::class, 'show'])->whereNumber(['goalId', 'id'])->name('goals.sub-goals.show');
 });

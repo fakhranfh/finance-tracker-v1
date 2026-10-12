@@ -4,6 +4,7 @@ namespace App\Http\Requests\Goal;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreGoalSavingRequest extends FormRequest
 {
@@ -24,6 +25,7 @@ class StoreGoalSavingRequest extends FormRequest
     {
         return [
             'amount' => ['required', 'numeric', 'gt:0', 'max:999999999999.99'],
+            'sub_goal_id' => [Rule::requiredIf(fn () => $this->route('goal')->subGoals()->exists()), 'nullable', 'integer', Rule::exists('sub_goals', 'id')->where('goal_id', $this->route('goal')->id)],
         ];
     }
 }
