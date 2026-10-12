@@ -64,6 +64,10 @@ export const routes = {
         destroy: (id) => endpoint(`/goals/${id}`),
         bulkDestroy: endpoint('/goals'),
         generate: endpoint('/goals/generate'),
+        savings: (id) => endpoint(`/goals/${id}/savings`),
+        generateSavings: (id) => endpoint(`/goals/${id}/savings/generate`),
+        bulkDestroySavings: (id) => endpoint(`/goals/${id}/savings`),
+        saving: (id, savingId) => endpoint(`/goals/${id}/savings/${savingId}`),
     },
     pages: {
         home: '/',

@@ -8,6 +8,7 @@ use Database\Factories\GoalFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * Something the user is saving up for, with a target amount and a desired date.
@@ -30,5 +31,13 @@ class Goal extends Model
             'saved_amount' => 'decimal:2',
             'status' => GoalStatus::class,
         ];
+    }
+
+    /**
+     * @return HasMany<GoalSaving, $this>
+     */
+    public function savings(): HasMany
+    {
+        return $this->hasMany(GoalSaving::class);
     }
 }

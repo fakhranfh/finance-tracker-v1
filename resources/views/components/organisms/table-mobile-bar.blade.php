@@ -3,13 +3,15 @@
     'headers' => [],
     'searchPlaceholder' => 'Search...',
     'perPageLabel' => 'Items per page',
+    'searchable' => true,
+    'hidden' => false,
 ])
 
 @php
     $sortable = collect($headers)->filter(fn ($header) => is_array($header) && isset($header['sort']));
 @endphp
 
-<div class="fixed inset-x-0 bottom-0 z-40 flex gap-3 border-t border-outline-variant bg-surface p-3 sm:hidden">
+<div id="{{ $id }}" @class(['fixed inset-x-0 bottom-0 z-40 flex gap-3 border-t border-outline-variant bg-surface p-3 sm:hidden', '!hidden' => $hidden])>
     <x-atoms.button type="button" variant="secondary" class="flex-1" data-modal-open="{{ $id }}-filter">
         {{ __('common.table.filter') }}
     </x-atoms.button>
@@ -21,12 +23,14 @@
 <x-organisms.modal id="{{ $id }}-filter" :title="__('common.table.filter')">
     <div class="flex max-h-[70dvh] flex-col">
         <div class="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto pb-4 pr-1">
-            <x-atoms.input
-                type="search"
-                name="search"
-                data-modal-search
-                placeholder="{{ $searchPlaceholder }}"
-            />
+            @if ($searchable)
+                <x-atoms.input
+                    type="search"
+                    name="search"
+                    data-modal-search
+                    placeholder="{{ $searchPlaceholder }}"
+                />
+            @endif
 
             <x-molecules.per-page-select :label="$perPageLabel" class="justify-between" />
 

@@ -14,12 +14,14 @@ const ICON_DELETE =
  * render({ id, cells, editUrl, onDelete, locked }):
  *   cells    text (or a DOM node, e.g. an icon) for each data column (first is emphasised)
  *   locked   row can't be selected or deleted (e.g. the current user)
+ *   onEdit   edit button handler, used instead of the editUrl link (e.g. to open a modal)
+ *   readOnly row has no edit or delete action at all
  */
 export function createTableRow({ tbody, selection, selectAll }) {
     const labels = tbody.dataset;
 
     return {
-        render({ id, cells, viewUrl = null, editUrl, onDelete, locked = false }) {
+        render({ id, cells, viewUrl = null, editUrl, onEdit = null, onDelete, locked = false, readOnly = false }) {
             const row = document.createElement('tr');
 
             // Without a checkbox column (table selectable="false") the leading cell is left out.
@@ -88,15 +90,25 @@ export function createTableRow({ tbody, selection, selectAll }) {
                 actions.append(viewLink);
             }
 
-            const editLink = document.createElement('a');
-            editLink.href = editUrl;
-            editLink.className = 'inline-flex items-center font-medium text-primary hover:underline';
-            editLink.title = labels.labelEdit;
-            editLink.innerHTML = `${ICON_EDIT}<span class="max-sm:sr-only"></span>`;
-            editLink.lastChild.textContent = labels.labelEdit;
-            actions.append(editLink);
+            if (!readOnly) {
+                const editLink = document.createElement(onEdit ? 'button' : 'a');
+                editLink.className = 'inline-flex items-center font-medium text-primary hover:underline';
+                editLink.title = labels.labelEdit;
+                editLink.innerHTML = `${ICON_EDIT}<span class="max-sm:sr-only"></span>`;
+                editLink.lastChild.textContent = labels.labelEdit;
 
-            if (!locked) {
+                if (onEdit) {
+                    editLink.type = 'button';
+                    editLink.classList.add('cursor-pointer');
+                    editLink.addEventListener('click', onEdit);
+                } else {
+                    editLink.href = editUrl;
+                }
+
+                actions.append(editLink);
+            }
+
+            if (!locked && !readOnly) {
                 const deleteButton = document.createElement('button');
                 deleteButton.type = 'button';
                 deleteButton.className = 'inline-flex cursor-pointer items-center font-medium text-error hover:underline';

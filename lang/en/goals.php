@@ -63,6 +63,20 @@ return [
         'not_found' => 'This goal could not be found.',
     ],
 
+    'history' => [
+        'title' => 'Saving history',
+        'empty' => 'No savings added yet.',
+        'date' => 'Date',
+        'date_from' => 'From date',
+        'date_to' => 'To date',
+        'clear_filters' => 'Clear filters',
+        'amount' => 'Amount',
+        'edit_title' => 'Edit saving',
+        'confirm_bulk_delete' => 'Are you sure you want to delete the selected savings? They will be subtracted from the saved amount.',
+        'confirm_delete' => 'Are you sure you want to delete this saving? It will be subtracted from the saved amount.',
+        'generate_count' => 'Number of savings to generate',
+    ],
+
     'icons' => [
         'flag' => 'Goal',
         'home' => 'Home',
@@ -102,6 +116,9 @@ return [
         'deleted' => 'Goal deleted successfully.',
         'generated' => 'Fake goals generated successfully.',
         'saved_added' => 'Saved amount updated.',
+        'saving_updated' => 'Saving updated.',
+        'saving_deleted' => 'Saving deleted.',
+        'generated_savings' => 'Fake savings generated successfully.',
         'reached_set' => 'Goal marked as reached.',
         'status_failed' => 'Could not update the goal status. Please try again.',
     ],

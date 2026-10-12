@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\Auth\ResetPasswordController;
 use App\Http\Controllers\Api\Auth\VerificationNotificationController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\GoalController;
+use App\Http\Controllers\Api\GoalSavingController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\RecordController;
 use App\Http\Middleware\EnsureLocalEnvironment;
@@ -83,6 +84,18 @@ Route::middleware('web')->name('api.')->group(function (): void {
         Route::post('/goals/generate', [GoalController::class, 'generate'])
             ->middleware(EnsureLocalEnvironment::class)
             ->name('goals.generate');
+        Route::get('/goals/{goal}/savings', [GoalSavingController::class, 'index'])->name('goals.savings.index');
+        Route::delete('/goals/{goal}/savings', [GoalSavingController::class, 'bulkDestroy'])->name('goals.savings.bulk-destroy');
+        Route::post('/goals/{goal}/savings/generate', [GoalSavingController::class, 'generate'])
+            ->middleware(EnsureLocalEnvironment::class)
+            ->name('goals.savings.generate');
+        Route::post('/goals/{goal}/savings', [GoalSavingController::class, 'store'])->name('goals.savings.store');
+        Route::put('/goals/{goal}/savings/{saving}', [GoalSavingController::class, 'update'])
+            ->scopeBindings()
+            ->name('goals.savings.update');
+        Route::delete('/goals/{goal}/savings/{saving}', [GoalSavingController::class, 'destroy'])
+            ->scopeBindings()
+            ->name('goals.savings.destroy');
         Route::resource('goals', GoalController::class)
             ->parameters(['goals' => 'goal'])
             ->except('create', 'edit')

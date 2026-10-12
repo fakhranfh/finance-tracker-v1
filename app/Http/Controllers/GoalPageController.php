@@ -34,8 +34,17 @@ class GoalPageController extends Controller
     public function show(int $id): View
     {
         $fields = ['estimated_completion', 'desired_date', 'note'];
+        $savingFilters = [
+            ['type' => 'date', 'key' => 'date_from', 'label' => __('goals.history.date_from')],
+            ['type' => 'date', 'key' => 'date_to', 'label' => __('goals.history.date_to')],
+        ];
+        $savingHeaders = [
+            ['label' => __('goals.history.date'), 'sort' => 'created_at'],
+            ['label' => __('goals.history.amount'), 'sort' => 'amount'],
+            __('goals.table.actions'),
+        ];
 
-        return view('goals.show', ['id' => $id, 'icons' => config('goal.icons'), 'fields' => $fields]);
+        return view('goals.show', ['id' => $id, 'icons' => config('goal.icons'), 'fields' => $fields, 'savingHeaders' => $savingHeaders, 'savingFilters' => $savingFilters]);
     }
 
     public function edit(int $id): View

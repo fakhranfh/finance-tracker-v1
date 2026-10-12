@@ -63,6 +63,20 @@ return [
         'not_found' => 'Target ini tidak ditemukan.',
     ],
 
+    'history' => [
+        'title' => 'Riwayat tabungan',
+        'empty' => 'Belum ada tabungan yang ditambahkan.',
+        'date' => 'Tanggal',
+        'date_from' => 'Dari tanggal',
+        'date_to' => 'Sampai tanggal',
+        'clear_filters' => 'Hapus filter',
+        'amount' => 'Jumlah',
+        'edit_title' => 'Ubah tabungan',
+        'confirm_bulk_delete' => 'Yakin ingin menghapus tabungan yang dipilih? Jumlahnya akan dikurangi dari jumlah terkumpul.',
+        'confirm_delete' => 'Yakin ingin menghapus tabungan ini? Jumlahnya akan dikurangi dari jumlah terkumpul.',
+        'generate_count' => 'Jumlah tabungan yang akan dibuat',
+    ],
+
     'icons' => [
         'flag' => 'Target',
         'home' => 'Rumah',
@@ -102,6 +116,9 @@ return [
         'deleted' => 'Target berhasil dihapus.',
         'generated' => 'Target palsu berhasil dibuat.',
         'saved_added' => 'Jumlah terkumpul diperbarui.',
+        'saving_updated' => 'Tabungan diperbarui.',
+        'saving_deleted' => 'Tabungan dihapus.',
+        'generated_savings' => 'Tabungan palsu berhasil dibuat.',
         'reached_set' => 'Target ditandai tercapai.',
         'status_failed' => 'Status target gagal diperbarui. Silakan coba lagi.',
     ],

@@ -35,6 +35,8 @@
             data-reached-set="{{ __('goals.flash.reached_set') }}"
             data-deleted="{{ __('goals.flash.deleted') }}"
             data-saved-added="{{ __('goals.flash.saved_added') }}"
+            data-saving-updated="{{ __('goals.flash.saving_updated') }}"
+            data-saving-deleted="{{ __('goals.flash.saving_deleted') }}"
         >
             <div class="mb-6 flex items-center gap-3">
                 <span data-field="icon"></span>
@@ -61,6 +63,58 @@
                     </div>
                 @endforeach
             </dl>
+
+            <div class="mt-6 border-t border-outline-variant pt-6">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <h3 class="font-heading text-title-md font-bold text-on-surface">{{ __('goals.history.title') }}</h3>
+                    @if (app()->isLocal())
+                        <div id="generate-savings-controls" class="flex items-center gap-3">
+                            <x-atoms.input
+                                type="number"
+                                name="generate-savings-count"
+                                id="generate-savings-count"
+                                value="5"
+                                min="1"
+                                max="50"
+                                class="!w-24"
+                                aria-label="{{ __('goals.history.generate_count') }}"
+                                title="{{ __('goals.history.generate_count') }}"
+                            />
+                            <x-atoms.button type="button" id="generate-savings" variant="secondary" data-success-message="{{ __('goals.flash.generated_savings') }}">
+                                {{ __('goals.actions.generate') }}
+                            </x-atoms.button>
+                        </div>
+                    @endif
+                </div>
+
+                <x-molecules.per-page-select :label="__('goals.table.per_page')" class="mt-3 justify-end max-sm:hidden" />
+
+                <div id="goal-savings-wrapper" class="mt-3 max-sm:pb-20">
+                    <x-organisms.table
+                        id="goal-savings-table"
+                        :headers="$savingHeaders"
+                        :filters="$savingFilters"
+                        filters-id="goal-savings-filters"
+                        :config="[
+                            'labels' => [
+                                'bulkDelete' => __('goals.actions.delete_selected'),
+                                'selected' => __('goals.table.selected'),
+                                'selectAllMatching' => __('goals.table.select_all_matching', ['total' => ':total']),
+                                'allSelected' => __('goals.table.all_selected', ['total' => ':total']),
+                                'clearSelection' => __('goals.table.clear_selection'),
+                                'empty' => __('goals.history.empty'),
+                                'clearFilters' => __('goals.history.clear_filters'),
+                                'expand' => __('goals.table.show_more'),
+                                'collapse' => __('goals.table.show_less'),
+                                'edit' => __('goals.actions.edit'),
+                                'delete' => __('goals.actions.delete'),
+                            ],
+                        ]"
+                    />
+
+                    <x-molecules.pagination data-pagination />
+                </div>
+            </div>
 
             <div class="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-outline-variant pt-6">
                 <x-atoms.button type="button" id="delete-goal-open" variant="danger">
@@ -102,6 +156,51 @@
                 {{ __('goals.actions.delete') }}
             </x-atoms.button>
         </div>
+    </x-organisms.modal>
+
+    <x-organisms.table-mobile-bar
+        id="goal-savings-mobile-bar"
+        :headers="$savingHeaders"
+        :per-page-label="__('goals.table.per_page')"
+        :searchable="false"
+        :hidden="true"
+    />
+
+    <x-organisms.modal id="delete-saving-modal" :title="__('goals.history.confirm_delete')">
+        <div class="flex justify-end gap-3">
+            <x-atoms.button type="button" variant="secondary" data-modal-close>
+                {{ __('goals.actions.cancel') }}
+            </x-atoms.button>
+            <x-atoms.button type="button" id="confirm-delete-saving" variant="danger">
+                {{ __('goals.actions.delete') }}
+            </x-atoms.button>
+        </div>
+    </x-organisms.modal>
+
+    <x-organisms.modal id="bulk-delete-savings-modal" :title="__('goals.history.confirm_bulk_delete')">
+        <div class="flex justify-end gap-3">
+            <x-atoms.button type="button" variant="secondary" data-modal-close>
+                {{ __('goals.actions.cancel') }}
+            </x-atoms.button>
+            <x-atoms.button type="button" id="confirm-bulk-delete-savings" variant="danger">
+                {{ __('goals.actions.delete') }}
+            </x-atoms.button>
+        </div>
+    </x-organisms.modal>
+
+    <x-organisms.modal id="edit-saving-modal" :title="__('goals.history.edit_title')">
+        <form id="edit-saving-form" novalidate class="space-y-5" data-invalid-message="{{ __('goals.actions.add_saved_invalid') }}">
+            <x-molecules.form-group name="saving_amount" type="text" inputmode="decimal" :label="__('goals.history.amount')" data-money required />
+
+            <div class="flex justify-end gap-3">
+                <x-atoms.button type="button" variant="secondary" data-modal-close>
+                    {{ __('goals.actions.cancel') }}
+                </x-atoms.button>
+                <x-atoms.button type="submit">
+                    {{ __('goals.actions.save') }}
+                </x-atoms.button>
+            </div>
+        </form>
     </x-organisms.modal>
 
     <x-organisms.modal id="add-saved-modal" :title="__('goals.actions.add_saved_title')">

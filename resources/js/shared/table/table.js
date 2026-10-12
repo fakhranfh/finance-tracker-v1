@@ -121,7 +121,8 @@ export function fillMultiSelect(dropdown, options, { checked = false } = {}) {
  *  - flashKey, selectionKey, deleteModalId, bulkDeleteModalId
  *  - defaultSort: { key, direction } (optional initial sort)
  *  - routes: { index, destroy, bulkDestroy, generate }
- *  - row(item, { lockedId }) => { cells, editUrl, locked }
+ *  - row(item, { lockedId }) => { cells, editUrl, onEdit, locked, readOnly }
+ *  - deletedMessage: flash shown after a row delete; onDataChanged() fires after a row delete or generate
  *  - onLoaded(query) called after each load with the search, sort and filter query string
  */
 export function createTable(config) {
@@ -190,15 +191,17 @@ export function createTable(config) {
     const rowRenderer = createTableRow({ tbody, selection, selectAll });
 
     const renderRow = (item) => {
-        const { cells, viewUrl, editUrl, locked } = config.row(item, { lockedId });
+        const { cells, viewUrl, editUrl, onEdit, locked, readOnly } = config.row(item, { lockedId });
 
         return rowRenderer.render({
             id: item.id,
             cells,
             viewUrl,
             editUrl,
+            onEdit,
             onDelete: () => rowDelete.request(item.id),
             locked,
+            readOnly,
         });
     };
 
@@ -272,12 +275,18 @@ export function createTable(config) {
     const reload = () => load();
     const reset = () => load(routes.index);
 
+    const afterDelete = async () => {
+        await reload();
+        flash.show(config.deletedMessage);
+        config.onDataChanged?.();
+    };
+
     const rowDelete = createRowDelete({
         modalId: config.deleteModalId,
         confirmButton: document.getElementById(ids.confirmDelete),
         destroyUrl: routes.destroy,
         selection,
-        onDeleted: reload,
+        onDeleted: afterDelete,
     });
 
     createBulkDelete({
@@ -289,7 +298,7 @@ export function createTable(config) {
         selectAll,
         getSearch: () => search.value,
         getFilters: activeFilters,
-        onDeleted: reload,
+        onDeleted: afterDelete,
     });
 
     createGenerateButton({

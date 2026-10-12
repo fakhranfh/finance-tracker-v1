@@ -197,3 +197,229 @@ it('rejects generating sample goals outside the local environment', function () 
 
     $this->actingAs($actor)->postJson('/api/goals/generate', ['count' => 5])->assertNotFound();
 });
+
+it('adds to the saved amount and records it in the history', function () {
+    $actor = User::factory()->create();
+    $target = Goal::factory()->create(['saved_amount' => 1000, 'status' => GoalStatus::Active]);
+
+    $response = $this->actingAs($actor)->postJson("/api/goals/{$target->id}/savings", ['amount' => 250.5]);
+
+    $response->assertStatus(201);
+    $response->assertJsonPath('data.amount', '250.50');
+    $response->assertJsonPath('goal.saved_amount', '1250.50');
+    $this->assertDatabaseHas('goal_savings', ['goal_id' => $target->id, 'amount' => 250.5]);
+    expect($target->fresh()->saved_amount)->toBe('1250.50');
+});
+
+it('rejects an invalid saving amount', function () {
+    $actor = User::factory()->create();
+    $target = Goal::factory()->create(['saved_amount' => 1000, 'status' => GoalStatus::Active]);
+
+    $this->actingAs($actor)->postJson("/api/goals/{$target->id}/savings", ['amount' => 0])
+        ->assertStatus(422)->assertJsonValidationErrors(['amount']);
+    $this->actingAs($actor)->postJson("/api/goals/{$target->id}/savings", [])
+        ->assertStatus(422)->assertJsonValidationErrors(['amount']);
+
+    expect($target->fresh()->saved_amount)->toBe('1000.00');
+    $this->assertDatabaseCount('goal_savings', 0);
+});
+
+it('rejects adding to a goal that is already reached', function () {
+    $actor = User::factory()->create();
+    $target = Goal::factory()->create(['saved_amount' => 1000, 'status' => GoalStatus::Reached]);
+
+    $this->actingAs($actor)->postJson("/api/goals/{$target->id}/savings", ['amount' => 100])->assertForbidden();
+
+    expect($target->fresh()->saved_amount)->toBe('1000.00');
+    $this->assertDatabaseCount('goal_savings', 0);
+});
+
+it('rejects a guest from adding or listing savings', function () {
+    $target = Goal::factory()->create();
+
+    $this->postJson("/api/goals/{$target->id}/savings", ['amount' => 100])->assertStatus(401);
+    $this->getJson("/api/goals/{$target->id}/savings")->assertStatus(401);
+});
+
+it('lists the saving history of a goal, newest first', function () {
+    $actor = User::factory()->create();
+    $target = Goal::factory()->create(['status' => GoalStatus::Active]);
+    $other = Goal::factory()->create(['status' => GoalStatus::Active]);
+
+    $this->actingAs($actor)->postJson("/api/goals/{$target->id}/savings", ['amount' => 100])->assertStatus(201);
+    $this->actingAs($actor)->postJson("/api/goals/{$target->id}/savings", ['amount' => 200])->assertStatus(201);
+    $this->actingAs($actor)->postJson("/api/goals/{$other->id}/savings", ['amount' => 300])->assertStatus(201);
+
+    $response = $this->actingAs($actor)->getJson("/api/goals/{$target->id}/savings");
+
+    $response->assertOk();
+    $response->assertJsonStructure(['data' => [['id', 'goal_id', 'amount', 'created_at']]]);
+    expect($response->json('data'))->toHaveCount(2);
+    expect($response->json('data.0.amount'))->toBe('200.00');
+});
+
+it('deletes the saving history together with the goal', function () {
+    $actor = User::factory()->create();
+    $target = Goal::factory()->create(['status' => GoalStatus::Active]);
+
+    $this->actingAs($actor)->postJson("/api/goals/{$target->id}/savings", ['amount' => 100])->assertStatus(201);
+    $this->actingAs($actor)->deleteJson("/api/goals/{$target->id}")->assertNoContent();
+
+    $this->assertDatabaseCount('goal_savings', 0);
+});
+
+it('generates sample savings for a goal in the local environment', function () {
+    $this->withoutMiddleware(PreventRequestForgery::class);
+    app()->detectEnvironment(fn () => 'local');
+
+    $actor = User::factory()->create();
+    $target = Goal::factory()->create(['saved_amount' => 0, 'status' => GoalStatus::Active]);
+
+    $response = $this->actingAs($actor)->postJson("/api/goals/{$target->id}/savings/generate", ['count' => 4]);
+
+    $response->assertOk();
+    expect($response->json('data'))->toHaveCount(4);
+    expect($target->savings()->count())->toBe(4);
+    expect((float) $target->fresh()->saved_amount)->toBe((float) $target->savings()->sum('amount'));
+});
+
+it('rejects generating sample savings outside local, for a reached goal, or with a bad count', function () {
+    $this->withoutMiddleware(PreventRequestForgery::class);
+    $actor = User::factory()->create();
+    $active = Goal::factory()->create(['status' => GoalStatus::Active]);
+    $reached = Goal::factory()->create(['status' => GoalStatus::Reached]);
+
+    app()->detectEnvironment(fn () => 'production');
+    $this->actingAs($actor)->postJson("/api/goals/{$active->id}/savings/generate", ['count' => 2])->assertNotFound();
+
+    app()->detectEnvironment(fn () => 'local');
+    $this->actingAs($actor)->postJson("/api/goals/{$reached->id}/savings/generate", ['count' => 2])->assertForbidden();
+    $this->actingAs($actor)->postJson("/api/goals/{$active->id}/savings/generate", ['count' => 0])->assertStatus(422);
+});
+
+it('edits a saving and adjusts the saved amount by the difference', function () {
+    $actor = User::factory()->create();
+    $target = Goal::factory()->create(['saved_amount' => 1000, 'status' => GoalStatus::Active]);
+    $saving = $this->actingAs($actor)->postJson("/api/goals/{$target->id}/savings", ['amount' => 200])->json('data');
+
+    $response = $this->actingAs($actor)->putJson("/api/goals/{$target->id}/savings/{$saving['id']}", ['amount' => 500]);
+
+    $response->assertOk();
+    $response->assertJsonPath('data.amount', '500.00');
+    $response->assertJsonPath('goal.saved_amount', '1500.00');
+    expect($target->fresh()->saved_amount)->toBe('1500.00');
+});
+
+it('deletes a saving and subtracts it from the saved amount', function () {
+    $actor = User::factory()->create();
+    $target = Goal::factory()->create(['saved_amount' => 1000, 'status' => GoalStatus::Active]);
+    $saving = $this->actingAs($actor)->postJson("/api/goals/{$target->id}/savings", ['amount' => 200])->json('data');
+
+    $response = $this->actingAs($actor)->deleteJson("/api/goals/{$target->id}/savings/{$saving['id']}");
+
+    $response->assertOk();
+    $response->assertJsonPath('goal.saved_amount', '1000.00');
+    $this->assertDatabaseMissing('goal_savings', ['id' => $saving['id']]);
+});
+
+it('rejects editing or deleting a saving with invalid input, on a reached goal, or of another goal', function () {
+    $actor = User::factory()->create();
+    $target = Goal::factory()->create(['saved_amount' => 1000, 'status' => GoalStatus::Active]);
+    $other = Goal::factory()->create(['status' => GoalStatus::Active]);
+    $saving = $this->actingAs($actor)->postJson("/api/goals/{$target->id}/savings", ['amount' => 200])->json('data');
+
+    $this->actingAs($actor)->putJson("/api/goals/{$target->id}/savings/{$saving['id']}", ['amount' => 0])
+        ->assertStatus(422)->assertJsonValidationErrors(['amount']);
+    $this->actingAs($actor)->putJson("/api/goals/{$other->id}/savings/{$saving['id']}", ['amount' => 5])->assertNotFound();
+    $this->actingAs($actor)->deleteJson("/api/goals/{$other->id}/savings/{$saving['id']}")->assertNotFound();
+
+    $target->update(['status' => GoalStatus::Reached]);
+
+    $this->actingAs($actor)->putJson("/api/goals/{$target->id}/savings/{$saving['id']}", ['amount' => 5])->assertForbidden();
+    $this->actingAs($actor)->deleteJson("/api/goals/{$target->id}/savings/{$saving['id']}")->assertForbidden();
+    $this->assertDatabaseHas('goal_savings', ['id' => $saving['id'], 'amount' => 200]);
+});
+
+it('sorts the saving history by amount', function () {
+    $actor = User::factory()->create();
+    $target = Goal::factory()->create(['status' => GoalStatus::Active]);
+
+    foreach ([300, 100, 200] as $amount) {
+        $this->actingAs($actor)->postJson("/api/goals/{$target->id}/savings", ['amount' => $amount]);
+    }
+
+    $amounts = $this->actingAs($actor)->getJson("/api/goals/{$target->id}/savings?sort=amount&direction=asc")->json('data.*.amount');
+
+    expect($amounts)->toBe(['100.00', '200.00', '300.00']);
+});
+
+it('bulk deletes savings by id and subtracts them from the saved amount', function () {
+    $actor = User::factory()->create();
+    $target = Goal::factory()->create(['saved_amount' => 1000, 'status' => GoalStatus::Active]);
+    $ids = collect([100, 200, 300])->map(
+        fn ($amount) => $this->actingAs($actor)->postJson("/api/goals/{$target->id}/savings", ['amount' => $amount])->json('data.id')
+    );
+
+    $response = $this->actingAs($actor)->deleteJson("/api/goals/{$target->id}/savings", ['ids' => $ids->take(2)->all()]);
+
+    $response->assertOk();
+    $response->assertJsonPath('goal.saved_amount', '1300.00');
+    expect($target->savings()->count())->toBe(1);
+});
+
+it('bulk deletes every saving of a goal when all is set, leaving other goals untouched', function () {
+    $actor = User::factory()->create();
+    $target = Goal::factory()->create(['saved_amount' => 0, 'status' => GoalStatus::Active]);
+    $other = Goal::factory()->create(['saved_amount' => 0, 'status' => GoalStatus::Active]);
+    $this->actingAs($actor)->postJson("/api/goals/{$target->id}/savings", ['amount' => 100]);
+    $this->actingAs($actor)->postJson("/api/goals/{$target->id}/savings", ['amount' => 200]);
+    $this->actingAs($actor)->postJson("/api/goals/{$other->id}/savings", ['amount' => 50]);
+
+    $this->actingAs($actor)->deleteJson("/api/goals/{$target->id}/savings", ['all' => true])
+        ->assertOk()->assertJsonPath('goal.saved_amount', '0.00');
+
+    expect($target->savings()->count())->toBe(0);
+    expect($other->savings()->count())->toBe(1);
+});
+
+it('rejects bulk deleting savings without ids or on a reached goal', function () {
+    $actor = User::factory()->create();
+    $target = Goal::factory()->create(['status' => GoalStatus::Active]);
+    $id = $this->actingAs($actor)->postJson("/api/goals/{$target->id}/savings", ['amount' => 100])->json('data.id');
+
+    $this->actingAs($actor)->deleteJson("/api/goals/{$target->id}/savings", [])->assertStatus(422);
+
+    $target->update(['status' => GoalStatus::Reached]);
+
+    $this->actingAs($actor)->deleteJson("/api/goals/{$target->id}/savings", ['ids' => [$id]])->assertForbidden();
+    expect($target->savings()->count())->toBe(1);
+});
+
+it('filters the saving history by date range in the user timezone', function () {
+    $actor = User::factory()->create(['timezone' => 'Asia/Jakarta']);
+    $target = Goal::factory()->create(['status' => GoalStatus::Active]);
+
+    $dates = ['2026-03-10 20:00:00' => 100, '2026-03-10 16:30:00' => 200, '2026-04-01 05:00:00' => 300];
+
+    foreach ($dates as $at => $amount) {
+        $saving = $target->savings()->create(['amount' => $amount]);
+        $saving->forceFill(['created_at' => $at])->save();
+    }
+
+    // 2026-03-10 20:00 UTC is already 11 March in Jakarta (UTC+7).
+    $amountsFor = fn (string $query) => $this->actingAs($actor)->getJson("/api/goals/{$target->id}/savings?sort=amount&direction=asc&{$query}")->json('data.*.amount');
+
+    expect($amountsFor('date_from=2026-03-11&date_to=2026-03-31'))->toBe(['100.00']);
+    expect($amountsFor('date_from=2026-03-10&date_to=2026-03-10'))->toBe(['200.00']);
+    expect($amountsFor('date_from=2026-04-01'))->toBe(['300.00']);
+    expect($amountsFor('date_to=2026-03-10'))->toBe(['200.00']);
+    expect($amountsFor(''))->toHaveCount(3);
+});
+
+it('rejects an invalid saving history date range', function () {
+    $actor = User::factory()->create();
+    $target = Goal::factory()->create();
+
+    $this->actingAs($actor)->getJson("/api/goals/{$target->id}/savings?date_from=nope")->assertStatus(422)->assertJsonValidationErrors(['date_from']);
+    $this->actingAs($actor)->getJson("/api/goals/{$target->id}/savings?date_from=2026-05-02&date_to=2026-05-01")->assertStatus(422)->assertJsonValidationErrors(['date_to']);
+});

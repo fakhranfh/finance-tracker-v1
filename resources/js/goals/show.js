@@ -2,8 +2,9 @@ import { hideSkeleton, setButtonLoading } from '../shared/loading-state.js';
 import { clearFieldErrors, showFieldErrors, showGenericError } from '../shared/field-errors.js';
 import { closeModal, openModal } from '../shared/modal.js';
 import '../shared/money-input.js';
-import { del, get, put } from '../shared/http.js';
-import { formatDate } from '../shared/datetime.js';
+import { del, get, post, put } from '../shared/http.js';
+import { createTable } from '../shared/table/table.js';
+import { formatDate, formatDateTime } from '../shared/datetime.js';
 import { formatMoney } from '../shared/money.js';
 import { routes } from '../routes.js';
 
@@ -11,6 +12,8 @@ const root = document.getElementById('goal-show');
 const icons = JSON.parse(root?.dataset.icons ?? '{}');
 
 let goal = null;
+let savingsTable = null;
+let editingSavingId = null;
 
 const field = (name) => root.querySelector(`[data-field="${name}"]`);
 
@@ -79,6 +82,109 @@ function render(current) {
     document.getElementById('goal-locked-notice').classList.toggle('hidden', !locked);
 }
 
+async function refreshGoal() {
+    const { ok, data } = await get(routes.goals.show(goal.id));
+
+    if (ok) {
+        render(data.data);
+    }
+}
+
+function showFlash(message) {
+    const flash = document.querySelector('[data-flash-success]');
+
+    flash.textContent = message;
+    flash.classList.remove('hidden');
+}
+
+function openEditSaving(saving) {
+    const form = document.getElementById('edit-saving-form');
+
+    editingSavingId = saving.id;
+    clearFieldErrors(form);
+    form.elements.namedItem('saving_amount').value = saving.amount;
+    openModal('edit-saving-modal');
+}
+
+async function editSaving(event) {
+    event.preventDefault();
+
+    const form = event.currentTarget;
+    const amount = Number(form.elements.namedItem('saving_amount').value);
+
+    clearFieldErrors(form);
+
+    if (!(amount > 0)) {
+        showGenericError(form, form.dataset.invalidMessage, 'saving_amount');
+        return;
+    }
+
+    const submitButton = form.querySelector('button[type="submit"]');
+    setButtonLoading(submitButton, true);
+
+    try {
+        const { ok, status, data } = await put(routes.goals.saving(goal.id, editingSavingId), { amount });
+
+        if (ok) {
+            render(data.goal);
+            closeModal('edit-saving-modal');
+            await savingsTable.reload();
+            showFlash(root.dataset.savingUpdated);
+        } else if (status === 422 && data.errors) {
+            showFieldErrors(form, { saving_amount: data.errors.amount ?? Object.values(data.errors)[0] });
+        } else {
+            showGenericError(form, data.message ?? 'Something went wrong.', 'saving_amount');
+        }
+    } catch {
+        showGenericError(form, 'Something went wrong.', 'saving_amount');
+    } finally {
+        setButtonLoading(submitButton, false);
+    }
+}
+
+/** The mobile filter/sort bar only shows while the saving history is on screen, so it doesn't cover the rest of the page. */
+function revealMobileBarWhileTableInView() {
+    const bar = document.getElementById('goal-savings-mobile-bar');
+
+    new IntersectionObserver(([entry]) => bar.classList.toggle('!hidden', !entry.isIntersecting)).observe(
+        document.getElementById('goal-savings-wrapper'),
+    );
+}
+
+function createSavingsTable() {
+    return createTable({
+        ids: {
+            table: 'goal-savings-table',
+            wrapper: 'goal-savings-wrapper',
+            generateButton: 'generate-savings',
+            generateCount: 'generate-savings-count',
+            confirmDelete: 'confirm-delete-saving',
+            confirmBulkDelete: 'confirm-bulk-delete-savings',
+        },
+        filtersId: 'goal-savings-filters',
+        flashKey: 'goal-savings-flash',
+        selectionKey: 'goal-savings-selection',
+        deleteModalId: 'delete-saving-modal',
+        bulkDeleteModalId: 'bulk-delete-savings-modal',
+        deletedMessage: root.dataset.savingDeleted,
+        defaultSort: { key: 'created_at', direction: 'desc' },
+        routes: {
+            index: routes.goals.savings(goal.id),
+            destroy: (savingId) => routes.goals.saving(goal.id, savingId),
+            bulkDestroy: routes.goals.bulkDestroySavings(goal.id),
+            generate: routes.goals.generateSavings(goal.id),
+        },
+        // A saving changes the goal's saved amount, so refresh the goal after a delete or generate.
+        onDataChanged: refreshGoal,
+        row: (item) => ({
+            cells: [formatDateTime(item.created_at), formatMoney(item.amount)],
+            onEdit: () => openEditSaving(item),
+            readOnly: goal.status !== 'active',
+            locked: goal.status !== 'active',
+        }),
+    });
+}
+
 async function addSaved(event) {
     event.preventDefault();
 
@@ -96,11 +202,11 @@ async function addSaved(event) {
     setButtonLoading(submitButton, true);
 
     try {
-        const saved = (Math.round((Number(goal.saved_amount) + amount) * 100) / 100).toFixed(2);
-        const { ok, status, data } = await put(routes.goals.update(goal.id), { ...goal, saved_amount: saved });
+        const { ok, status, data } = await post(routes.goals.savings(goal.id), { amount });
 
         if (ok) {
-            render(data.data);
+            render(data.goal);
+            await savingsTable.reload();
             closeModal('add-saved-modal');
             form.reset();
 
@@ -108,7 +214,7 @@ async function addSaved(event) {
             flash.textContent = root.dataset.savedAdded;
             flash.classList.remove('hidden');
         } else if (status === 422 && data.errors) {
-            showFieldErrors(form, { amount: data.errors.saved_amount ?? Object.values(data.errors)[0] });
+            showFieldErrors(form, { amount: data.errors.amount ?? Object.values(data.errors)[0] });
         } else {
             showGenericError(form, data.message ?? 'Something went wrong.', 'amount');
         }
@@ -132,6 +238,7 @@ async function setReached() {
 
         if (ok) {
             render(data.data);
+            savingsTable.reload();
             closeModal('set-reached-modal');
             flash.textContent = root.dataset.reachedSet;
             flash.classList.remove('hidden');
@@ -174,6 +281,8 @@ if (root) {
 
     if (ok) {
         render(data.data);
+        savingsTable = createSavingsTable();
+        revealMobileBarWhileTableInView();
         hideSkeleton('goal-show', 'goal-show-skeleton');
 
         document.getElementById('delete-goal-open').addEventListener('click', () => openModal('delete-goal-modal'));
@@ -181,6 +290,7 @@ if (root) {
         document.getElementById('add-saved-open').addEventListener('click', () => openModal('add-saved-modal'));
         document.getElementById('set-reached-open').addEventListener('click', () => openModal('set-reached-modal'));
         document.getElementById('confirm-set-reached').addEventListener('click', setReached);
+        document.getElementById('edit-saving-form').addEventListener('submit', editSaving);
         document.getElementById('add-saved-form').addEventListener('submit', addSaved);
     } else {
         document.getElementById('goal-show-skeleton').classList.add('hidden');

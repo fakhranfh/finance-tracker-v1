@@ -22,6 +22,12 @@
         </div>
     </div>
 
+    <div class="mt-6 space-y-3 border-t border-outline-variant pt-6">
+        <x-atoms.skeleton class="h-6 w-36" />
+        <x-atoms.skeleton class="h-5 w-full" />
+        <x-atoms.skeleton class="h-5 w-full" />
+    </div>
+
     <div class="mt-6 flex items-center justify-between gap-3 border-t border-outline-variant pt-6">
         <x-atoms.skeleton class="h-11 w-24" />
         <div class="flex gap-3">

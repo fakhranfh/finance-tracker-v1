@@ -108,6 +108,106 @@ test.describe('Manage Goals', () => {
         await expect(page.getByRole('row', { name: new RegExp(mainValue) })).toHaveCount(0);
     });
 
+    test('records a saving history when adding to the saved amount', async ({ page }) => {
+        const { email, password } = seedUser();
+        const mainValue = `E2E Save ${Date.now()}`;
+
+        await login(page, email, password);
+        await page.goto('/goals/create');
+        await page.getByLabel('Name', { exact: true }).fill(mainValue);
+        await page.getByLabel('Target Amount', { exact: true }).fill('10000000');
+        await page.getByLabel('Desired Date', { exact: true }).fill('2027-03-15');
+        await page.getByRole('button', { name: 'Save' }).click();
+        await expect(page).toHaveURL('/goals');
+
+        await page.getByRole('row', { name: new RegExp(mainValue) }).getByRole('link', { name: 'View' }).click();
+        await expect(page.getByText('No savings added yet.')).toBeVisible();
+
+        await page.getByRole('button', { name: 'Add saved amount' }).click();
+        await page.getByLabel('Amount to add').fill('500000');
+        await page.locator('#add-saved-form').getByRole('button', { name: 'Save' }).click();
+        await expect(page.getByText('Saved amount updated.')).toBeVisible();
+
+        await page.getByRole('button', { name: 'Add saved amount' }).click();
+        await page.getByLabel('Amount to add').fill('250000');
+        await page.locator('#add-saved-form').getByRole('button', { name: 'Save' }).click();
+
+        const history = page.locator('#goal-savings-table tr:not([data-table-empty-row]):not([data-table-bulk-row])');
+        await expect(history).toHaveCount(2);
+        await expect(history.first()).toContainText('250.000');
+        await expect(history.last()).toContainText('500.000');
+        await expect(page.getByText('No savings added yet.')).toBeHidden();
+
+        await page.reload();
+        await expect(history).toHaveCount(2);
+
+        await page.locator('#filter-date_from').fill('2099-01-01');
+        await expect(history).toHaveCount(0);
+        await expect(page.getByText('No savings added yet.')).toBeVisible();
+        await page.locator('#filter-date_from').fill('2000-01-01');
+        await page.locator('#filter-date_to').fill('2099-01-01');
+        await expect(history).toHaveCount(2);
+        await page.getByRole('button', { name: 'Clear filters' }).click();
+        await expect(page.locator('#filter-date_from')).toHaveValue('');
+        await expect(history).toHaveCount(2);
+
+        await history.first().getByRole('button', { name: 'Edit' }).click();
+        await page.locator('#edit-saving-form').getByLabel('Amount').fill('300000');
+        await page.locator('#edit-saving-form').getByRole('button', { name: 'Save' }).click();
+        await expect(page.getByText('Saving updated.')).toBeVisible();
+        await expect(history.first()).toContainText('300.000');
+        await expect(page.locator('[data-field="saved_amount"]')).toHaveText(/800\.000/);
+
+        await history.first().getByRole('button', { name: 'Delete' }).click();
+        await expect(page.getByText('Are you sure you want to delete this saving?')).toBeVisible();
+        await page.locator('#confirm-delete-saving').click();
+        await expect(history).toHaveCount(1);
+        await expect(page.getByText('Saving deleted.')).toBeVisible();
+        await expect(page.locator('[data-field="saved_amount"]')).toHaveText(/500\.000/);
+
+        for (const amount of ['100000', '200000']) {
+            await page.getByRole('button', { name: 'Add saved amount' }).click();
+            await page.getByLabel('Amount to add').fill(amount);
+            await page.locator('#add-saved-form').getByRole('button', { name: 'Save' }).click();
+            await expect(page.locator('#add-saved-modal')).toBeHidden();
+        }
+        await expect(history).toHaveCount(3);
+
+        await page.locator('#goal-savings-table').locator('xpath=ancestor::table').locator('[data-table-select-all]').check();
+        await page.getByRole('button', { name: 'Delete selected' }).click();
+        await expect(page.getByText('Are you sure you want to delete the selected savings?')).toBeVisible();
+        await page.locator('#confirm-bulk-delete-savings').click();
+
+        await expect(history).toHaveCount(0);
+        await expect(page.getByText('No savings added yet.')).toBeVisible();
+        await expect(page.locator('[data-field="saved_amount"]')).toHaveText(/Rp\s0$/);
+    });
+
+    test('shows the saving history filter bar on mobile only while the table is in view', async ({ page }) => {
+        const { email, password } = seedUser();
+        const mainValue = `E2E Mobile ${Date.now()}`;
+
+        await login(page, email, password);
+        await page.goto('/goals/create');
+        await page.getByLabel('Name', { exact: true }).fill(mainValue);
+        await page.getByLabel('Target Amount', { exact: true }).fill('1000000');
+        await page.getByLabel('Desired Date', { exact: true }).fill('2027-03-15');
+        await page.getByRole('button', { name: 'Save' }).click();
+        await expect(page).toHaveURL('/goals');
+
+        await page.setViewportSize({ width: 375, height: 500 });
+        await page.goto((await page.getByRole('row', { name: new RegExp(mainValue) }).getByRole('link', { name: 'View' }).getAttribute('href')) ?? '/goals');
+        const bar = page.locator('#goal-savings-mobile-bar');
+        await expect(page.getByRole('heading', { name: mainValue })).toBeVisible();
+        await expect(bar).toBeHidden();
+
+        await page.locator('#goal-savings-wrapper').scrollIntoViewIfNeeded();
+        await expect(bar).toBeVisible();
+
+        await bar.getByRole('button', { name: 'Filter' }).click();
+        await expect(page.locator('#goal-savings-mobile-bar-filter').getByLabel('From date')).toBeVisible();
+    });
+
     test('deletes a goal from its detail page', async ({ page }) => {
         const { email, password } = seedUser();
         const mainValue = `E2E Del ${Date.now()}`;
