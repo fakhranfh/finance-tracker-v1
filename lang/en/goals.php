@@ -6,6 +6,7 @@ return [
     'create' => 'Add goal',
     'edit' => 'Edit goal',
     'show' => 'Goal details',
+    'locked' => 'This goal is already reached and can no longer be changed.',
     'back' => 'Back to goals',
 
     'table' => [
@@ -48,10 +49,13 @@ return [
     ],
 
     'show_page' => [
+        'of' => 'of',
         'progress' => 'Progress',
         'target_amount' => 'Target Amount',
         'saved_amount' => 'Saved Amount',
-        'remaining' => 'Remaining',
+        'estimated_completion' => 'Estimated Completion',
+        'estimate_reached' => 'Goal reached',
+        'estimate_unknown' => 'Not enough savings history to estimate yet.',
         'desired_date' => 'Desired Date',
         'status' => 'Status',
         'color' => 'Color',
@@ -71,6 +75,14 @@ return [
     ],
 
     'actions' => [
+        'set_reached' => 'Set as reached',
+        'set_reached_title' => 'Set goal as reached?',
+        'set_reached_warning' => 'Once a goal is reached it becomes read-only. You will not be able to edit it, add to its saved amount or change its status again.',
+        'set_reached_confirm' => 'Yes, set as reached',
+        'add_saved' => 'Add saved amount',
+        'add_saved_title' => 'Add to saved amount',
+        'add_saved_amount' => 'Amount to add',
+        'add_saved_invalid' => 'Enter an amount greater than 0.',
         'view' => 'View',
         'edit' => 'Edit',
         'delete' => 'Delete',
@@ -89,6 +101,8 @@ return [
         'updated' => 'Goal updated successfully.',
         'deleted' => 'Goal deleted successfully.',
         'generated' => 'Fake goals generated successfully.',
+        'saved_added' => 'Saved amount updated.',
+        'reached_set' => 'Goal marked as reached.',
         'status_failed' => 'Could not update the goal status. Please try again.',
     ],
 ];

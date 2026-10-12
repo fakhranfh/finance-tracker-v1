@@ -84,6 +84,7 @@ trait DocumentsApi
         ),
         responses: [
             new OA\Response(response: 200, description: 'Goal updated'),
+            new OA\Response(response: 403, description: 'The goal is already reached and can no longer be changed'),
             new OA\Response(response: 422, description: 'Validation error'),
         ]
     )]

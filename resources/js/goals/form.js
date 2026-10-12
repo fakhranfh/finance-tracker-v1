@@ -27,7 +27,10 @@ document.querySelector('[data-dev-autofill]')?.addEventListener('click', syncCol
 async function loadItem() {
     const { ok, data } = await get(routes.goals.show(itemId));
 
-    if (ok) {
+    if (ok && data.data.status === 'reached') {
+        showGenericError(form, form.dataset.lockedMessage, 'name');
+        form.querySelector('[type="submit"]')?.setAttribute('disabled', '');
+    } else if (ok) {
         form.elements.namedItem('name').value = data.data.name ?? '';
         form.elements.namedItem('target_amount').value = data.data.target_amount ?? '';
         form.elements.namedItem('saved_amount').value = data.data.saved_amount ?? '';

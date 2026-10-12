@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\GoalStatus;
 use App\Models\Goal;
 use App\Models\User;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
@@ -109,7 +110,7 @@ it('shows a goal via the api', function () {
 
 it('updates a goal via the api', function () {
     $actor = User::factory()->create();
-    $target = Goal::factory()->create();
+    $target = Goal::factory()->create(['status' => GoalStatus::Active]);
 
     $response = $this->actingAs($actor)->putJson("/api/goals/{$target->id}", [
         'name' => 'Updated name',
@@ -125,6 +126,25 @@ it('updates a goal via the api', function () {
     $response->assertOk();
     $response->assertJsonPath('data.name', 'Updated name');
     $response->assertJsonPath('data.status', 'reached');
+});
+
+it('rejects updating a goal that is already reached', function () {
+    $actor = User::factory()->create();
+    $target = Goal::factory()->create(['name' => 'Locked goal', 'status' => GoalStatus::Reached]);
+
+    $this->actingAs($actor)->putJson("/api/goals/{$target->id}", [
+        'name' => 'Changed name',
+        'target_amount' => 100,
+        'saved_amount' => 100,
+        'desired_date' => '2026-02-20',
+        'color' => '#10B981',
+        'icon' => 'home',
+        'status' => 'active',
+        'note' => null,
+    ])->assertForbidden();
+
+    expect($target->fresh()->name)->toBe('Locked goal');
+    expect($target->fresh()->status)->toBe(GoalStatus::Reached);
 });
 
 it('deletes a goal via the api', function () {

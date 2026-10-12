@@ -746,6 +746,15 @@
                                         "type": "string",
                                         "example": "flag"
                                     },
+                                    "status": {
+                                        "type": "string",
+                                        "example": "active",
+                                        "enum": [
+                                            "active",
+                                            "paused",
+                                            "reached"
+                                        ]
+                                    },
                                     "note": {
                                         "type": "string",
                                         "example": "Dana liburan akhir tahun",
@@ -878,6 +887,15 @@
                                         "type": "string",
                                         "example": "flag"
                                     },
+                                    "status": {
+                                        "type": "string",
+                                        "example": "active",
+                                        "enum": [
+                                            "active",
+                                            "paused",
+                                            "reached"
+                                        ]
+                                    },
                                     "note": {
                                         "type": "string",
                                         "example": "Dana liburan akhir tahun",
@@ -892,6 +910,9 @@
                 "responses": {
                     "200": {
                         "description": "Goal updated"
+                    },
+                    "403": {
+                        "description": "The goal is already reached and can no longer be changed"
                     },
                     "422": {
                         "description": "Validation error"

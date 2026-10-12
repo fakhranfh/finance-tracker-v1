@@ -6,6 +6,7 @@ return [
     'create' => 'Tambah target',
     'edit' => 'Ubah target',
     'show' => 'Detail target',
+    'locked' => 'Target ini sudah tercapai dan tidak dapat diubah lagi.',
     'back' => 'Kembali ke daftar target',
 
     'table' => [
@@ -48,10 +49,13 @@ return [
     ],
 
     'show_page' => [
+        'of' => 'dari',
         'progress' => 'Progres',
         'target_amount' => 'Jumlah Target',
         'saved_amount' => 'Jumlah Terkumpul',
-        'remaining' => 'Sisa',
+        'estimated_completion' => 'Perkiraan Tercapai',
+        'estimate_reached' => 'Target tercapai',
+        'estimate_unknown' => 'Riwayat tabungan belum cukup untuk memperkirakan.',
         'desired_date' => 'Tanggal Diinginkan',
         'status' => 'Status',
         'color' => 'Warna',
@@ -71,6 +75,14 @@ return [
     ],
 
     'actions' => [
+        'set_reached' => 'Tandai tercapai',
+        'set_reached_title' => 'Tandai target sebagai tercapai?',
+        'set_reached_warning' => 'Setelah tercapai, target hanya bisa dilihat. Anda tidak dapat lagi mengubahnya, menambah jumlah terkumpul, atau mengganti statusnya.',
+        'set_reached_confirm' => 'Ya, tandai tercapai',
+        'add_saved' => 'Tambah tabungan',
+        'add_saved_title' => 'Tambah jumlah terkumpul',
+        'add_saved_amount' => 'Jumlah yang ditambahkan',
+        'add_saved_invalid' => 'Masukkan jumlah lebih dari 0.',
         'view' => 'Lihat',
         'edit' => 'Ubah',
         'delete' => 'Hapus',
@@ -89,6 +101,8 @@ return [
         'updated' => 'Target berhasil diperbarui.',
         'deleted' => 'Target berhasil dihapus.',
         'generated' => 'Target palsu berhasil dibuat.',
+        'saved_added' => 'Jumlah terkumpul diperbarui.',
+        'reached_set' => 'Target ditandai tercapai.',
         'status_failed' => 'Status target gagal diperbarui. Silakan coba lagi.',
     ],
 ];

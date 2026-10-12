@@ -30,6 +30,7 @@
             @class(['space-y-5', 'hidden' => $id])
             novalidate
             @if ($id) data-item-id="{{ $id }}" @endif
+            data-locked-message="{{ __('goals.locked') }}"
             data-success-message="{{ $id ? __('goals.flash.updated') : __('goals.flash.created') }}"
         >
             @csrf

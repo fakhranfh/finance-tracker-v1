@@ -48,6 +48,7 @@ function statusNode(item) {
 
     Object.entries(statusLabels).forEach(([value, label]) => select.append(new Option(label, value)));
     select.value = item.status;
+    select.disabled = item.status === 'reached';
 
     select.addEventListener('change', async () => {
         select.disabled = true;
@@ -66,7 +67,7 @@ function statusNode(item) {
             select.value = item.status;
             statusError?.classList.remove('hidden');
         } finally {
-            select.disabled = false;
+            select.disabled = item.status === 'reached';
         }
     });
 

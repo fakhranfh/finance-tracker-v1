@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\GoalStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Goal\BulkDeleteGoalRequest;
 use App\Http\Requests\Goal\StoreGoalRequest;
@@ -72,6 +73,8 @@ class GoalController extends Controller
 
     public function update(UpdateGoalRequest $request, Goal $goal): GoalResource
     {
+        abort_if($goal->status === GoalStatus::Reached, 403, __('goals.locked'));
+
         return new GoalResource($this->goalManagementService->update($goal, $request->validated()));
     }
 
