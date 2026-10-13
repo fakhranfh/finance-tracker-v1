@@ -14,7 +14,7 @@ test.describe('Manage Categories', () => {
         const { email, password } = seedUser();
 
         await login(page, email, password);
-        await page.getByRole('link', { name: 'Manage Categories' }).click();
+        await page.locator('aside').getByRole('link', { name: 'Manage Categories' }).click();
 
         await expect(page).toHaveURL('/categories');
         await expect(page.getByRole('heading', { name: 'Manage Categories' })).toBeVisible();

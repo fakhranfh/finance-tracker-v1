@@ -3,10 +3,10 @@
 return [
     'nav' => [
         ['label' => 'dashboard.nav.dashboard', 'route' => 'dashboard', 'icon' => 'home'],
-        ['label' => 'dashboard.nav.accounts', 'route' => 'accounts.index', 'active' => 'accounts.*', 'icon' => 'cube'],
-        ['label' => 'dashboard.nav.records', 'route' => 'records.index', 'active' => 'records.*', 'icon' => 'cube'],
-        ['label' => 'dashboard.nav.categories', 'route' => 'categories.index', 'active' => 'categories.*', 'icon' => 'tag'],
-        ['label' => 'dashboard.nav.goals', 'route' => 'goals.index', 'active' => 'goals.*', 'icon' => 'cube'],
+        ['label' => 'dashboard.nav.accounts', 'route' => 'accounts.index', 'active' => 'accounts.*', 'icon' => 'cube', 'description' => 'dashboard.welcome.features.accounts'],
+        ['label' => 'dashboard.nav.records', 'route' => 'records.index', 'active' => 'records.*', 'icon' => 'cube', 'description' => 'dashboard.welcome.features.records'],
+        ['label' => 'dashboard.nav.categories', 'route' => 'categories.index', 'active' => 'categories.*', 'icon' => 'tag', 'description' => 'dashboard.welcome.features.categories'],
+        ['label' => 'dashboard.nav.goals', 'route' => 'goals.index', 'active' => 'goals.*', 'icon' => 'cube', 'description' => 'dashboard.welcome.features.goals'],
     ],
 
     'icons' => [
