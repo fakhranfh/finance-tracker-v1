@@ -88,4 +88,9 @@ interface RecordRepositoryInterface
      * Delete a record.
      */
     public function delete(Record $record): void;
+
+    /**
+     * Delete every record that touches the account, one by one so the record observer still syncs balances and totals.
+     */
+    public function deleteAllForAccount(int $accountId): void;
 }

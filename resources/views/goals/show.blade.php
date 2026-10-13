@@ -37,6 +37,7 @@
             data-saved-added="{{ __('goals.flash.saved_added') }}"
             data-saving-updated="{{ __('goals.flash.saving_updated') }}"
             data-saving-deleted="{{ __('goals.flash.saving_deleted') }}"
+            data-saving-done="{{ __('sub-goals.show_page.history_done') }}"
         >
             <div class="mb-6 flex items-center gap-3">
                 <span data-field="icon"></span>

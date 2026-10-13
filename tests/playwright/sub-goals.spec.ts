@@ -44,6 +44,24 @@ async function createGoal(page, name: string, target: string, subGoals: SubGoalI
     return (href ?? '').split('/').pop() ?? '';
 }
 
+/** Adds a saving to a sub goal through the API: a goal with sub goals has no add saved amount button. */
+async function addSaving(page, goalId: string, subGoalName: string, amount: number) {
+    await page.goto(`/goals/${goalId}`);
+    await page.evaluate(
+        async ({ goalId, subGoalName, amount }) => {
+            const headers = { Accept: 'application/json', 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('api_token')}` };
+            const list = await (await fetch(`/api/goals/${goalId}/sub-goals`, { headers })).json();
+            const subGoal = list.data.find((item) => item.name === subGoalName);
+            const response = await fetch(`/api/goals/${goalId}/savings`, { method: 'POST', headers, body: JSON.stringify({ amount, sub_goal_id: subGoal.id }) });
+
+            if (!response.ok) {
+                throw new Error(`Saving failed: ${response.status}`);
+            }
+        },
+        { goalId, subGoalName, amount },
+    );
+}
+
 test.describe('Sub goals', () => {
     test('creates a goal with sub goals whose saved amounts become the goal saved amount', async ({ page }) => {
         const { email, password } = seedUser();
@@ -118,13 +136,10 @@ test.describe('Sub goals', () => {
         await page.goto(`/goals/${goalId}`);
         await expect(page.getByRole('columnheader', { name: 'Sub goal' })).toBeVisible();
 
-        await page.getByRole('button', { name: 'Add saved amount' }).click();
-        await page.getByLabel('Amount to add').fill('250000');
-        await page.locator('#add-saved-form').getByRole('button', { name: 'Save' }).click();
-        await expect(page.locator('#add-saved-form [data-error-for="sub_goal_id"]')).toBeVisible();
+        await expect(page.getByRole('button', { name: 'Add saved amount' })).toBeHidden();
 
-        await page.locator('#amount_sub_goal').selectOption({ label: 'Vendor katering' });
-        await page.locator('#add-saved-form').getByRole('button', { name: 'Save' }).click();
+        await addSaving(page, goalId, 'Vendor katering', 250000);
+        await page.reload();
 
         const history = page.locator('#goal-savings-table tr:not([data-table-empty-row]):not([data-table-bulk-row])');
         await expect(history).toHaveCount(1);
@@ -199,12 +214,7 @@ test.describe('Sub goals', () => {
             { name: 'Vendor katering', target: '4000000' },
         ]);
 
-        await page.goto(`/goals/${goalId}`);
-        await page.getByRole('button', { name: 'Add saved amount' }).click();
-        await page.getByLabel('Amount to add').fill('250000');
-        await page.locator('#amount_sub_goal').selectOption({ label: 'Vendor katering' });
-        await page.locator('#add-saved-form').getByRole('button', { name: 'Save' }).click();
-        await expect(page.getByText('Saved amount updated.')).toBeVisible();
+        await addSaving(page, goalId, 'Vendor katering', 250000);
 
         await page.goto(`/goals/${goalId}/sub-goals`);
         await page.getByRole('row', { name: /Vendor katering/ }).getByRole('link', { name: 'View' }).click();
@@ -222,6 +232,13 @@ test.describe('Sub goals', () => {
         await expect(page.getByText('Sub goal marked as done.')).toBeVisible();
         await expect(page.locator('[data-field="status"]')).toHaveText('Done');
         await expect(page.getByRole('button', { name: 'Mark as not done' })).toBeVisible();
+        await expect(history).toHaveCount(2);
+        await expect(history.first()).toContainText('Marked as done');
+
+        await page.getByRole('button', { name: 'Mark as not done' }).click();
+        await expect(history).toHaveCount(1);
+        await page.getByRole('button', { name: 'Mark as done' }).click();
+        await expect(history).toHaveCount(2);
 
         await page.getByRole('link', { name: 'Edit sub goal' }).click();
         await expect(page).toHaveURL(new RegExp(`/goals/${goalId}/sub-goals/[0-9]+/edit$`));

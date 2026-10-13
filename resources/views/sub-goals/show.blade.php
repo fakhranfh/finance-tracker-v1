@@ -30,6 +30,7 @@
             class="hidden"
             data-goal-id="{{ $goalId }}"
             data-item-id="{{ $id }}"
+            data-saving-done="{{ __('sub-goals.show_page.history_done') }}"
             data-done-label="{{ __('sub-goals.table.done') }}"
             data-not-done-label="{{ __('sub-goals.table.not_done') }}"
             data-marked-done="{{ __('sub-goals.flash.marked_done') }}"

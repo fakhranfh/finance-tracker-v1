@@ -42,7 +42,7 @@ class GoalManagementService
         $subGoals = Arr::pull($data, 'sub_goals');
         $data['status'] ??= GoalStatus::Active->value;
 
-        return DB::transaction(function () use ($data, $subGoals): Goal {
+        return $this->goalRepository->transaction(function () use ($data, $subGoals): Goal {
             $goal = $this->goalRepository->create($data);
 
             if ($subGoals) {
@@ -62,7 +62,7 @@ class GoalManagementService
     {
         $subGoals = Arr::pull($data, 'sub_goals');
 
-        return DB::transaction(function () use ($goal, $data, $subGoals): Goal {
+        return $this->goalRepository->transaction(function () use ($goal, $data, $subGoals): Goal {
             $goal = $this->goalRepository->update($goal, $data);
 
             if ($subGoals !== null) {

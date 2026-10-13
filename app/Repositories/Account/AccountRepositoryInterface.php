@@ -61,4 +61,24 @@ interface AccountRepositoryInterface
      * Delete a account.
      */
     public function delete(Account $account): void;
+
+    /**
+     * The IDs of every account, optionally leaving one out.
+     *
+     * @return array<int, int>
+     */
+    public function allIds(?int $exceptId = null): array;
+
+    /**
+     * The sort order a newly created account takes: one after the last.
+     */
+    public function nextSortOrder(): int;
+
+    /**
+     * The names of the given accounts.
+     *
+     * @param  array<int, int>  $ids
+     * @return \Illuminate\Support\Collection<int, string>
+     */
+    public function namesOf(array $ids): \Illuminate\Support\Collection;
 }

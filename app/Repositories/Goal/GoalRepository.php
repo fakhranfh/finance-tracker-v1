@@ -3,11 +3,14 @@
 namespace App\Repositories\Goal;
 
 use App\Models\Goal;
+use App\Repositories\Concerns\RunsTransactions;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class GoalRepository implements GoalRepositoryInterface
 {
+    use RunsTransactions;
+
     public function find(int $id): ?Goal
     {
         return Goal::query()->find($id);
@@ -81,5 +84,15 @@ class GoalRepository implements GoalRepositoryInterface
     public function delete(Goal $goal): void
     {
         $goal->delete();
+    }
+
+    public function shiftSavedAmount(Goal $goal, float $difference): void
+    {
+        $goal->increment('saved_amount', $difference);
+        $goal->refresh();
+
+        if ((float) $goal->saved_amount < 0) {
+            $goal->update(['saved_amount' => 0]);
+        }
     }
 }

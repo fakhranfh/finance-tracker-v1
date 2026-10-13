@@ -52,4 +52,19 @@ interface GoalRepositoryInterface
      * Delete a goal.
      */
     public function delete(Goal $goal): void;
+
+    /**
+     * Move the goal's saved amount by a signed difference (never below zero) and refresh the model.
+     */
+    public function shiftSavedAmount(Goal $goal, float $difference): void;
+
+    /**
+     * Run the callback inside a database transaction and return its result.
+     *
+     * @template T
+     *
+     * @param  \Closure(): T  $callback
+     * @return T
+     */
+    public function transaction(\Closure $callback): mixed;
 }

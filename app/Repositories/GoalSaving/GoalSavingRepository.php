@@ -2,19 +2,21 @@
 
 namespace App\Repositories\GoalSaving;
 
-use App\Models\Goal;
 use App\Models\GoalSaving;
+use App\Repositories\Concerns\RunsTransactions;
 use Carbon\CarbonInterface;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\DB;
 
 class GoalSavingRepository implements GoalSavingRepositoryInterface
 {
-    public function paginate(Goal $goal, int $perPage, ?string $sort = null, string $direction = 'desc', ?CarbonInterface $from = null, ?CarbonInterface $to = null, ?int $subGoalId = null): LengthAwarePaginator
+    use RunsTransactions;
+
+    public function paginate(int $goalId, int $perPage, ?string $sort = null, string $direction = 'desc', ?CarbonInterface $from = null, ?CarbonInterface $to = null, ?int $subGoalId = null): LengthAwarePaginator
     {
         $query = GoalSaving::query()
             ->with('subGoal')
-            ->whereBelongsTo($goal)
+            ->where('goal_id', $goalId)
             ->when($from, fn ($q) => $q->where('created_at', '>=', $from))
             ->when($to, fn ($q) => $q->where('created_at', '<=', $to))
             ->when($subGoalId, fn ($q) => $q->where('sub_goal_id', $subGoalId));
@@ -29,69 +31,40 @@ class GoalSavingRepository implements GoalSavingRepositoryInterface
         return $query->orderBy('id', $direction)->paginate($perPage)->withQueryString();
     }
 
-    public function create(Goal $goal, string|float|int $amount, ?int $subGoalId = null): GoalSaving
+    public function create(int $goalId, string|float|int $amount, ?int $subGoalId = null): GoalSaving
     {
-        return DB::transaction(function () use ($goal, $amount, $subGoalId): GoalSaving {
-            $goal->increment('saved_amount', $amount);
-            $goal->refresh();
-
-            $saving = GoalSaving::query()->create(['goal_id' => $goal->id, 'sub_goal_id' => $subGoalId, 'amount' => $amount]);
-            $this->shiftSubGoalSavedAmount($saving, (float) $amount);
-
-            return $saving;
-        });
+        return GoalSaving::query()->create(['goal_id' => $goalId, 'sub_goal_id' => $subGoalId, 'amount' => $amount]);
     }
 
-    public function update(Goal $goal, GoalSaving $saving, string|float|int $amount, ?int $subGoalId = null): GoalSaving
+    public function update(GoalSaving $saving, string|float|int $amount, ?int $subGoalId = null): GoalSaving
     {
-        return DB::transaction(function () use ($goal, $saving, $amount, $subGoalId): GoalSaving {
-            $this->shiftSavedAmount($goal, round((float) $amount - (float) $saving->amount, 2));
-            $this->shiftSubGoalSavedAmount($saving, -(float) $saving->amount);
-            $saving->update(['amount' => $amount, 'sub_goal_id' => $subGoalId]);
-            $this->shiftSubGoalSavedAmount($saving, (float) $amount);
+        $saving->update(['amount' => $amount, 'sub_goal_id' => $subGoalId]);
 
-            return $saving;
-        });
+        return $saving;
     }
 
-    public function delete(Goal $goal, GoalSaving $saving): void
+    public function delete(GoalSaving $saving): void
     {
-        DB::transaction(function () use ($goal, $saving): void {
-            $this->shiftSavedAmount($goal, -(float) $saving->amount);
-            $this->shiftSubGoalSavedAmount($saving, -(float) $saving->amount);
-            $saving->delete();
-        });
+        $saving->delete();
     }
 
-    public function deleteMany(Goal $goal, ?array $ids = null): void
+    public function deleteMany(int $goalId, ?array $ids = null): void
     {
-        DB::transaction(function () use ($goal, $ids): void {
-            $query = GoalSaving::query()->whereBelongsTo($goal)->when($ids !== null, fn ($q) => $q->whereIn('id', $ids));
-
-            $this->shiftSavedAmount($goal, -(float) $query->sum('amount'));
-            (clone $query)->whereNotNull('sub_goal_id')->get()->each(fn (GoalSaving $saving) => $this->shiftSubGoalSavedAmount($saving, -(float) $saving->amount));
-            $query->delete();
-        });
+        GoalSaving::query()->where('goal_id', $goalId)->when($ids !== null, fn ($q) => $q->whereIn('id', $ids))->delete();
     }
 
-    /**
-     * Move the saved amount of the saving's sub goal (if any) by a signed difference, so the sub goals keep adding up to the goal.
-     */
-    private function shiftSubGoalSavedAmount(GoalSaving $saving, float $difference): void
+    public function getForGoal(int $goalId, ?array $ids = null): Collection
     {
-        $saving->subGoal()->increment('saved_amount', $difference);
+        return GoalSaving::query()->where('goal_id', $goalId)->when($ids !== null, fn ($q) => $q->whereIn('id', $ids))->get();
     }
 
-    /**
-     * Move the saved amount by a signed difference, never below zero.
-     */
-    private function shiftSavedAmount(Goal $goal, float $difference): void
+    public function recordDone(int $goalId, int $subGoalId): GoalSaving
     {
-        $goal->increment('saved_amount', $difference);
-        $goal->refresh();
+        return GoalSaving::query()->create(['goal_id' => $goalId, 'sub_goal_id' => $subGoalId, 'type' => GoalSaving::TYPE_DONE, 'amount' => 0]);
+    }
 
-        if ((float) $goal->saved_amount < 0) {
-            $goal->update(['saved_amount' => 0]);
-        }
+    public function deleteDone(array $subGoalIds): void
+    {
+        GoalSaving::query()->whereIn('sub_goal_id', $subGoalIds)->where('type', GoalSaving::TYPE_DONE)->delete();
     }
 }

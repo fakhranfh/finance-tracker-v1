@@ -107,4 +107,19 @@ class AccountRepository implements AccountRepositoryInterface
     {
         Account::query()->whereKey($account->id)->delete();
     }
+
+    public function allIds(?int $exceptId = null): array
+    {
+        return Account::query()->when($exceptId !== null, fn ($q) => $q->whereKeyNot($exceptId))->pluck('id')->all();
+    }
+
+    public function nextSortOrder(): int
+    {
+        return (int) (Account::query()->max('sort_order') ?? 0) + 1;
+    }
+
+    public function namesOf(array $ids): \Illuminate\Support\Collection
+    {
+        return Account::query()->whereIn('id', $ids)->pluck('name');
+    }
 }

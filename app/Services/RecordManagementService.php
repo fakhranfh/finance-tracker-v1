@@ -4,9 +4,9 @@ namespace App\Services;
 
 use App\Enums\RecordType;
 use App\Exports\RecordsExport;
-use App\Models\Account;
-use App\Models\Category;
 use App\Models\Record;
+use App\Repositories\Account\AccountRepositoryInterface;
+use App\Repositories\Category\CategoryRepositoryInterface;
 use App\Repositories\Record\RecordRepositoryInterface;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\CarbonImmutable;
@@ -23,6 +23,8 @@ class RecordManagementService
 
     public function __construct(
         protected RecordRepositoryInterface $recordRepository,
+        protected AccountRepositoryInterface $accountRepository,
+        protected CategoryRepositoryInterface $categoryRepository,
         protected AccountLastBalanceService $lastBalance,
         protected AccountBalanceSnapshotService $snapshots,
         protected AccountMonthlyTotalsService $monthlyTotals,
@@ -87,10 +89,10 @@ class RecordManagementService
                 ->map(fn (string $t) => RecordType::from($t)->label())->implode(', ');
         }
         if (! empty($filters['account_ids'])) {
-            $lines[__('records.filters.account')] = Account::whereIn('id', $filters['account_ids'])->pluck('name')->implode(', ');
+            $lines[__('records.filters.account')] = $this->accountRepository->namesOf($filters['account_ids'])->implode(', ');
         }
         if (! empty($filters['category_ids'])) {
-            $names = Category::whereIn('id', array_filter($filters['category_ids'], 'is_numeric'))->pluck('name');
+            $names = $this->categoryRepository->namesOf(array_filter($filters['category_ids'], 'is_numeric'));
 
             if (in_array('none', $filters['category_ids'], true)) {
                 $names->push(__('records.fields.no_category'));
@@ -134,7 +136,7 @@ class RecordManagementService
             && (($from && $to) || (! $from && ! $to));
 
         if ($storedOnly) {
-            $accountIds = ! empty($filters['account_ids']) ? $filters['account_ids'] : Account::query()->pluck('id')->all();
+            $accountIds = ! empty($filters['account_ids']) ? $filters['account_ids'] : $this->accountRepository->allIds();
             $flows = $this->accountSummaries->flowsOfAccounts(
                 $accountIds,
                 $from ? CarbonImmutable::parse($from, $timezone)->startOfDay() : null,

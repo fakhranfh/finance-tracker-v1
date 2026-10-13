@@ -16,12 +16,13 @@ const ICON_DELETE =
  *   locked   row can't be selected or deleted (e.g. the current user)
  *   onEdit   edit button handler, used instead of the editUrl link (e.g. to open a modal)
  *   readOnly row has no edit or delete action at all
+ *   noEdit   row has no edit action but can still be deleted
  */
 export function createTableRow({ tbody, selection, selectAll }) {
     const labels = tbody.dataset;
 
     return {
-        render({ id, cells, viewUrl = null, editUrl, onEdit = null, onDelete, locked = false, readOnly = false }) {
+        render({ id, cells, viewUrl = null, editUrl, onEdit = null, onDelete, locked = false, readOnly = false, noEdit = false }) {
             const row = document.createElement('tr');
 
             // Without a checkbox column (table selectable="false") the leading cell is left out.
@@ -90,7 +91,7 @@ export function createTableRow({ tbody, selection, selectAll }) {
                 actions.append(viewLink);
             }
 
-            if (!readOnly) {
+            if (!readOnly && !noEdit) {
                 const editLink = document.createElement(onEdit ? 'button' : 'a');
                 editLink.className = 'inline-flex items-center font-medium text-primary hover:underline';
                 editLink.title = labels.labelEdit;

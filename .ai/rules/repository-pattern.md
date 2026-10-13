@@ -1099,8 +1099,19 @@ class ProductService
 A repository wraps exactly one Eloquent model: `Repositories/{Model}/{Model}Repository.php` only queries and writes `{Model}`. Never add methods that read or write a second model (e.g. a `GoalRepository` with `paginateSavings()` / `addSaving()` for `GoalSaving`). Give the second model its own repository (+ interface and binding in `AppServiceProvider`) and its own service, e.g. `GoalSavingRepository` + `GoalSavingService`.
 
 - Loading a related model through a relation on the owning model (`with(['category'])`) is fine; querying or persisting the related model is not.
-- When a change must touch two models atomically (e.g. adding a saving also raises `goals.saved_amount`), keep the write in the repository of the model being created or changed and move the parent through the model instance it receives (`$goal->increment(...)`), or orchestrate both repositories from a service inside `DB::transaction()`.
+- When a change must touch two models atomically (e.g. adding a saving also raises `goals.saved_amount`), keep the write in the repository of the model being created or changed and move the parent through the model instance it receives (`$goal->increment(...)`), or orchestrate both repositories from a service, wrapping the calls in the main repository's `transaction()` (see rule 9).
+- A repository does not even import another model: scope by a plain id (`int $goalId` + `where('goal_id', $goalId)`) instead of taking `Goal $goal`, and let the service pass `$goal->id`. Moving a parent's counter (e.g. `goals.saved_amount`) is the parent repository's job (`GoalRepository::shiftSavedAmount()`), called by the service.
+- Reaching a second model through a relation chain (`$saving->subGoal()->increment(...)`, `$goal->savings()->where(...)`) counts as querying it. The `validate-repository-pattern` hook reports both static calls on another model and these relation chains.
 - Services follow the same split: one service per model, calling other services or repositories for the rest.
+
+### 9. No queries or transactions in services
+
+A service only orchestrates: it calls repositories (and other services) and applies business rules. It never builds or runs a query and never opens a transaction.
+
+- No `Model::query()`, `Model::find()` etc., no `DB::` facade calls (including `DB::transaction()`), and no queries through a relation (`$goal->savings()->where(...)`, `$goal->subGoals()->get()`). Put them in the model's repository.
+- Plain collection work on data a repository returned (`groupBy`, `sum`, `pluck` ...) is fine.
+- For atomic work across several repository calls, use the `transaction()` method every repository gets from the `App\Repositories\Concerns\RunsTransactions` trait (declare it on the repository interface too): `$this->goalRepository->transaction(function () { ... })`. The `DB` facade stays inside repositories.
+- The `validate-repository-pattern` hook (`.claude/hooks/validate-repository-pattern.php`) reports `DB::` calls, model static calls and relation chains in `app/Services/**`.
 
 ---
 

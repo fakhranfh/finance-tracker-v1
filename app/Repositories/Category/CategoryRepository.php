@@ -79,4 +79,9 @@ class CategoryRepository implements CategoryRepositoryInterface
     {
         $category->delete();
     }
+
+    public function namesOf(array $ids): \Illuminate\Support\Collection
+    {
+        return Category::query()->whereIn('id', $ids)->pluck('name');
+    }
 }

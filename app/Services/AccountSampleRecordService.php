@@ -7,6 +7,8 @@ use App\Jobs\GenerateAccountRecords;
 use App\Models\Account;
 use App\Models\Category;
 use App\Models\Record;
+use App\Repositories\Account\AccountRepositoryInterface;
+use App\Repositories\Record\RecordRepositoryInterface;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
 
@@ -16,6 +18,11 @@ use Illuminate\Support\Collection;
  */
 class AccountSampleRecordService
 {
+    public function __construct(
+        protected AccountRepositoryInterface $accountRepository,
+        protected RecordRepositoryInterface $recordRepository,
+    ) {}
+
     /**
      * Queue a background job that runs generate() with the same arguments.
      */
@@ -36,10 +43,7 @@ class AccountSampleRecordService
      */
     public function deleteAll(Account $account): void
     {
-        Record::query()
-            ->where('account_id', $account->id)
-            ->orWhere('to_account_id', $account->id)
-            ->chunkById(200, fn (Collection $records) => $records->each->delete());
+        $this->recordRepository->deleteAllForAccount($account->id);
     }
 
     /**
@@ -63,7 +67,7 @@ class AccountSampleRecordService
             ->map(fn (int $i) => $type ?? $cases[$i % count($cases)])
             ->shuffle();
 
-        $counterpartIds = Account::query()->whereKeyNot($account->id)->pluck('id')->all();
+        $counterpartIds = $this->accountRepository->allIds($account->id);
 
         if ($counterpartIds === [] && $types->contains(RecordType::Transfer)) {
             $counterpartIds = [Account::factory()->create()->id];

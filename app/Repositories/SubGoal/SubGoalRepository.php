@@ -2,17 +2,19 @@
 
 namespace App\Repositories\SubGoal;
 
-use App\Models\Goal;
 use App\Models\SubGoal;
+use App\Repositories\Concerns\RunsTransactions;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class SubGoalRepository implements SubGoalRepositoryInterface
 {
-    public function paginate(Goal $goal, int $perPage, ?string $search = null, ?string $sort = null, string $direction = 'asc'): LengthAwarePaginator
+    use RunsTransactions;
+
+    public function paginate(int $goalId, int $perPage, ?string $search = null, ?string $sort = null, string $direction = 'asc'): LengthAwarePaginator
     {
-        $query = SubGoal::query()->whereBelongsTo($goal);
+        $query = SubGoal::query()->where('goal_id', $goalId);
 
         $this->applySearch($query, $search);
 
@@ -28,14 +30,14 @@ class SubGoalRepository implements SubGoalRepositoryInterface
         return $query->orderBy('id', $direction)->paginate($perPage)->withQueryString();
     }
 
-    public function getForGoal(Goal $goal): Collection
+    public function getForGoal(int $goalId): Collection
     {
-        return SubGoal::query()->whereBelongsTo($goal)->orderBy('id')->get();
+        return SubGoal::query()->where('goal_id', $goalId)->orderBy('id')->get();
     }
 
-    public function summary(Goal $goal): array
+    public function summary(int $goalId): array
     {
-        $query = SubGoal::query()->whereBelongsTo($goal);
+        $query = SubGoal::query()->where('goal_id', $goalId);
 
         return [
             'total' => (clone $query)->count(),
@@ -45,9 +47,9 @@ class SubGoalRepository implements SubGoalRepositoryInterface
         ];
     }
 
-    public function deleteMany(Goal $goal, array $ids): void
+    public function deleteMany(int $goalId, array $ids): void
     {
-        SubGoal::query()->whereBelongsTo($goal)->whereIn('id', $ids)->delete();
+        SubGoal::query()->where('goal_id', $goalId)->whereIn('id', $ids)->delete();
     }
 
     private function applySearch(Builder $query, ?string $search): void
@@ -62,9 +64,9 @@ class SubGoalRepository implements SubGoalRepositoryInterface
         });
     }
 
-    public function create(Goal $goal, array $data): SubGoal
+    public function create(int $goalId, array $data): SubGoal
     {
-        return SubGoal::query()->create([...$data, 'goal_id' => $goal->id]);
+        return SubGoal::query()->create([...$data, 'goal_id' => $goalId]);
     }
 
     public function update(SubGoal $subGoal, array $data): SubGoal
@@ -72,5 +74,15 @@ class SubGoalRepository implements SubGoalRepositoryInterface
         $subGoal->update($data);
 
         return $subGoal;
+    }
+
+    public function incrementSavedAmount(int $id, float $difference): void
+    {
+        SubGoal::query()->whereKey($id)->increment('saved_amount', $difference);
+    }
+
+    public function markNotDone(array $ids): void
+    {
+        SubGoal::query()->whereIn('id', $ids)->update(['is_done' => false]);
     }
 }

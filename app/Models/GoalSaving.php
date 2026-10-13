@@ -10,10 +10,16 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 /**
  * One amount added to a goal's saved amount, kept as history.
  */
-#[Fillable(['goal_id', 'sub_goal_id', 'amount'])]
+#[Fillable(['goal_id', 'sub_goal_id', 'type', 'amount'])]
 class GoalSaving extends Model
 {
     use HasUserTimezone;
+
+    /** A history entry that adds an amount to the saved amount. */
+    public const TYPE_SAVING = 'saving';
+
+    /** A history entry (amount 0) noting that its sub goal was marked as done. */
+    public const TYPE_DONE = 'done';
 
     /**
      * Get the attributes that should be cast.

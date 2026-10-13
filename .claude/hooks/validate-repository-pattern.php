@@ -2,7 +2,10 @@
 
 /**
  * PostToolUse hook: validates Controllers, Repositories, and Services against
- * docs/REPOSITORY_PATTERN.md after they are written or edited.
+ * docs/REPOSITORY_PATTERN.md after they are written or edited. A repository must wrap
+ * exactly one model: static calls on another model and `$model->relation()->write()`
+ * chains are reported. A service must not query (models, `DB::`, relation chains) or open
+ * transactions itself; atomic work goes through a repository's `transaction()`.
  *
  * Reads the Claude Code hook payload (tool_name/tool_input JSON) from STDIN,
  * static-checks the edited file if it lives under app/Http/Controllers,
@@ -131,6 +134,18 @@ function validateRepository(string $code, string $normalizedPath): array
                 $violations[] = "`{$className}` calls `{$class}::{$method}(...)`, but a repository must only touch its own model (`{$expectedModel}`) per rule 7 — cross-entity orchestration belongs in the Service layer.";
             }
         }
+
+        if (preg_match_all('/^use\s+App\\\\Models\\\\(\w+);/m', $code, $imports)) {
+            foreach ($imports[1] as $model) {
+                if ($model !== $expectedModel) {
+                    $violations[] = "`{$className}` imports the `{$model}` model, but a repository wraps exactly one model (`{$expectedModel}`); take a plain id (e.g. `int \$goalId`) instead of the other model and let a Service pass it (\"One model per repository\" in .ai/rules/repository-pattern.md).";
+                }
+            }
+        }
+
+        foreach (relationChainCalls($code) as [$relation, $method]) {
+            $violations[] = "`{$className}` calls `->{$relation}()->{$method}(...)`, which queries or writes a related model through its relation; a repository wraps exactly one model (`{$expectedModel}`) — move that to the related model's own repository and orchestrate both from a Service inside `DB::transaction()` (\"One model per repository\" in .ai/rules/repository-pattern.md).";
+        }
     }
 
     return array_unique($violations);
@@ -155,6 +170,16 @@ function validateService(string $code): array
         } else {
             $violations[] = "Service calls `{$class}::{$method}(...)` directly on a model; query building must live in the Repository, not the Service (rule 9).";
         }
+    }
+
+    if (preg_match_all('/\bDB::(\w+)\s*\(/', $code, $dbCalls)) {
+        foreach ($dbCalls[1] as $method) {
+            $violations[] = "Service calls `DB::{$method}(...)`; services never touch the database layer, not even for transactions — wrap atomic work in a repository method (e.g. `\$this->xRepository->transaction(fn () => ...)` from the `RunsTransactions` trait) (\"No queries or transactions in services\" in .ai/rules/repository-pattern.md).";
+        }
+    }
+
+    foreach (relationChainCalls($code) as [$relation, $method]) {
+        $violations[] = "Service calls `->{$relation}()->{$method}(...)`, a query through a model relation; query building must live in the Repository (\"No queries or transactions in services\" in .ai/rules/repository-pattern.md).";
     }
 
     return array_unique($violations);
@@ -214,6 +239,31 @@ function directModelCalls(string $code): array
             continue;
         }
         $calls[] = [$class, $match[2]];
+    }
+
+    return $calls;
+}
+
+/**
+ * Finds `$model->relation()->increment(...)`-style chains that query or write a related model
+ * through its relation. `$this`, `$query`, `$q` and `$builder` are skipped, as are query
+ * builder helpers such as `->latest()->get()`.
+ *
+ * @return array<int, array{0: string, 1: string}>
+ */
+function relationChainCalls(string $code): array
+{
+    $builderHelpers = ['latest', 'oldest', 'distinct', 'lockForUpdate', 'withTrashed', 'onlyTrashed', 'newQuery', 'toBase', 'getQuery'];
+    $chained = ['increment', 'decrement', 'create', 'createMany', 'update', 'delete', 'forceDelete', 'insert', 'save', 'saveMany', 'updateOrCreate', 'firstOrCreate', 'attach', 'detach', 'sync', 'where', 'whereIn', 'get', 'first', 'find', 'exists', 'count', 'sum', 'pluck'];
+
+    preg_match_all('/\$(\w+)->(\w+)\(\)->(' . implode('|', $chained) . ')\s*\(/', $code, $matches, PREG_SET_ORDER);
+
+    $calls = [];
+    foreach ($matches as $match) {
+        if (in_array($match[1], ['this', 'query', 'q', 'builder'], true) || in_array($match[2], $builderHelpers, true)) {
+            continue;
+        }
+        $calls[] = [$match[2], $match[3]];
     }
 
     return $calls;

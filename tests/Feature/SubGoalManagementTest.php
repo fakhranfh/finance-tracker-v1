@@ -367,3 +367,39 @@ it('lists only the savings of one sub goal when filtered', function () {
         ->and($response->json('data.0.amount'))->toBe('200.00');
     expect($this->actingAs($actor)->getJson("/api/goals/{$goal->id}/savings")->json('data'))->toHaveCount(2);
 });
+
+it('logs a done entry in the saving history when a sub goal is marked done and removes it when unmarked', function () {
+    $actor = User::factory()->create();
+    $goal = Goal::factory()->create(['status' => GoalStatus::Active]);
+    $target = SubGoal::factory()->for($goal)->create(['is_done' => false]);
+    $url = "/api/goals/{$goal->id}/sub-goals/{$target->id}";
+
+    $this->actingAs($actor)->putJson($url, ['is_done' => true])->assertOk();
+    $this->actingAs($actor)->putJson($url, ['is_done' => true])->assertOk();
+
+    expect($goal->savings()->where('sub_goal_id', $target->id)->where('type', 'done')->count())->toBe(1);
+
+    $this->actingAs($actor)->putJson($url, ['is_done' => false])->assertOk();
+
+    expect($goal->savings()->count())->toBe(0);
+});
+
+it('marks the sub goal as not done when its done history entry is deleted', function () {
+    $actor = User::factory()->create();
+    $goal = Goal::factory()->create(['status' => GoalStatus::Active]);
+    $one = SubGoal::factory()->for($goal)->create(['is_done' => false]);
+    $two = SubGoal::factory()->for($goal)->create(['is_done' => false]);
+
+    foreach ([$one, $two] as $subGoal) {
+        $this->actingAs($actor)->putJson("/api/goals/{$goal->id}/sub-goals/{$subGoal->id}", ['is_done' => true])->assertOk();
+    }
+
+    $entry = $goal->savings()->where('sub_goal_id', $one->id)->firstOrFail();
+    $this->actingAs($actor)->deleteJson("/api/goals/{$goal->id}/savings/{$entry->id}")->assertOk();
+
+    expect($one->fresh()->is_done)->toBeFalse()->and($two->fresh()->is_done)->toBeTrue();
+
+    $this->actingAs($actor)->deleteJson("/api/goals/{$goal->id}/savings", ['all' => true])->assertOk();
+
+    expect($two->fresh()->is_done)->toBeFalse();
+});

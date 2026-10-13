@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Goal;
 use App\Models\SubGoal;
+use App\Repositories\GoalSaving\GoalSavingRepositoryInterface;
 use App\Repositories\SubGoal\SubGoalRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -13,6 +14,7 @@ class SubGoalManagementService
 {
     public function __construct(
         protected SubGoalRepositoryInterface $subGoalRepository,
+        protected GoalSavingRepositoryInterface $goalSavingRepository,
     ) {}
 
     /**
@@ -20,7 +22,7 @@ class SubGoalManagementService
      */
     public function paginate(Goal $goal, int $perPage = 10, ?string $search = null, ?string $sort = null, string $direction = 'asc'): LengthAwarePaginator
     {
-        return $this->subGoalRepository->paginate($goal, $perPage, $search, $sort, $direction);
+        return $this->subGoalRepository->paginate($goal->id, $perPage, $search, $sort, $direction);
     }
 
     /**
@@ -30,7 +32,7 @@ class SubGoalManagementService
      */
     public function all(Goal $goal): Collection
     {
-        return $this->subGoalRepository->getForGoal($goal);
+        return $this->subGoalRepository->getForGoal($goal->id);
     }
 
     /**
@@ -40,17 +42,28 @@ class SubGoalManagementService
      */
     public function summary(Goal $goal): array
     {
-        return $this->subGoalRepository->summary($goal);
+        return $this->subGoalRepository->summary($goal->id);
     }
 
     /**
-     * Mark a sub goal as done or not done.
+     * Update a sub goal; marking it done adds an entry to the saving history, marking it not done removes that entry.
      *
      * @param  array<string, mixed>  $data
      */
     public function update(SubGoal $subGoal, array $data): SubGoal
     {
-        return $this->subGoalRepository->update($subGoal, $data);
+        return $this->subGoalRepository->transaction(function () use ($subGoal, $data): SubGoal {
+            $wasDone = $subGoal->is_done;
+            $subGoal = $this->subGoalRepository->update($subGoal, $data);
+
+            if (! $wasDone && $subGoal->is_done) {
+                $this->goalSavingRepository->recordDone($subGoal->goal_id, $subGoal->id);
+            } elseif ($wasDone && ! $subGoal->is_done) {
+                $this->goalSavingRepository->deleteDone([$subGoal->id]);
+            }
+
+            return $subGoal;
+        });
     }
 
     /**
@@ -60,7 +73,7 @@ class SubGoalManagementService
      */
     public function replace(Goal $goal, array $items): void
     {
-        DB::transaction(fn () => $this->sync($goal, $items));
+        $this->subGoalRepository->transaction(fn () => $this->sync($goal, $items));
     }
 
     /**
@@ -71,7 +84,7 @@ class SubGoalManagementService
      */
     public function sync(Goal $goal, array $items): void
     {
-        $existing = $this->subGoalRepository->getForGoal($goal)->keyBy('id');
+        $existing = $this->subGoalRepository->getForGoal($goal->id)->keyBy('id');
         $kept = [];
 
         foreach ($items as $item) {
@@ -87,14 +100,15 @@ class SubGoalManagementService
                 $this->subGoalRepository->update($existing[$id], $fields);
                 $kept[] = $id;
             } else {
-                $kept[] = $this->subGoalRepository->create($goal, [...$fields, 'saved_amount' => $item['saved_amount'] ?? 0])->id;
+                $kept[] = $this->subGoalRepository->create($goal->id, [...$fields, 'saved_amount' => $item['saved_amount'] ?? 0])->id;
             }
         }
 
         $removed = $existing->keys()->diff($kept)->values()->all();
 
         if ($removed !== []) {
-            $this->subGoalRepository->deleteMany($goal, $removed);
+            $this->goalSavingRepository->deleteDone($removed);
+            $this->subGoalRepository->deleteMany($goal->id, $removed);
         }
     }
 }

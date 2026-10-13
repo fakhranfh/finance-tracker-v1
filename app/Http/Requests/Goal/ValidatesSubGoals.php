@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Goal;
 
 use App\Models\Goal;
+use App\Models\GoalSaving;
 use App\Models\SubGoal;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
@@ -57,7 +58,7 @@ trait ValidatesSubGoals
         $keptIds = collect($items)->pluck('id')->filter()->map(fn ($id) => (int) $id);
         $removed = $existing->keys()->diff($keptIds);
 
-        if ($goal && $removed->isNotEmpty() && ($existing->only($removed->all())->sum(fn (SubGoal $subGoal) => (float) $subGoal->saved_amount) > 0 || $goal->savings()->whereIn('sub_goal_id', $removed)->exists())) {
+        if ($goal && $removed->isNotEmpty() && ($existing->only($removed->all())->sum(fn (SubGoal $subGoal) => (float) $subGoal->saved_amount) > 0 || $goal->savings()->where('type', GoalSaving::TYPE_SAVING)->whereIn('sub_goal_id', $removed)->exists())) {
             $validator->errors()->add('sub_goals', __('sub-goals.validation.remove_with_savings'));
 
             return;

@@ -79,7 +79,9 @@ function render(current) {
     const locked = current.status === 'reached';
     document.getElementById('goal-edit-link').classList.toggle('!hidden', locked);
     const paused = current.status === 'paused';
-    ['set-reached-open', 'add-saved-open'].forEach((id) => document.getElementById(id).classList.toggle('!hidden', locked || paused));
+    document.getElementById('set-reached-open').classList.toggle('!hidden', locked || paused);
+    // A goal with sub goals is saved to through its sub goals, so it has no add saved amount button.
+    document.getElementById('add-saved-open').classList.toggle('!hidden', locked || paused || hasSubGoals);
     document.getElementById('delete-goal-open').classList.toggle('!hidden', paused);
     document.getElementById('goal-locked-notice').classList.toggle('hidden', !locked);
 }
@@ -90,6 +92,7 @@ async function loadSubGoalOptions() {
 
     hasSubGoals = subGoals.length > 0;
     document.getElementById('goal-savings-wrapper').toggleAttribute('data-no-sub-goals', !hasSubGoals);
+    render(goal);
 
     document.querySelectorAll('[data-sub-goal-field]').forEach((wrapper) => {
         const select = wrapper.querySelector('select');
@@ -207,9 +210,10 @@ function createSavingsTable() {
         // A saving changes the goal's saved amount, so refresh the goal after a delete or generate.
         onDataChanged: refreshGoal,
         row: (item) => ({
-            cells: [formatDateTime(item.created_at), formatMoney(item.amount), item.sub_goal_name ?? '-'],
+            cells: [formatDateTime(item.created_at), item.type === 'done' ? root.dataset.savingDone : formatMoney(item.amount), item.sub_goal_name ?? '-'],
             onEdit: () => openEditSaving(item),
             readOnly: goal.status !== 'active',
+            noEdit: item.type === 'done',
             locked: goal.status !== 'active',
         }),
     });

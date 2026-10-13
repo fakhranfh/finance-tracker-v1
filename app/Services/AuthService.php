@@ -3,8 +3,8 @@
 namespace App\Services;
 
 use App\Jobs\SyncRecordEffects;
-use App\Models\Account;
 use App\Models\User;
+use App\Repositories\Account\AccountRepositoryInterface;
 use App\Repositories\User\UserRepositoryInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -18,6 +18,7 @@ class AuthService
 {
     public function __construct(
         protected UserRepositoryInterface $userRepository,
+        protected AccountRepositoryInterface $accountRepository,
     ) {}
 
     /**
@@ -150,8 +151,8 @@ class AuthService
             $this->userRepository->update($user, ['timezone' => $timezone]);
 
             // The totals are bucketed in the first user's timezone, so a change there moves their months.
-            if ($user->id === User::query()->min('id')) {
-                SyncRecordEffects::request(Account::query()->pluck('id')->all(), null, null, true);
+            if ($user->id === $this->userRepository->first()?->id) {
+                SyncRecordEffects::request($this->accountRepository->allIds(), null, null, true);
             }
         }
     }

@@ -48,7 +48,7 @@ class AccountManagementService
         return $this->accountRepository->create([
             'name' => $data['name'],
             'last_balance' => $data['balance'],
-            'sort_order' => (Account::query()->max('sort_order') ?? 0) + 1,
+            'sort_order' => $this->accountRepository->nextSortOrder(),
             ...Arr::only($data, ['color', 'icon']),
         ]);
     }

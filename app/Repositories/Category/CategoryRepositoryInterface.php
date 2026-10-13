@@ -52,4 +52,12 @@ interface CategoryRepositoryInterface
      * Delete a category.
      */
     public function delete(Category $category): void;
+
+    /**
+     * The names of the given categories.
+     *
+     * @param  array<int, int|string>  $ids
+     * @return \Illuminate\Support\Collection<int, string>
+     */
+    public function namesOf(array $ids): \Illuminate\Support\Collection;
 }

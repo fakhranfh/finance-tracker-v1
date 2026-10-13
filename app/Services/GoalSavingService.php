@@ -4,15 +4,20 @@ namespace App\Services;
 
 use App\Models\Goal;
 use App\Models\GoalSaving;
+use App\Repositories\Goal\GoalRepositoryInterface;
 use App\Repositories\GoalSaving\GoalSavingRepositoryInterface;
+use App\Repositories\SubGoal\SubGoalRepositoryInterface;
 use Carbon\CarbonImmutable;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 
 class GoalSavingService
 {
     public function __construct(
+        protected GoalRepositoryInterface $goalRepository,
         protected GoalSavingRepositoryInterface $goalSavingRepository,
+        protected SubGoalRepositoryInterface $subGoalRepository,
     ) {}
 
     /**
@@ -24,7 +29,7 @@ class GoalSavingService
         $timezone = Auth::user()?->timezone ?: config('app.timezone');
 
         return $this->goalSavingRepository->paginate(
-            $goal,
+            $goal->id,
             $perPage,
             $sort,
             $direction,
@@ -35,36 +40,85 @@ class GoalSavingService
     }
 
     /**
-     * Add an amount to a goal's saved amount and keep it in the saving history.
+     * Add an amount to a goal's saved amount and keep it in the saving history; the sub goal it is for gets it too.
      */
     public function addSaving(Goal $goal, string|float|int $amount, ?int $subGoalId = null): GoalSaving
     {
-        return $this->goalSavingRepository->create($goal, $amount, $subGoalId);
+        return $this->goalSavingRepository->transaction(function () use ($goal, $amount, $subGoalId): GoalSaving {
+            $this->goalRepository->shiftSavedAmount($goal, (float) $amount);
+            $saving = $this->goalSavingRepository->create($goal->id, $amount, $subGoalId);
+
+            $this->shiftSubGoal($subGoalId, (float) $amount);
+
+            return $saving;
+        });
     }
 
     /**
-     * Change a saving's amount; the goal's saved amount follows.
+     * Change a saving's amount; the goal's saved amount and the sub goals' follow.
      */
     public function updateSaving(Goal $goal, GoalSaving $saving, string|float|int $amount, ?int $subGoalId = null): GoalSaving
     {
-        return $this->goalSavingRepository->update($goal, $saving, $amount, $subGoalId);
+        return $this->goalSavingRepository->transaction(function () use ($goal, $saving, $amount, $subGoalId): GoalSaving {
+            $this->goalRepository->shiftSavedAmount($goal, round((float) $amount - (float) $saving->amount, 2));
+            $this->shiftSubGoal($saving->sub_goal_id, -(float) $saving->amount);
+            $saving = $this->goalSavingRepository->update($saving, $amount, $subGoalId);
+            $this->shiftSubGoal($subGoalId, (float) $amount);
+
+            return $saving;
+        });
     }
 
     /**
-     * Remove a saving; the goal's saved amount follows.
+     * Remove a saving; the goal's saved amount and its sub goal's follow, and removing a "done" entry marks its sub goal as not done.
      */
     public function deleteSaving(Goal $goal, GoalSaving $saving): void
     {
-        $this->goalSavingRepository->delete($goal, $saving);
+        $this->goalSavingRepository->transaction(function () use ($goal, $saving): void {
+            $this->goalRepository->shiftSavedAmount($goal, -(float) $saving->amount);
+            $this->releaseSubGoals(collect([$saving]));
+            $this->goalSavingRepository->delete($saving);
+        });
     }
 
     /**
-     * Remove several savings (every saving when `$ids` is null); the goal's saved amount follows.
+     * Remove several savings (every saving when `$ids` is null); the goal's saved amount and the sub goals' follow.
      *
      * @param  array<int, int>|null  $ids
      */
     public function deleteSavings(Goal $goal, ?array $ids = null): void
     {
-        $this->goalSavingRepository->deleteMany($goal, $ids);
+        $this->goalSavingRepository->transaction(function () use ($goal, $ids): void {
+            $savings = $this->goalSavingRepository->getForGoal($goal->id, $ids);
+
+            $this->goalRepository->shiftSavedAmount($goal, -(float) $savings->sum('amount'));
+            $this->releaseSubGoals($savings);
+            $this->goalSavingRepository->deleteMany($goal->id, $ids);
+        });
+    }
+
+    private function shiftSubGoal(?int $subGoalId, float $difference): void
+    {
+        if ($subGoalId !== null && $difference !== 0.0) {
+            $this->subGoalRepository->incrementSavedAmount($subGoalId, $difference);
+        }
+    }
+
+    /**
+     * Take the savings about to be removed off their sub goals: subtract their amounts and mark the sub goals of "done" entries as not done.
+     *
+     * @param  Collection<int, GoalSaving>  $savings
+     */
+    private function releaseSubGoals(Collection $savings): void
+    {
+        $withSubGoal = $savings->whereNotNull('sub_goal_id');
+
+        $withSubGoal->groupBy('sub_goal_id')->each(fn (Collection $group, int $subGoalId) => $this->shiftSubGoal($subGoalId, -(float) $group->sum('amount')));
+
+        $doneIds = $withSubGoal->where('type', GoalSaving::TYPE_DONE)->pluck('sub_goal_id')->unique()->values()->all();
+
+        if ($doneIds !== []) {
+            $this->subGoalRepository->markNotDone($doneIds);
+        }
     }
 }

@@ -11,6 +11,7 @@ const itemId = root?.dataset.itemId;
 
 let subGoal = null;
 let locked = false;
+let savingsTable = null;
 
 const field = (name) => root.querySelector(`[data-field="${name}"]`);
 
@@ -78,7 +79,7 @@ function createSavingsTable() {
         params: () => ({ sub_goal_id: itemId }),
         // The saving history is read-only here; savings are added and edited on the goal page.
         row: (item) => ({
-            cells: [formatDateTime(item.created_at), formatMoney(item.amount)],
+            cells: [formatDateTime(item.created_at), item.type === 'done' ? root.dataset.savingDone : formatMoney(item.amount)],
             readOnly: true,
             locked: true,
         }),
@@ -98,6 +99,7 @@ async function toggleDone() {
 
         if (ok) {
             render(data.data, goal);
+            savingsTable.reload();
             showFlash(data.data.is_done ? root.dataset.markedDone : root.dataset.markedNotDone);
         } else {
             error.classList.remove('hidden');
@@ -115,7 +117,7 @@ if (root) {
 
     if (subGoalResponse.ok && goalResponse.ok) {
         render(subGoalResponse.data.data, goalResponse.data.data);
-        createSavingsTable();
+        savingsTable = createSavingsTable();
         revealMobileBarWhileTableInView();
         hideSkeleton('sub-goal-show', 'sub-goal-show-skeleton');
 

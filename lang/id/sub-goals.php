@@ -74,6 +74,7 @@ return [
         'history_title' => 'Riwayat tabungan',
         'history_date' => 'Tanggal',
         'history_amount' => 'Jumlah',
+        'history_done' => 'Ditandai selesai',
         'history_empty' => 'Belum ada tabungan untuk sub target ini.',
         'mark_done' => 'Tandai selesai',
         'mark_not_done' => 'Tandai belum selesai',

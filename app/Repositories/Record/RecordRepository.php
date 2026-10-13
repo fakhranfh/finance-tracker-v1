@@ -224,4 +224,12 @@ class RecordRepository implements RecordRepositoryInterface
     {
         $record->delete();
     }
+
+    public function deleteAllForAccount(int $accountId): void
+    {
+        Record::query()
+            ->where('account_id', $accountId)
+            ->orWhere('to_account_id', $accountId)
+            ->chunkById(200, fn ($records) => $records->each->delete());
+    }
 }

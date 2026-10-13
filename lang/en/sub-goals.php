@@ -74,6 +74,7 @@ return [
         'history_title' => 'Saving history',
         'history_date' => 'Date',
         'history_amount' => 'Amount',
+        'history_done' => 'Marked as done',
         'history_empty' => 'No savings for this sub goal yet.',
         'mark_done' => 'Mark as done',
         'mark_not_done' => 'Mark as not done',
