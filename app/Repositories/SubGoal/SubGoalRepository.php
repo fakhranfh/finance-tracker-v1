@@ -76,6 +76,11 @@ class SubGoalRepository implements SubGoalRepositoryInterface
         return $subGoal;
     }
 
+    public function find(int $id): ?SubGoal
+    {
+        return SubGoal::query()->find($id);
+    }
+
     public function incrementSavedAmount(int $id, float $difference): void
     {
         SubGoal::query()->whereKey($id)->increment('saved_amount', $difference);

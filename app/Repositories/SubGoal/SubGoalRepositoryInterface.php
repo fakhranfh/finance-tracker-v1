@@ -54,6 +54,11 @@ interface SubGoalRepositoryInterface
     public function incrementSavedAmount(int $id, float $difference): void;
 
     /**
+     * Find a sub goal by ID.
+     */
+    public function find(int $id): ?SubGoal;
+
+    /**
      * Mark the given sub goals as not done.
      *
      * @param  array<int, int>  $ids

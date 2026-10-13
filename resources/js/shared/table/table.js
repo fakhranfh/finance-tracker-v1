@@ -298,7 +298,7 @@ export function createTable(config) {
         selection,
         selectAll,
         getSearch: () => search.value,
-        getFilters: activeFilters,
+        getFilters: () => ({ ...activeFilters(), ...(config.params?.() ?? {}) }),
         onDeleted: afterDelete,
     });
 

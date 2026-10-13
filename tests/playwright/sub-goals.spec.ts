@@ -228,17 +228,34 @@ test.describe('Sub goals', () => {
         await expect(history).toHaveCount(1);
         await expect(history.first()).toContainText('250.000');
 
+        await page.getByRole('button', { name: 'Add saved amount' }).click();
+        await page.getByLabel('Amount to add').fill('100000');
+        await page.locator('#add-saved-form').getByRole('button', { name: 'Save' }).click();
+        await expect(history).toHaveCount(2);
+        await expect(page.locator('[data-field="saved_amount"]')).toContainText('350.000');
+
         await page.getByRole('button', { name: 'Mark as done' }).click();
         await expect(page.getByText('Sub goal marked as done.')).toBeVisible();
         await expect(page.locator('[data-field="status"]')).toHaveText('Done');
         await expect(page.getByRole('button', { name: 'Mark as not done' })).toBeVisible();
-        await expect(history).toHaveCount(2);
+        await expect(history).toHaveCount(3);
         await expect(history.first()).toContainText('Marked as done');
 
         await page.getByRole('button', { name: 'Mark as not done' }).click();
-        await expect(history).toHaveCount(1);
-        await page.getByRole('button', { name: 'Mark as done' }).click();
         await expect(history).toHaveCount(2);
+        await page.getByRole('button', { name: 'Mark as done' }).click();
+        await expect(history).toHaveCount(3);
+
+        await history.filter({ hasText: 'Marked as done' }).getByRole('button', { name: 'Delete' }).click();
+        await page.locator('#confirm-delete-saving').click();
+        await expect(history).toHaveCount(2);
+        await expect(page.locator('[data-field="status"]')).toHaveText('Not done');
+
+        await page.locator('#sub-goal-savings-table').locator('xpath=ancestor::table').locator('[data-table-select-all]').check();
+        await page.getByRole('button', { name: 'Delete selected' }).click();
+        await page.locator('#confirm-bulk-delete-savings').click();
+        await expect(history).toHaveCount(0);
+        await expect(page.locator('[data-field="saved_amount"]')).toContainText('0');
 
         await page.getByRole('link', { name: 'Edit sub goal' }).click();
         await expect(page).toHaveURL(new RegExp(`/goals/${goalId}/sub-goals/[0-9]+/edit$`));

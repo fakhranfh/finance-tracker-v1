@@ -69,7 +69,7 @@ class GoalSavingController extends Controller
     {
         abort_if($goal->status === GoalStatus::Reached, 403, __('goals.locked'));
 
-        $this->goalSavingService->deleteSavings($goal, $request->boolean('all') ? null : $request->validated('ids'));
+        $this->goalSavingService->deleteSavings($goal, $request->boolean('all') ? null : $request->validated('ids'), $request->boolean('all') ? $request->validated('sub_goal_id') : null);
 
         return response()->json(['goal' => (new GoalResource($goal))->resolve()]);
     }

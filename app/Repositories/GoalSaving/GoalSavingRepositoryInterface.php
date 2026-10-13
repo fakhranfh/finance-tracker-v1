@@ -35,7 +35,7 @@ interface GoalSavingRepositoryInterface
      *
      * @param  array<int, int>|null  $ids
      */
-    public function deleteMany(int $goalId, ?array $ids = null): void;
+    public function deleteMany(int $goalId, ?array $ids = null, ?int $subGoalId = null): void;
 
     /**
      * The goal's savings, limited to the given ids when not null.
@@ -43,7 +43,7 @@ interface GoalSavingRepositoryInterface
      * @param  array<int, int>|null  $ids
      * @return Collection<int, GoalSaving>
      */
-    public function getForGoal(int $goalId, ?array $ids = null): Collection;
+    public function getForGoal(int $goalId, ?array $ids = null, ?int $subGoalId = null): Collection;
 
     /**
      * Note in the saving history (amount 0) that a sub goal of the goal was marked as done.

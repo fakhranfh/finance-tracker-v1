@@ -403,3 +403,42 @@ it('marks the sub goal as not done when its done history entry is deleted', func
 
     expect($two->fresh()->is_done)->toBeFalse();
 });
+
+it('bulk deletes only the savings of one sub goal when all matching are selected', function () {
+    $actor = User::factory()->create();
+    $goal = Goal::factory()->create(['status' => GoalStatus::Active, 'saved_amount' => 0]);
+    $one = SubGoal::factory()->for($goal)->create(['saved_amount' => 0]);
+    $two = SubGoal::factory()->for($goal)->create(['saved_amount' => 0]);
+
+    foreach ([[$one, 100], [$one, 50], [$two, 25]] as [$subGoal, $amount]) {
+        $this->actingAs($actor)->postJson("/api/goals/{$goal->id}/savings", ['amount' => $amount, 'sub_goal_id' => $subGoal->id])->assertCreated();
+    }
+
+    $this->actingAs($actor)->deleteJson("/api/goals/{$goal->id}/savings", ['all' => true, 'sub_goal_id' => $one->id])->assertOk();
+
+    expect($goal->savings()->pluck('sub_goal_id')->all())->toBe([$two->id])
+        ->and((float) $one->fresh()->saved_amount)->toBe(0.0)
+        ->and((float) $two->fresh()->saved_amount)->toBe(25.0)
+        ->and((float) $goal->fresh()->saved_amount)->toBe(25.0);
+});
+
+it('marks a sub goal done when its savings reach the target and not done when they fall below it', function () {
+    $actor = User::factory()->create();
+    $goal = Goal::factory()->create(['status' => GoalStatus::Active, 'saved_amount' => 0]);
+    $target = SubGoal::factory()->for($goal)->create(['target_amount' => 100, 'saved_amount' => 0, 'is_done' => false]);
+    $post = fn (int $amount) => $this->actingAs($actor)->postJson("/api/goals/{$goal->id}/savings", ['amount' => $amount, 'sub_goal_id' => $target->id])->assertCreated()->json('data.id');
+
+    $post(60);
+    expect($target->fresh()->is_done)->toBeFalse();
+
+    $second = $post(40);
+    expect($target->fresh()->is_done)->toBeTrue()
+        ->and($goal->savings()->where('type', 'done')->count())->toBe(1);
+
+    $this->actingAs($actor)->deleteJson("/api/goals/{$goal->id}/savings/{$second}")->assertOk();
+    expect($target->fresh()->is_done)->toBeFalse()
+        ->and($goal->savings()->where('type', 'done')->count())->toBe(0);
+
+    $this->actingAs($actor)->putJson("/api/goals/{$goal->id}/savings/{$post(30)}", ['amount' => 50, 'sub_goal_id' => $target->id])->assertOk();
+    expect($target->fresh()->is_done)->toBeTrue();
+});

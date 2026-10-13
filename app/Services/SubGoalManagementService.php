@@ -67,6 +67,24 @@ class SubGoalManagementService
     }
 
     /**
+     * Move a sub goal's saved amount by a signed difference. The sub goal is marked done once its saved amount
+     * reaches its target and not done again when it falls below it.
+     */
+    public function shiftSavedAmount(int $id, float $difference): void
+    {
+        $this->subGoalRepository->transaction(function () use ($id, $difference): void {
+            $this->subGoalRepository->incrementSavedAmount($id, $difference);
+
+            $subGoal = $this->subGoalRepository->find($id);
+            $reached = $subGoal !== null && (float) $subGoal->saved_amount >= (float) $subGoal->target_amount;
+
+            if ($subGoal !== null && $reached !== $subGoal->is_done) {
+                $this->update($subGoal, ['is_done' => $reached]);
+            }
+        });
+    }
+
+    /**
      * Replace the goal's sub goals with the given list, all or nothing; see sync().
      *
      * @param  array<int, array<string, mixed>>  $items

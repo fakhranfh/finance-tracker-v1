@@ -30,6 +30,8 @@
             class="hidden"
             data-goal-id="{{ $goalId }}"
             data-item-id="{{ $id }}"
+            data-saved-added="{{ __('goals.flash.saved_added') }}"
+            data-saving-deleted="{{ __('goals.flash.saving_deleted') }}"
             data-saving-done="{{ __('sub-goals.show_page.history_done') }}"
             data-done-label="{{ __('sub-goals.table.done') }}"
             data-not-done-label="{{ __('sub-goals.table.not_done') }}"
@@ -67,10 +69,16 @@
                 <div id="sub-goal-savings-wrapper" class="mt-3 max-sm:pb-20">
                     <x-organisms.table
                         id="sub-goal-savings-table"
-                        :selectable="false"
                         :headers="$savingHeaders"
                         :config="[
                             'labels' => [
+                                'bulkDelete' => __('goals.actions.delete_selected'),
+                                'selected' => __('goals.table.selected'),
+                                'selectAllMatching' => __('goals.table.select_all_matching', ['total' => ':total']),
+                                'allSelected' => __('goals.table.all_selected', ['total' => ':total']),
+                                'clearSelection' => __('goals.table.clear_selection'),
+                                'edit' => __('goals.actions.edit'),
+                                'delete' => __('goals.actions.delete'),
                                 'empty' => __('sub-goals.show_page.history_empty'),
                                 'expand' => __('sub-goals.table.show_more'),
                                 'collapse' => __('sub-goals.table.show_less'),
@@ -83,6 +91,9 @@
             </div>
 
             <div class="mt-6 flex flex-wrap items-center justify-end gap-3 border-t border-outline-variant pt-6">
+                <x-atoms.button type="button" id="add-saved-open">
+                    {{ __('goals.actions.add_saved') }}
+                </x-atoms.button>
                 <x-atoms.button type="button" id="toggle-done" variant="secondary" data-done-label="{{ __('sub-goals.show_page.mark_done') }}" data-not-done-label="{{ __('sub-goals.show_page.mark_not_done') }}">
                     {{ __('sub-goals.show_page.mark_done') }}
                 </x-atoms.button>
@@ -99,6 +110,43 @@
         :searchable="false"
         :hidden="true"
     />
+
+    <x-organisms.modal id="delete-saving-modal" :title="__('goals.history.confirm_delete')">
+        <div class="flex justify-end gap-3">
+            <x-atoms.button type="button" variant="secondary" data-modal-close>
+                {{ __('goals.actions.cancel') }}
+            </x-atoms.button>
+            <x-atoms.button type="button" id="confirm-delete-saving" variant="danger">
+                {{ __('goals.actions.delete') }}
+            </x-atoms.button>
+        </div>
+    </x-organisms.modal>
+
+    <x-organisms.modal id="bulk-delete-savings-modal" :title="__('goals.history.confirm_bulk_delete')">
+        <div class="flex justify-end gap-3">
+            <x-atoms.button type="button" variant="secondary" data-modal-close>
+                {{ __('goals.actions.cancel') }}
+            </x-atoms.button>
+            <x-atoms.button type="button" id="confirm-bulk-delete-savings" variant="danger">
+                {{ __('goals.actions.delete') }}
+            </x-atoms.button>
+        </div>
+    </x-organisms.modal>
+
+    <x-organisms.modal id="add-saved-modal" :title="__('goals.actions.add_saved_title')">
+        <form id="add-saved-form" novalidate class="space-y-5" data-invalid-message="{{ __('goals.actions.add_saved_invalid') }}">
+            <x-molecules.form-group name="amount" type="text" inputmode="decimal" :label="__('goals.actions.add_saved_amount')" data-money required />
+
+            <div class="flex justify-end gap-3">
+                <x-atoms.button type="button" variant="secondary" data-modal-close>
+                    {{ __('goals.actions.cancel') }}
+                </x-atoms.button>
+                <x-atoms.button type="submit">
+                    {{ __('goals.actions.save') }}
+                </x-atoms.button>
+            </div>
+        </form>
+    </x-organisms.modal>
 @endsection
 
 @push('scripts')

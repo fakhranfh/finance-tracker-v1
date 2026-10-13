@@ -48,14 +48,14 @@ class GoalSavingRepository implements GoalSavingRepositoryInterface
         $saving->delete();
     }
 
-    public function deleteMany(int $goalId, ?array $ids = null): void
+    public function deleteMany(int $goalId, ?array $ids = null, ?int $subGoalId = null): void
     {
-        GoalSaving::query()->where('goal_id', $goalId)->when($ids !== null, fn ($q) => $q->whereIn('id', $ids))->delete();
+        GoalSaving::query()->where('goal_id', $goalId)->when($ids !== null, fn ($q) => $q->whereIn('id', $ids))->when($subGoalId !== null, fn ($q) => $q->where('sub_goal_id', $subGoalId))->delete();
     }
 
-    public function getForGoal(int $goalId, ?array $ids = null): Collection
+    public function getForGoal(int $goalId, ?array $ids = null, ?int $subGoalId = null): Collection
     {
-        return GoalSaving::query()->where('goal_id', $goalId)->when($ids !== null, fn ($q) => $q->whereIn('id', $ids))->get();
+        return GoalSaving::query()->where('goal_id', $goalId)->when($ids !== null, fn ($q) => $q->whereIn('id', $ids))->when($subGoalId !== null, fn ($q) => $q->where('sub_goal_id', $subGoalId))->get();
     }
 
     public function recordDone(int $goalId, int $subGoalId): GoalSaving

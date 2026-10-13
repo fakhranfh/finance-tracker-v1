@@ -18,6 +18,7 @@ class GoalSavingService
         protected GoalRepositoryInterface $goalRepository,
         protected GoalSavingRepositoryInterface $goalSavingRepository,
         protected SubGoalRepositoryInterface $subGoalRepository,
+        protected SubGoalManagementService $subGoalService,
     ) {}
 
     /**
@@ -82,25 +83,25 @@ class GoalSavingService
     }
 
     /**
-     * Remove several savings (every saving when `$ids` is null); the goal's saved amount and the sub goals' follow.
+     * Remove several savings (every saving when `$ids` is null, limited to one sub goal's when `$subGoalId` is given); the goal's saved amount and the sub goals' follow.
      *
      * @param  array<int, int>|null  $ids
      */
-    public function deleteSavings(Goal $goal, ?array $ids = null): void
+    public function deleteSavings(Goal $goal, ?array $ids = null, ?int $subGoalId = null): void
     {
-        $this->goalSavingRepository->transaction(function () use ($goal, $ids): void {
-            $savings = $this->goalSavingRepository->getForGoal($goal->id, $ids);
+        $this->goalSavingRepository->transaction(function () use ($goal, $ids, $subGoalId): void {
+            $savings = $this->goalSavingRepository->getForGoal($goal->id, $ids, $subGoalId);
 
             $this->goalRepository->shiftSavedAmount($goal, -(float) $savings->sum('amount'));
             $this->releaseSubGoals($savings);
-            $this->goalSavingRepository->deleteMany($goal->id, $ids);
+            $this->goalSavingRepository->deleteMany($goal->id, $ids, $subGoalId);
         });
     }
 
     private function shiftSubGoal(?int $subGoalId, float $difference): void
     {
         if ($subGoalId !== null && $difference !== 0.0) {
-            $this->subGoalRepository->incrementSavedAmount($subGoalId, $difference);
+            $this->subGoalService->shiftSavedAmount($subGoalId, $difference);
         }
     }
 

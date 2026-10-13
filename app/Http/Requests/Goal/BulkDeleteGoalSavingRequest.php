@@ -26,6 +26,7 @@ class BulkDeleteGoalSavingRequest extends FormRequest
             'all' => ['sometimes', 'boolean'],
             'ids' => ['required_without:all', 'array', 'min:1'],
             'ids.*' => ['integer'],
+            'sub_goal_id' => ['nullable', 'integer'],
         ];
     }
 }
