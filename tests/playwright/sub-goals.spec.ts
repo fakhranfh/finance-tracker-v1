@@ -15,11 +15,18 @@ type SubGoalInput = { name: string; target: string; saved?: string };
 async function fillGoalForm(page, name: string, target: string, subGoals: SubGoalInput[]) {
     await page.goto('/goals/create');
     await page.locator('input[name="name"]').fill(name);
-    await page.locator('input[name="target_amount"]').fill(target);
     await page.locator('input[name="desired_date"]').fill('2027-03-15');
 
+    if (subGoals.length > 0) {
+        await page.getByLabel('Sub goals', { exact: true }).check();
+    } else {
+        await page.locator('input[name="target_amount"]').fill(target);
+    }
+
     for (const [index, subGoal] of subGoals.entries()) {
-        await page.getByRole('button', { name: 'Add sub goal' }).click();
+        if (index > 0) {
+            await page.getByRole('button', { name: 'Add sub goal' }).click();
+        }
         await page.locator(`[name="sub_goals.${index}.name"]`).fill(subGoal.name);
         await page.locator(`[name="sub_goals.${index}.target_amount"]`).fill(subGoal.target);
         await page.locator(`[name="sub_goals.${index}.saved_amount"]`).fill(subGoal.saved ?? '0');
@@ -72,17 +79,18 @@ test.describe('Sub goals', () => {
         await expect(page.getByRole('row', { name: /Mas kawin/ }).getByLabel('Mas kawin')).toBeChecked();
     });
 
-    test('blocks sub goals that do not add up to the goal target', async ({ page }) => {
+    test('replaces the target amount input with the sub goals', async ({ page }) => {
         const { email, password } = seedUser();
 
         await login(page, email, password);
-        await fillGoalForm(page, `E2E Mismatch ${Date.now()}`, '10000000', [{ name: 'Only part', target: '9000000' }]);
+        await fillGoalForm(page, `E2E Mode ${Date.now()}`, '10000000', [{ name: 'Only part', target: '9000000' }]);
 
-        await expect(page.locator('[data-sub-goals-totals]')).toHaveClass(/text-error/);
-        await page.getByRole('button', { name: 'Save' }).click();
+        await expect(page.locator('input[name="target_amount"]')).toBeHidden();
+        await expect(page.locator('input[name="target_amount"]')).toHaveValue('9.000.000');
 
-        await expect(page).toHaveURL('/goals/create');
-        await expect(page.locator('[data-error-for="sub_goals"]')).toContainText('must equal the goal target amount');
+        await page.getByLabel('Target amount', { exact: true }).check();
+        await expect(page.locator('input[name="target_amount"]')).toBeVisible();
+        await expect(page.locator('[data-sub-goals-field]')).toBeHidden();
     });
 
     test('shows validation errors on a sub goal row', async ({ page }) => {
@@ -90,7 +98,7 @@ test.describe('Sub goals', () => {
 
         await login(page, email, password);
         await fillGoalForm(page, `E2E Row ${Date.now()}`, '10000000', []);
-        await page.getByRole('button', { name: 'Add sub goal' }).click();
+        await page.getByLabel('Sub goals', { exact: true }).check();
         await page.getByRole('button', { name: 'Save' }).click();
 
         await expect(page).toHaveURL('/goals/create');
@@ -143,12 +151,6 @@ test.describe('Sub goals', () => {
 
         await page.locator('[name="sub_goals.1.name"]').fill('Katering baru');
         await page.locator('[name="sub_goals.1.target_amount"]').fill('3000000');
-        await page.getByRole('button', { name: 'Save' }).click();
-
-        await expect(page).toHaveURL(`/goals/${goalId}/edit`);
-        await expect(page.locator('[data-error-for="sub_goals"]')).toContainText('must equal the goal target amount');
-
-        await page.locator('[name="sub_goals.1.target_amount"]').fill('4000000');
         await page.getByRole('button', { name: 'Save' }).click();
         await expect(page).toHaveURL('/goals');
 

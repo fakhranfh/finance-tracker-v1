@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\GoalStatus;
 use App\Models\Goal;
 use App\Repositories\Goal\GoalRepositoryInterface;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -32,13 +33,14 @@ class GoalManagementService
     }
 
     /**
-     * Create a new goal, together with its sub goals when `sub_goals` is given.
+     * Create a new goal (active unless a status is given), together with its sub goals when `sub_goals` is given.
      *
      * @param  array<string, mixed>  $data
      */
     public function create(array $data): Goal
     {
         $subGoals = Arr::pull($data, 'sub_goals');
+        $data['status'] ??= GoalStatus::Active->value;
 
         return DB::transaction(function () use ($data, $subGoals): Goal {
             $goal = $this->goalRepository->create($data);

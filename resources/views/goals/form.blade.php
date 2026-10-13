@@ -36,22 +36,27 @@
             @csrf
 
             <x-molecules.form-group name="name" type="text" :label="__('goals.fields.name')" required autofocus />
-            <x-molecules.form-group name="target_amount" type="text" inputmode="decimal" :label="__('goals.fields.target_amount')" data-money data-calculator required />
+            <fieldset class="space-y-2">
+                <legend class="font-body text-body-sm font-medium text-on-surface">{{ __('goals.fields.target_mode') }}</legend>
+                <div class="flex flex-wrap gap-x-6 gap-y-2">
+                    <label class="flex cursor-pointer items-center gap-2 font-body text-body-md text-on-surface">
+                        <input type="radio" name="target_mode" value="amount" checked>
+                        {{ __('goals.target_mode.amount') }}
+                    </label>
+                    <label class="flex cursor-pointer items-center gap-2 font-body text-body-md text-on-surface">
+                        <input type="radio" name="target_mode" value="sub_goals">
+                        {{ __('goals.target_mode.sub_goals') }}
+                    </label>
+                </div>
+                <p class="font-body text-body-sm text-on-surface-variant">{{ __('goals.target_mode.hint') }}</p>
+            </fieldset>
+            <x-organisms.sub-goals-field />
+
+            <div data-target-amount-group>
+                <x-molecules.form-group name="target_amount" type="text" inputmode="decimal" :label="__('goals.fields.target_amount')" data-money data-calculator required />
+            </div>
             <x-molecules.form-group name="saved_amount" type="text" inputmode="decimal" :label="__('goals.fields.saved_amount')" value="0" data-money data-calculator required />
             <x-molecules.form-group name="desired_date" type="date" :label="__('goals.fields.desired_date')" required />
-
-            <fieldset class="space-y-2">
-                <legend class="font-body text-body-sm font-medium text-on-surface">{{ __('goals.fields.status') }}</legend>
-                <div class="flex flex-wrap gap-x-6 gap-y-2">
-                    @foreach ($statuses as $status)
-                        <label class="flex cursor-pointer items-center gap-2 font-body text-body-md text-on-surface">
-                            <input type="radio" name="status" value="{{ $status->value }}" @checked($status === \App\Enums\GoalStatus::Active)>
-                            {{ $status->label() }}
-                        </label>
-                    @endforeach
-                </div>
-                <x-atoms.form-error for="status" />
-            </fieldset>
 
             <fieldset class="space-y-2">
                 <legend class="font-body text-body-sm font-medium text-on-surface">{{ __('goals.fields.color') }}</legend>
@@ -94,8 +99,6 @@
             </fieldset>
 
             <x-molecules.form-group name="note" type="text" :label="__('goals.fields.note')" maxlength="1000" />
-
-            <x-organisms.sub-goals-field />
 
             <div class="flex items-center gap-3">
                 <x-atoms.button type="submit">

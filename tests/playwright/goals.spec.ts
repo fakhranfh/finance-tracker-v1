@@ -37,7 +37,6 @@ test.describe('Manage Goals', () => {
         await page.getByLabel('Desired Date', { exact: true }).fill('2027-03-15');
         await page.locator('input[name="color"]').fill('#10b981');
         await page.getByTitle('Home').click();
-        await page.getByLabel('Paused', { exact: true }).check();
         await page.getByLabel('Note', { exact: true }).fill('E2E Note');
         await page.getByRole('button', { name: 'Save' }).click();
 
@@ -46,6 +45,9 @@ test.describe('Manage Goals', () => {
         const row = page.getByRole('row', { name: new RegExp(mainValue) });
         await expect(row).toBeVisible();
         await expect(row).toContainText('Mar 15, 2027');
+        await expect(row.locator('select')).toHaveValue('active');
+        await row.locator('select').selectOption('paused');
+        await page.reload();
         await expect(row.locator('select')).toHaveValue('paused');
         await expect(row.locator('td svg.size-6')).toBeVisible();
 
@@ -66,7 +68,6 @@ test.describe('Manage Goals', () => {
 
         await expect(page.getByLabel('Name', { exact: true })).toHaveValue(mainValue);
         await expect(page.getByLabel('Saved Amount', { exact: true })).toHaveValue('2.500.000');
-        await expect(page.getByLabel('Paused', { exact: true })).toBeChecked();
         await page.getByLabel('Name', { exact: true }).fill(`${mainValue} Edited`);
         await page.getByRole('button', { name: 'Save' }).click();
 

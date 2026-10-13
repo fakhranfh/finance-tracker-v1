@@ -5,7 +5,6 @@
  * Per .ai/rules/dev-autofill.md.
  */
 
-const STATUSES = ['active', 'paused', 'reached'];
 
 // Mirrors config('goal.samples') so autofill matches the dev-only "Generate" data.
 const SAMPLES = [
@@ -44,7 +43,6 @@ export function goalFormFixture() {
         desired_date: futureDate(randomInt(30, 730)),
         color: sample.color,
         icon: sample.icon,
-        status: randomItem(STATUSES),
         note: sample.note,
     };
 }

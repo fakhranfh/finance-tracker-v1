@@ -5,8 +5,9 @@ const FIELDS = ['id', 'name', 'target_amount', 'saved_amount', 'desired_date', '
 
 /**
  * The "Sub goals" repeater of the goal form: one row per sub goal, edited together with the goal.
- * The rows must add up to the goal's target amount; their saved amounts add up to the goal's saved amount,
- * so with rows present the goal's saved amount field follows them. Existing rows keep their saved amount
+ * With the "sub goals" target mode on, the target amount input is replaced by this field: the goal's target amount is the sum of the rows' target amounts and
+ * their saved amounts add up to the goal's saved amount, so both fields follow the rows. In "amount" mode
+ * the field is hidden and an empty list is sent. Existing rows keep their saved amount
  * (it follows the savings), only new rows can be given one.
  *
  * config: { form }
@@ -21,7 +22,14 @@ export function createSubGoalsField({ form }) {
     const savedInput = form.elements.namedItem('saved_amount');
     const dateInput = form.elements.namedItem('desired_date');
 
+    const targetGroup = form.querySelector('[data-target-amount-group]');
+    const modeInputs = [...form.querySelectorAll('[name="target_mode"]')];
+
     let loaded = true;
+    // Without the mode radios (the standalone sub goals page) the field is always on and the target stays fixed.
+    const standalone = modeInputs.length === 0;
+
+    let useSubGoals = standalone;
 
     const rows = () => [...rowsNode.querySelectorAll('[data-sub-goal-row]')];
     const input = (row, name) => row.querySelector(`[name$=".${name}"]`);
@@ -45,9 +53,16 @@ export function createSubGoalsField({ form }) {
     function sync() {
         const items = rows();
 
-        savedInput.readOnly = items.length > 0;
+        savedInput.readOnly = useSubGoals && items.length > 0;
+        if (!standalone) {
+            targetInput.readOnly = useSubGoals;
+        }
 
-        if (items.length > 0) {
+        if (useSubGoals && !standalone) {
+            targetInput.value = String(sum('target_amount'));
+        }
+
+        if (useSubGoals && items.length > 0) {
             savedInput.value = String(sum('saved_amount'));
         }
 
@@ -80,11 +95,36 @@ export function createSubGoalsField({ form }) {
         return row;
     }
 
+    /** Switches between a plain target amount and a target made of the sub goals' target amounts. */
+    function setMode(subGoals) {
+        if (standalone) {
+            sync();
+
+            return;
+        }
+
+        useSubGoals = subGoals;
+        modeInputs.forEach((node) => {
+            node.checked = node.value === (subGoals ? 'sub_goals' : 'amount');
+        });
+        root.classList.toggle('hidden', !subGoals);
+        targetGroup.classList.toggle('hidden', subGoals);
+
+        if (subGoals && rows().length === 0) {
+            add();
+        }
+
+        sync();
+    }
+
     function fill(items) {
         rowsNode.replaceChildren();
         items.forEach((item) => add(item));
-        sync();
+        setMode(items.length > 0);
     }
+
+    modeInputs.forEach((node) => node.addEventListener('change', () => setMode(node.value === 'sub_goals' && node.checked)));
+    setMode(false);
 
     root.querySelector('[data-sub-goal-add]').addEventListener('click', () => {
         add().querySelector('input[name$=".name"]').focus();
@@ -112,11 +152,18 @@ export function createSubGoalsField({ form }) {
         markUnloaded() {
             loaded = false;
             root.classList.add('hidden');
+            modeInputs.forEach((node) => {
+                node.disabled = true;
+            });
         },
         /** The `sub_goals` value of the request, or undefined to leave the goal's sub goals as they are. */
         payload() {
             if (!loaded) {
                 return undefined;
+            }
+
+            if (!useSubGoals) {
+                return [];
             }
 
             return rows().map((row) => ({
@@ -130,7 +177,7 @@ export function createSubGoalsField({ form }) {
         },
         /** Client-side check that the sub goal targets add up to the goal's target; returns an errors map for showFieldErrors. */
         check() {
-            if (rows().length === 0 || cents(sum('target_amount')) === cents(Number(targetInput.value) || 0)) {
+            if (!useSubGoals || rows().length === 0 || cents(sum('target_amount')) === cents(Number(targetInput.value) || 0)) {
                 return {};
             }
 

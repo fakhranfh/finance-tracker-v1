@@ -48,7 +48,7 @@ return [
 
     'form' => [
         'title' => 'Sub goals',
-        'hint' => 'Optional. Break the goal down into what must be achieved. Their target amounts must add up to the goal target amount, and their saved amounts become the goal saved amount.',
+        'hint' => 'Optional. Break the goal down into what must be achieved. Their total target amount becomes the goal target amount, and their saved amounts become the goal saved amount.',
         'edit' => 'Edit sub goals',
         'remove' => 'Remove',
         'totals' => 'Sub goals total :total of :target',

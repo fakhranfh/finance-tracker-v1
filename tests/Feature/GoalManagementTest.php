@@ -89,13 +89,26 @@ it('returns the desired date as a plain calendar date', function () {
     $this->actingAs($actor)->getJson("/api/goals/{$goal->id}")->assertJsonPath('data.desired_date', '2026-12-31');
 });
 
+it('creates a goal as active when no status is given', function () {
+    $actor = User::factory()->create();
+
+    $this->actingAs($actor)->postJson('/api/goals', [
+        'name' => 'Trip',
+        'target_amount' => 1000,
+        'saved_amount' => 0,
+        'desired_date' => '2027-01-01',
+        'color' => '#112233',
+        'icon' => array_key_first(config('goal.icons')),
+    ])->assertCreated()->assertJsonPath('data.status', 'active');
+});
+
 it('rejects creating a goal with missing required fields', function () {
     $actor = User::factory()->create();
 
     $response = $this->actingAs($actor)->postJson('/api/goals', []);
 
     $response->assertStatus(422);
-    $response->assertJsonValidationErrors(['name', 'target_amount', 'saved_amount', 'desired_date', 'color', 'icon', 'status']);
+    $response->assertJsonValidationErrors(['name', 'target_amount', 'saved_amount', 'desired_date', 'color', 'icon']);
 });
 
 it('shows a goal via the api', function () {

@@ -37,7 +37,14 @@ return [
         'reached' => 'Tercapai',
     ],
 
+    'target_mode' => [
+        'amount' => 'Target dana',
+        'sub_goals' => 'Sub target',
+        'hint' => 'Jika memakai sub target, target dana adalah total target dana semua sub target.',
+    ],
+
     'fields' => [
+        'target_mode' => 'Target berdasarkan',
         'name' => 'Nama',
         'target_amount' => 'Target Dana',
         'saved_amount' => 'Sudah Terkumpul',

@@ -28,7 +28,7 @@ class GoalPageController extends Controller
 
     public function create(): View
     {
-        return view('goals.form', ['id' => null, 'statuses' => GoalStatus::cases()]);
+        return view('goals.form', ['id' => null]);
     }
 
     public function show(int $id): View
@@ -50,6 +50,6 @@ class GoalPageController extends Controller
 
     public function edit(int $id): View
     {
-        return view('goals.form', ['id' => $id, 'statuses' => GoalStatus::cases()]);
+        return view('goals.form', ['id' => $id]);
     }
 }

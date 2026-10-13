@@ -37,7 +37,14 @@ return [
         'reached' => 'Reached',
     ],
 
+    'target_mode' => [
+        'amount' => 'Target amount',
+        'sub_goals' => 'Sub goals',
+        'hint' => 'With sub goals, the target amount is the total of all sub goal target amounts.',
+    ],
+
     'fields' => [
+        'target_mode' => 'Target based on',
         'name' => 'Name',
         'target_amount' => 'Target Amount',
         'saved_amount' => 'Saved Amount',

@@ -48,7 +48,7 @@ return [
 
     'form' => [
         'title' => 'Sub target',
-        'hint' => 'Opsional. Pecah target menjadi hal-hal yang perlu dicapai. Total target biayanya harus sama dengan target biaya target, dan jumlah terkumpulnya menjadi jumlah terkumpul target.',
+        'hint' => 'Opsional. Pecah target menjadi hal-hal yang perlu dicapai. Total target biayanya menjadi target biaya target, dan jumlah terkumpulnya menjadi jumlah terkumpul target.',
         'edit' => 'Ubah semua sub target',
         'remove' => 'Hapus',
         'totals' => 'Total sub target :total dari :target',
