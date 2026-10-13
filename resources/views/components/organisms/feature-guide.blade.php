@@ -6,8 +6,6 @@
         <p class="font-body text-body-lg text-on-surface-variant">{{ __('dashboard.welcome.intro') }}</p>
     </div>
 
-    <h2 class="font-heading text-headline-sm font-semibold text-on-surface">{{ __('dashboard.welcome.features_title') }}</h2>
-
     <div class="grid gap-4 sm:grid-cols-2">
         @foreach ($features as $feature)
             <a
