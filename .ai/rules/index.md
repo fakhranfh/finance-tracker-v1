@@ -25,3 +25,4 @@ Before planning or editing, find the row whose globs match the file's path and r
 | resources/views/components/organisms/table.blade.php, resources/views/**/index.blade.php, resources/js/**/index.js | .ai/rules/tables.md |
 | ** | .ai/rules/testing.md |
 | resources/views/** | .ai/rules/views.md |
+| ** | .ai/rules/xss-protection.md |
