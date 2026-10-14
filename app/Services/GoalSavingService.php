@@ -106,7 +106,7 @@ class GoalSavingService
     }
 
     /**
-     * Take the savings about to be removed off their sub goals: subtract their amounts and mark the sub goals of "done" entries as not done.
+     * Take the savings about to be removed off their sub goals: subtract their amounts and mark the sub goals of "done" entries as not done, which puts back their saved amount from before.
      *
      * @param  Collection<int, GoalSaving>  $savings
      */
@@ -118,8 +118,12 @@ class GoalSavingService
 
         $doneIds = $withSubGoal->where('type', GoalSaving::TYPE_DONE)->pluck('sub_goal_id')->unique()->values()->all();
 
-        if ($doneIds !== []) {
-            $this->subGoalRepository->markNotDone($doneIds);
+        foreach ($doneIds as $doneId) {
+            $subGoal = $this->subGoalRepository->find($doneId);
+
+            if ($subGoal !== null) {
+                $this->subGoalService->update($subGoal, ['is_done' => false]);
+            }
         }
     }
 }

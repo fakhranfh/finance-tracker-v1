@@ -22,7 +22,7 @@ async function refreshSummary() {
 }
 
 /** Inline checkbox: saves the sub goal as done / not done and reverts the tick if that fails. */
-function doneNode(item) {
+function doneNode(item, savedNode) {
     const label = document.createElement('label');
     label.className = 'inline-flex cursor-pointer items-center gap-2';
 
@@ -40,12 +40,18 @@ function doneNode(item) {
         checkbox.disabled = true;
         statusError.classList.add('hidden');
 
+        const skeleton = document.createElement('span');
+
+        skeleton.className = 'inline-block h-4 w-20 animate-pulse rounded-md bg-surface-container-high align-middle';
+        savedNode.replaceChildren(skeleton);
+
         try {
-            const { ok } = await put(routes.goals.subGoal(goalId, item.id), { is_done: checkbox.checked });
+            const { ok, data } = await put(routes.goals.subGoal(goalId, item.id), { is_done: checkbox.checked });
 
             if (ok) {
                 item.is_done = checkbox.checked;
                 text.textContent = item.is_done ? page.dataset.doneLabel : page.dataset.notDoneLabel;
+                item.saved_amount = data.data.saved_amount;
                 refreshSummary();
             } else {
                 checkbox.checked = item.is_done;
@@ -55,6 +61,7 @@ function doneNode(item) {
             checkbox.checked = item.is_done;
             statusError.classList.remove('hidden');
         } finally {
+            savedNode.textContent = formatMoney(item.saved_amount);
             checkbox.disabled = locked;
         }
     });
@@ -88,19 +95,25 @@ if (page) {
             index: routes.goals.subGoals(goalId),
         },
         // Sub goals are edited together with their goal, so the row's edit link opens the goal form and nothing can be deleted here.
-        row: (item) => ({
-            cells: [
-                item.name ?? '',
-                formatMoney(item.target_amount),
-                formatMoney(item.saved_amount),
-                item.desired_date ? formatDate(item.desired_date) : '-',
-                doneNode(item),
-                item.note ?? '',
-            ],
-            viewUrl: routes.pages.goalSubGoalShow(goalId, item.id),
-            editUrl: routes.pages.goalSubGoalEdit(goalId, item.id),
-            readOnly: locked,
-            locked: true,
-        }),
+        row: (item) => {
+            const savedNode = document.createElement('span');
+
+            savedNode.textContent = formatMoney(item.saved_amount);
+
+            return {
+                cells: [
+                    item.name ?? '',
+                    formatMoney(item.target_amount),
+                    savedNode,
+                    item.desired_date ? formatDate(item.desired_date) : '-',
+                    doneNode(item, savedNode),
+                    item.note ?? '',
+                ],
+                viewUrl: routes.pages.goalSubGoalShow(goalId, item.id),
+                editUrl: routes.pages.goalSubGoalEdit(goalId, item.id),
+                readOnly: locked,
+                locked: true,
+            };
+        },
     });
 }

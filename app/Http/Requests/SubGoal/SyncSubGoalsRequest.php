@@ -8,8 +8,8 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
 
 /**
- * Replaces the sub goals of a goal. They are checked against the goal's stored target amount,
- * saved amount and desired date, which this request borrows from the goal in the route.
+ * Replaces the sub goals of a goal. They are checked against the goal's stored target amount and desired date,
+ * which this request borrows from the goal in the route; the goal's saved amount follows their saved amounts.
  */
 class SyncSubGoalsRequest extends FormRequest
 {
@@ -29,7 +29,7 @@ class SyncSubGoalsRequest extends FormRequest
 
         $this->merge([
             'target_amount' => $goal->target_amount,
-            'saved_amount' => $goal->saved_amount,
+            'saved_amount' => $this->subGoalSavedTotal((array) $this->input('sub_goals'), $goal->subGoals()->get()->keyBy('id')),
             'desired_date' => $goal->desired_date,
         ]);
     }

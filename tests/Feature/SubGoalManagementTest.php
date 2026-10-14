@@ -71,7 +71,7 @@ it('shows a sub goal only through its own goal', function () {
     $this->actingAs($actor)->getJson("/api/goals/{$other->id}/sub-goals/{$target->id}")->assertNotFound();
 });
 
-it('updates the details of a sub goal but never its amounts', function () {
+it('updates the details of a sub goal and fills its saved amount when marked done, restoring it when unmarked', function () {
     $actor = User::factory()->create();
     $goal = Goal::factory()->create(['status' => GoalStatus::Active, 'desired_date' => '2027-06-30']);
     $target = SubGoal::factory()->for($goal)->create(['is_done' => false, 'name' => 'Old', 'target_amount' => 100, 'saved_amount' => 40]);
@@ -81,8 +81,11 @@ it('updates the details of a sub goal but never its amounts', function () {
         ->assertJsonPath('data.name', 'New')
         ->assertJsonPath('data.is_done', true)
         ->assertJsonPath('data.target_amount', '100.00')
+        ->assertJsonPath('data.saved_amount', '100.00');
+    $this->actingAs($actor)->putJson("/api/goals/{$goal->id}/sub-goals/{$target->id}", ['is_done' => false])
+        ->assertOk()
+        ->assertJsonPath('data.name', 'New')
         ->assertJsonPath('data.saved_amount', '40.00');
-    $this->actingAs($actor)->putJson("/api/goals/{$goal->id}/sub-goals/{$target->id}", ['is_done' => false])->assertOk()->assertJsonPath('data.name', 'New');
 });
 
 it('rejects an empty or invalid sub goal update', function () {
@@ -168,19 +171,19 @@ it('rejects invalid sub goal fields and a date later than the goal date', functi
         ->assertJsonValidationErrors(['sub_goals.0.id']);
 });
 
-it('syncs the sub goals of a goal on update and keeps the saved amount of existing ones', function () {
+it('syncs the sub goals of a goal on update and lets the saved amount of existing ones change', function () {
     $actor = User::factory()->create();
     $goal = Goal::factory()->create(['status' => GoalStatus::Active, 'target_amount' => 10000000, 'saved_amount' => 3000000, 'desired_date' => '2027-06-30']);
     $keep = SubGoal::factory()->for($goal)->create(['name' => 'Old name', 'target_amount' => 4000000, 'saved_amount' => 3000000]);
     $drop = SubGoal::factory()->for($goal)->create(['target_amount' => 6000000, 'saved_amount' => 0]);
 
-    $this->actingAs($actor)->putJson("/api/goals/{$goal->id}", goalPayload(['sub_goals' => [
+    $this->actingAs($actor)->putJson("/api/goals/{$goal->id}", goalPayload(['saved_amount' => 999, 'sub_goals' => [
         ['id' => $keep->id, 'name' => 'New name', 'target_amount' => 7000000, 'saved_amount' => 999],
         subGoalPayload(['name' => 'Fresh', 'target_amount' => 3000000, 'saved_amount' => 0]),
     ]]))->assertOk();
 
     expect($keep->fresh()->name)->toBe('New name')
-        ->and($keep->fresh()->saved_amount)->toBe('3000000.00')
+        ->and($keep->fresh()->saved_amount)->toBe('999.00')
         ->and(SubGoal::query()->whereKey($drop->id)->exists())->toBeFalse()
         ->and($goal->subGoals()->count())->toBe(2);
 });
@@ -194,10 +197,8 @@ it('rejects an update whose sub goals do not add up', function () {
         ['id' => $existing->id, 'name' => 'X', 'target_amount' => 9000000],
     ]]))->assertStatus(422)->assertJsonValidationErrors(['sub_goals']);
 
-    // The saved amount of an existing sub goal comes from the database, not from the request.
-    $existing->update(['saved_amount' => 500000]);
     $this->actingAs($actor)->putJson("/api/goals/{$goal->id}", goalPayload(['saved_amount' => 0, 'sub_goals' => [
-        ['id' => $existing->id, 'name' => 'X', 'target_amount' => 10000000, 'saved_amount' => 0],
+        ['id' => $existing->id, 'name' => 'X', 'target_amount' => 10000000, 'saved_amount' => 500000],
     ]]))->assertStatus(422)->assertJsonValidationErrors(['sub_goals']);
 });
 
@@ -441,4 +442,54 @@ it('marks a sub goal done when its savings reach the target and not done when th
 
     $this->actingAs($actor)->putJson("/api/goals/{$goal->id}/savings/{$post(30)}", ['amount' => 50, 'sub_goal_id' => $target->id])->assertOk();
     expect($target->fresh()->is_done)->toBeTrue();
+});
+
+it('puts back the saved amount from before when the done entry of a sub goal is deleted from the saving history', function () {
+    $actor = User::factory()->create();
+    $goal = Goal::factory()->create(['status' => GoalStatus::Active, 'saved_amount' => 40]);
+    $target = SubGoal::factory()->for($goal)->create(['target_amount' => 100, 'saved_amount' => 40, 'is_done' => false]);
+
+    $this->actingAs($actor)->putJson("/api/goals/{$goal->id}/sub-goals/{$target->id}", ['is_done' => true])->assertOk();
+    expect((float) $target->fresh()->saved_amount)->toBe(100.0)
+        ->and((float) $goal->fresh()->saved_amount)->toBe(100.0);
+
+    $done = $goal->savings()->where('type', 'done')->firstOrFail();
+    $this->actingAs($actor)->deleteJson("/api/goals/{$goal->id}/savings/{$done->id}")->assertOk();
+
+    expect($target->fresh()->is_done)->toBeFalse()
+        ->and((float) $target->fresh()->saved_amount)->toBe(40.0)
+        ->and((float) $goal->fresh()->saved_amount)->toBe(40.0)
+        ->and($goal->savings()->where('type', 'done')->count())->toBe(0);
+});
+
+it('lets the saved amount of a sub goal be edited, moving the goal saved amount and the done status with it', function () {
+    $actor = User::factory()->create();
+    $goal = Goal::factory()->create(['status' => GoalStatus::Active, 'saved_amount' => 40]);
+    $target = SubGoal::factory()->for($goal)->create(['target_amount' => 100, 'saved_amount' => 40, 'is_done' => false]);
+    $url = "/api/goals/{$goal->id}/sub-goals/{$target->id}";
+
+    $this->actingAs($actor)->putJson($url, ['saved_amount' => 70])->assertOk()->assertJsonPath('data.saved_amount', '70.00')->assertJsonPath('data.is_done', false);
+    expect((float) $goal->fresh()->saved_amount)->toBe(70.0);
+
+    $this->actingAs($actor)->putJson($url, ['saved_amount' => 100])->assertOk()->assertJsonPath('data.is_done', true);
+    expect((float) $goal->fresh()->saved_amount)->toBe(100.0);
+
+    $this->actingAs($actor)->putJson($url, ['saved_amount' => -1])->assertStatus(422)->assertJsonValidationErrors(['saved_amount']);
+});
+
+it('lets the saved amounts of existing sub goals be edited on their own, moving the goal saved amount', function () {
+    $actor = User::factory()->create();
+    $goal = Goal::factory()->create(['status' => GoalStatus::Active, 'target_amount' => 100, 'saved_amount' => 40, 'desired_date' => '2027-06-30']);
+    $one = SubGoal::factory()->for($goal)->create(['target_amount' => 60, 'saved_amount' => 40]);
+    $two = SubGoal::factory()->for($goal)->create(['target_amount' => 40, 'saved_amount' => 0]);
+
+    $this->actingAs($actor)->putJson("/api/goals/{$goal->id}/sub-goals", ['sub_goals' => [
+        ['id' => $one->id, 'name' => 'A', 'target_amount' => 60, 'saved_amount' => 10],
+        ['id' => $two->id, 'name' => 'B', 'target_amount' => 40, 'saved_amount' => 40],
+    ]])->assertOk();
+
+    expect((float) $one->fresh()->saved_amount)->toBe(10.0)
+        ->and((float) $two->fresh()->saved_amount)->toBe(40.0)
+        ->and($two->fresh()->is_done)->toBeTrue()
+        ->and((float) $goal->fresh()->saved_amount)->toBe(50.0);
 });

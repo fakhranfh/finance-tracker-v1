@@ -59,13 +59,6 @@ interface SubGoalRepositoryInterface
     public function find(int $id): ?SubGoal;
 
     /**
-     * Mark the given sub goals as not done.
-     *
-     * @param  array<int, int>  $ids
-     */
-    public function markNotDone(array $ids): void;
-
-    /**
      * Run the callback inside a database transaction and return its result.
      *
      * @template T

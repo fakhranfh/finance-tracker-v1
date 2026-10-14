@@ -85,9 +85,4 @@ class SubGoalRepository implements SubGoalRepositoryInterface
     {
         SubGoal::query()->whereKey($id)->increment('saved_amount', $difference);
     }
-
-    public function markNotDone(array $ids): void
-    {
-        SubGoal::query()->whereIn('id', $ids)->update(['is_done' => false]);
-    }
 }

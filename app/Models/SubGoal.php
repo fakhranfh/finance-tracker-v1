@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 /**
  * One thing that has to be achieved to reach a goal, e.g. the dowry or a vendor for a wedding goal.
  */
-#[Fillable(['goal_id', 'name', 'target_amount', 'saved_amount', 'desired_date', 'is_done', 'note'])]
+#[Fillable(['goal_id', 'name', 'target_amount', 'saved_amount', 'saved_amount_before_done', 'desired_date', 'is_done', 'note'])]
 class SubGoal extends Model
 {
     /** @use HasFactory<SubGoalFactory> */
@@ -28,6 +28,7 @@ class SubGoal extends Model
         return [
             'target_amount' => 'decimal:2',
             'saved_amount' => 'decimal:2',
+            'saved_amount_before_done' => 'decimal:2',
             'is_done' => 'boolean',
         ];
     }

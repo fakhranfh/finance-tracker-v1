@@ -162,7 +162,7 @@ test.describe('Sub goals', () => {
         await page.goto(`/goals/${goalId}/edit`);
         await expect(page.locator('[name="sub_goals.0.name"]')).toHaveValue('Mas kawin');
         await expect(page.locator('[name="sub_goals.0.saved_amount"]')).toHaveValue('1.000.000');
-        await expect(page.locator('[name="sub_goals.0.saved_amount"]')).toHaveJSProperty('readOnly', true);
+        await expect(page.locator('[name="sub_goals.0.saved_amount"]')).toHaveJSProperty('readOnly', false);
 
         await page.locator('[name="sub_goals.1.name"]').fill('Katering baru');
         await page.locator('[name="sub_goals.1.target_amount"]').fill('3000000');

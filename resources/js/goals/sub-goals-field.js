@@ -7,9 +7,7 @@ const FIELDS = ['id', 'name', 'target_amount', 'saved_amount', 'desired_date', '
  * The "Sub goals" repeater of the goal form: one row per sub goal, edited together with the goal.
  * With the "sub goals" target mode on, the target amount input is replaced by this field: the goal's target amount is the sum of the rows' target amounts and
  * their saved amounts add up to the goal's saved amount, so both fields follow the rows. In "amount" mode
- * the field is hidden and an empty list is sent. Existing rows keep their saved amount
- * (it follows the savings), only new rows can be given one.
- *
+ * the field is hidden and an empty list is sent.
  * config: { form }
  * returns: { add, fill, load, markUnloaded, payload, check }
  */
@@ -88,7 +86,6 @@ export function createSubGoalsField({ form }) {
         FIELDS.forEach((name) => {
             input(row, name).value = values[name] ?? (name === 'saved_amount' ? '0' : '');
         });
-        input(row, 'saved_amount').readOnly = Boolean(values.id);
 
         sync();
 

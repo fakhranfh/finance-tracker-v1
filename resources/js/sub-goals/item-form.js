@@ -59,6 +59,7 @@ if (form) {
 
         const payload = {
             name: form.elements.namedItem('name').value,
+            saved_amount: form.elements.namedItem('saved_amount').value,
             desired_date: form.elements.namedItem('desired_date').value || null,
             is_done: form.elements.namedItem('is_done').checked,
             note: form.elements.namedItem('note').value || null,
