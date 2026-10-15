@@ -50,6 +50,9 @@ test.describe('Import records', () => {
 
         await expect(page.getByText('Step 3 of 4')).toBeVisible();
         const choice = (value: string) => page.locator(`select[data-value="${value}"]`);
+        await expect(page.locator('#import-type-expense')).toHaveValue('expense');
+        await expect(page.locator('#import-type-income')).toHaveValue('income');
+        await page.locator('#import-type-income').fill('income, Salary');
         await expect(choice(`E2E Cash ${stamp}`)).not.toHaveValue('create');
         await expect(choice(`Imported Bank ${stamp}`)).toHaveValue('create');
         await expect(choice('Imported Food')).toHaveValue('create');

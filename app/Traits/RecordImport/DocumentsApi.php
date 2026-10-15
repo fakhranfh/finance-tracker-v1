@@ -110,6 +110,12 @@ trait DocumentsApi
             content: new OA\JsonContent(
                 properties: [
                     new OA\Property(
+                        property: 'types',
+                        type: 'object',
+                        description: 'The values of the type column that mean each record type, separated by commas. Values left out are recognized by name (income, expense, transfer, pemasukan, pengeluaran).',
+                        example: ['income' => 'Pemasukan, Masuk', 'expense' => 'Pengeluaran', 'transfer' => 'Pindah']
+                    ),
+                    new OA\Property(
                         property: 'accounts',
                         type: 'array',
                         items: new OA\Items(properties: [

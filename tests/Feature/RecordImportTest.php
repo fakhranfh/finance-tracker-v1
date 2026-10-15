@@ -42,11 +42,12 @@ function loadImportValues(int $id, array $mapping = IMPORT_MAPPING)
 }
 
 /** Run an import: store the mapping (as the values step does), then import with the given choices. */
-function runImport(array $import, array $accounts = [], array $categories = [], array $mapping = IMPORT_MAPPING)
+function runImport(array $import, array $accounts = [], array $categories = [], array $mapping = IMPORT_MAPPING, array $types = [])
 {
     loadImportValues($import['id'], $mapping)->assertOk();
 
     return test()->actingAs(test()->user)->postJson("/api/records/imports/{$import['id']}/run", [
+        'types' => $types,
         'accounts' => $accounts,
         'categories' => $categories,
     ]);
@@ -114,7 +115,7 @@ it('keeps every user\'s imports private', function () {
     $this->actingAs($other)->getJson("/api/records/imports/{$mine['id']}")->assertNotFound();
     $this->actingAs($other)->putJson("/api/records/imports/{$mine['id']}", ['step' => 'columns'])->assertNotFound();
     $this->actingAs($other)->postJson("/api/records/imports/{$mine['id']}/values", ['mapping' => IMPORT_MAPPING])->assertNotFound();
-    $this->actingAs($other)->postJson("/api/records/imports/{$mine['id']}/run", ['accounts' => [], 'categories' => []])->assertNotFound();
+    $this->actingAs($other)->postJson("/api/records/imports/{$mine['id']}/run", ['types' => [], 'accounts' => [], 'categories' => []])->assertNotFound();
     $this->actingAs($other)->deleteJson("/api/records/imports/{$mine['id']}")->assertNotFound();
 
     expect(RecordImport::count())->toBe(1);
@@ -173,6 +174,45 @@ it('lists the distinct accounts and categories of the mapped columns with sugges
     expect($categories->keys()->all())->toBe(['Food', 'Gift'])
         ->and($categories['Food']['suggestion'])->toBe(['action' => 'existing', 'id' => $food->id])
         ->and($categories['Gift']['suggestion'])->toBe(['action' => 'create']);
+});
+
+it('lists the values of the type column and prefills the ones recognized by name', function () {
+    $csv = 'Date,Type,Amount
+2026-10-01,Pemasukan,100
+2026-10-02,Keluar,200
+2026-10-03,Pemasukan,300
+2026-10-04,Misc,400
+';
+    $import = uploadImport($csv);
+
+    $types = loadImportValues($import['id'], ['recorded_at' => 0, 'type' => 1, 'amount' => 2])->assertOk()->json('data.values.types');
+
+    expect($types['found'])->toBe(['Pemasukan', 'Keluar', 'Misc'])
+        ->and($types['suggestion'])->toBe(['income' => 'Pemasukan', 'expense' => 'Keluar', 'transfer' => '']);
+});
+
+it('takes the values that mean each type from the user, skipping rows that match none', function () {
+    $csv = 'Date,Type,Amount
+2026-10-01,In-flow,100
+2026-10-02,Out-flow,200
+2026-10-03,Weird,300
+2026-10-04,income,400
+2026-10-05,Spend,500
+';
+
+    $response = runImport(
+        uploadImport($csv),
+        mapping: ['recorded_at' => 0, 'type' => 1, 'amount' => 2],
+        types: ['income' => 'in-flow', 'expense' => ' OUT-FLOW , Spend', 'transfer' => ''],
+    )->assertOk();
+
+    expect($response->json('data.imported'))->toBe(4)
+        ->and($response->json('data.skipped'))->toBe(1)
+        ->and($response->json('data.errors.0.row'))->toBe(4)
+        ->and(Record::where('amount', '100')->value('type')->value)->toBe('income')
+        ->and(Record::where('amount', '200')->value('type')->value)->toBe('expense')
+        ->and(Record::where('amount', '400')->value('type')->value)->toBe('income')
+        ->and(Record::where('amount', '500')->value('type')->value)->toBe('expense');
 });
 
 it('requires the date and amount columns to be mapped', function () {
@@ -242,7 +282,7 @@ it('removes the import and its file once imported, leaving other imports alone',
     Storage::disk('local')->assertMissing($path);
     expect(RecordImport::pluck('id')->all())->toBe([$other['id']]);
 
-    $this->actingAs($this->user)->postJson("/api/records/imports/{$done['id']}/run", ['accounts' => [], 'categories' => []])->assertNotFound();
+    $this->actingAs($this->user)->postJson("/api/records/imports/{$done['id']}/run", ['types' => [], 'accounts' => [], 'categories' => []])->assertNotFound();
 });
 
 it('discards an import together with its file', function () {
@@ -259,7 +299,7 @@ it('refuses to run an import whose columns are not mapped yet', function () {
     $import = uploadImport(IMPORT_CSV);
     RecordImport::whereKey($import['id'])->update(['mapping' => json_encode(['recorded_at' => null, 'amount' => null])]);
 
-    $this->actingAs($this->user)->postJson("/api/records/imports/{$import['id']}/run", ['accounts' => [], 'categories' => []])
+    $this->actingAs($this->user)->postJson("/api/records/imports/{$import['id']}/run", ['types' => [], 'accounts' => [], 'categories' => []])
         ->assertStatus(422)->assertJsonValidationErrors('import');
 });
 

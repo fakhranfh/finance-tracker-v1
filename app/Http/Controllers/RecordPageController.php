@@ -24,6 +24,7 @@ class RecordPageController extends Controller
         return view('records.import', [
             'fields' => $this->importFields(),
             'labels' => $this->importLabels(),
+            'typeLabels' => $this->typeLabels(),
         ]);
     }
 
@@ -78,6 +79,7 @@ class RecordPageController extends Controller
             'createdAccounts' => __('records.import.created_accounts', ['names' => ':names']),
             'errorRow' => __('records.import.error_row', ['row' => ':row', 'message' => ':message']),
             'failed' => __('records.import.failed'),
+            'typesFound' => __('records.import.types_found', ['values' => ':values']),
             'rowCount' => __('records.import.row_count', ['count' => ':count']),
             'resume' => __('records.import.resume'),
             'discard' => __('records.import.discard'),

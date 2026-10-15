@@ -56,6 +56,7 @@ class RecordImportController extends Controller
     {
         return response()->json(['data' => $this->recordImportService->import(
             $this->findOrFail($request, $import),
+            $request->validated('types') ?? [],
             $request->validated('accounts'),
             $request->validated('categories'),
             $request->user()?->timezone ?: config('app.timezone', 'UTC'),

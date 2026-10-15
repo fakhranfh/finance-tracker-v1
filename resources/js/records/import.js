@@ -151,19 +151,21 @@ function optionGroup(label, options) {
     return group;
 }
 
+const typeInputs = [...document.querySelectorAll('[data-import-type]')];
 const accountList = document.getElementById('import-accounts-list');
 const categoryList = document.getElementById('import-categories-list');
 const choiceKey = (list, select) => `${list.dataset.importList}|${select.dataset.value}`;
 
 function saveChoices() {
     saveProgress({
-        choices: Object.fromEntries(
-            [accountList, categoryList].flatMap((list) => [...list.querySelectorAll('select')].map((select) => [choiceKey(list, select), select.value])),
-        ),
+        choices: Object.fromEntries([
+            ...typeInputs.map((input) => [`type|${input.dataset.importType}`, input.value]),
+            ...[accountList, categoryList].flatMap((list) => [...list.querySelectorAll('select')].map((select) => [choiceKey(list, select), select.value])),
+        ]),
     });
 }
 
-[accountList, categoryList].forEach((list) => list.addEventListener('change', saveChoices));
+[...typeInputs, accountList, categoryList].forEach((element) => element.addEventListener('change', saveChoices));
 
 function renderValues(values, choices = {}) {
     const restore = (list, select) => {
@@ -173,6 +175,13 @@ function renderValues(values, choices = {}) {
             select.value = saved;
         }
     };
+
+    typeInputs.forEach((input) => {
+        input.value = choices[`type|${input.dataset.importType}`] ?? values.types.suggestion[input.dataset.importType] ?? '';
+    });
+    document.getElementById('import-types-found').textContent = fill(labels.typesFound, { values: values.types.found.join(', ') });
+    document.getElementById('import-types-fields').classList.toggle('hidden', values.types.found.length === 0);
+    document.getElementById('import-types-empty').classList.toggle('hidden', values.types.found.length > 0);
 
     accountList.replaceChildren(...values.accounts.map((entry) => {
         const select = document.createElement('select');
@@ -245,7 +254,8 @@ function resume(item) {
     setUrl(item.id);
     renderColumns(item);
 
-    if (item.step === 'values' && item.values) {
+    // Values saved before the type inputs existed lack them (or hold the old list); loading them again from the columns step fixes that.
+    if (item.step === 'values' && item.values?.types?.found) {
         state.mapping = item.mapping;
         renderValues(item.values, item.choices);
         show('values');
@@ -419,6 +429,7 @@ forms.values.addEventListener('submit', async (event) => {
 
     try {
         const { ok, status, data } = await post(routes.records.importRun(state.id), {
+            types: Object.fromEntries(typeInputs.map((input) => [input.dataset.importType, input.value])),
             accounts: [...accountList.querySelectorAll('select')].map(choiceOf),
             categories: [...categoryList.querySelectorAll('select')].map(choiceOf),
         });

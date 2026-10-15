@@ -47,6 +47,10 @@ final class RecordImportRules
     public static function values(): array
     {
         return [
+            'types' => ['present', 'array'],
+            'types.income' => ['nullable', 'string', 'max:500'],
+            'types.expense' => ['nullable', 'string', 'max:500'],
+            'types.transfer' => ['nullable', 'string', 'max:500'],
             'accounts' => ['present', 'array'],
             'accounts.*.value' => ['required', 'string', 'max:255'],
             'accounts.*.action' => ['required', Rule::in(['existing', 'create', 'unmapped'])],

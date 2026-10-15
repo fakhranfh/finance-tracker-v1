@@ -159,6 +159,7 @@ class RecordImportService
         $accountIds = $accounts->mapWithKeys(fn ($account) => [$this->key($account->name) => $account->id]);
         $categoryIds = $categories->reverse()->mapWithKeys(fn ($category) => [$this->key($category->name) => $category->id]);
 
+        $typeValues = $this->distinct($rows, [$mapping['type'] ?? null]);
         $accountValues = $this->distinct($rows, [$mapping['account'] ?? null, $mapping['to_account'] ?? null]);
         $categoryValues = $this->distinct($rows, [$mapping['category'] ?? null]);
 
@@ -167,6 +168,10 @@ class RecordImportService
             'step' => RecordImportStep::Values->value,
             'choices' => [],
             'values' => [
+                'types' => [
+                    'found' => $typeValues->values()->all(),
+                    'suggestion' => $this->suggestTypeTexts($typeValues->values()->all()),
+                ],
                 'accounts' => $accountValues->map(fn (string $value, string $key) => [
                     'value' => $value,
                     'suggestion' => $accountIds->has($key) ? ['action' => 'existing', 'id' => $accountIds[$key]] : ['action' => 'create'],
@@ -196,11 +201,12 @@ class RecordImportService
      * rows without an account. Categories that are not mapped (or do not fit the record's type)
      * leave the record uncategorized.
      *
+     * @param  array<string, string|null>  $types  The values of the type column that mean each record type, separated by commas (e.g. income => "Pemasukan, Masuk"). Values left out are recognized by name.
      * @param  array<int, array{value: string, action: string, id?: int|null, name?: string|null}>  $accounts
      * @param  array<int, array{value: string, action: string, id?: int|null, name?: string|null}>  $categories
      * @return array{imported: int, skipped: int, errors: array<int, array{row: int, message: string}>, created_accounts: array<int, string>, created_categories: array<int, string>}
      */
-    public function import(RecordImport $import, array $accounts, array $categories, string $timezone): array
+    public function import(RecordImport $import, array $types, array $accounts, array $categories, string $timezone): array
     {
         $mapping = $import->mapping ?? [];
 
@@ -210,6 +216,7 @@ class RecordImportService
 
         $rows = $this->readFile($import->path, 'import')['rows'];
         $accountMap = collect($accounts)->mapWithKeys(fn (array $entry) => [$this->key($entry['value']) => $entry]);
+        $typeMap = $this->typeMap($types);
         $categoryMap = collect($categories)->mapWithKeys(fn (array $entry) => [$this->key($entry['value']) => $entry]);
         $accountIds = $this->accountRepository->allNamed()->mapWithKeys(fn ($account) => [$this->key($account->name) => $account->id])->all();
         $categoriesById = $this->categoryRepository->allNamed()->keyBy('id');
@@ -261,14 +268,15 @@ class RecordImportService
             return $categoryIdsByNameAndType[$key];
         };
 
-        $this->recordRepository->transaction(function () use ($rows, $mapping, $timezone, $resolveCategory, $resolveAccount, &$errors, &$imported, &$skipped): void {
+        $this->recordRepository->transaction(function () use ($rows, $mapping, $typeMap, $timezone, $resolveCategory, $resolveAccount, &$errors, &$imported, &$skipped): void {
             foreach ($rows as $rowNumber => $row) {
                 $cell = fn (string $field) => isset($mapping[$field]) ? ($row[$mapping[$field]] ?? null) : null;
 
                 $recordedAt = $this->parseDate($cell('recorded_at'), $timezone);
                 $amount = $this->parseAmount($cell('amount'));
+                $typeText = $this->text($cell('type'));
                 $type = isset($mapping['type'])
-                    ? $this->parseType($cell('type'))
+                    ? ($typeText === null ? null : ($typeMap[$this->key($typeText)] ?? $this->parseType($typeText)))
                     : ($amount === null ? null : ($amount < 0 ? RecordType::Expense : RecordType::Income));
                 $accountValue = $this->text($cell('account'));
                 $toAccountValue = $this->text($cell('to_account'));
@@ -412,6 +420,46 @@ class RecordImportService
         foreach ($this->recordImportRepository->deleteOlderThan(now()->subDays(self::STALE_AFTER_DAYS)) as $path) {
             Storage::disk('local')->delete($path);
         }
+    }
+
+    /**
+     * @param  array<string, string|null>  $types
+     * @return array<string, RecordType> Each typed value, by comparison key.
+     */
+    private function typeMap(array $types): array
+    {
+        $map = [];
+
+        foreach (RecordType::cases() as $type) {
+            foreach (explode(',', (string) ($types[$type->value] ?? '')) as $part) {
+                if ($this->key($part) !== '') {
+                    $map[$this->key($part)] = $type;
+                }
+            }
+        }
+
+        return $map;
+    }
+
+    /**
+     * Prefill for the type inputs: the found values that are recognized by name, per type.
+     *
+     * @param  array<int, string>  $found
+     * @return array<string, string>
+     */
+    private function suggestTypeTexts(array $found): array
+    {
+        $texts = array_fill_keys(array_map(fn (RecordType $type) => $type->value, RecordType::cases()), []);
+
+        foreach ($found as $value) {
+            $type = $this->parseType($value);
+
+            if ($type !== null) {
+                $texts[$type->value][] = $value;
+            }
+        }
+
+        return array_map(fn (array $values) => implode(', ', $values), $texts);
     }
 
     private function parseType(mixed $value): ?RecordType

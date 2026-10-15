@@ -1864,6 +1864,15 @@
                         "application/json": {
                             "schema": {
                                 "properties": {
+                                    "types": {
+                                        "description": "The values of the type column that mean each record type, separated by commas. Values left out are recognized by name (income, expense, transfer, pemasukan, pengeluaran).",
+                                        "type": "object",
+                                        "example": {
+                                            "income": "Pemasukan, Masuk",
+                                            "expense": "Pengeluaran",
+                                            "transfer": "Pindah"
+                                        }
+                                    },
                                     "accounts": {
                                         "type": "array",
                                         "items": {

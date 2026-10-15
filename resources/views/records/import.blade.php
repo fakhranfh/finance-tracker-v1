@@ -83,6 +83,29 @@
         <section id="import-step-values" class="hidden rounded-lg border border-outline-variant bg-surface p-6">
             <form id="import-values-form" class="space-y-8" novalidate>
                 <div class="space-y-3">
+                    <h2 class="font-heading text-title-md font-semibold text-on-surface">{{ __('records.import.types_title') }}</h2>
+                    <p class="font-body text-body-sm text-on-surface-variant">{{ __('records.import.types_hint') }}</p>
+                    <p id="import-types-empty" class="hidden rounded-lg border border-warning/20 bg-warning/10 px-4 py-3 font-body text-sm text-on-surface">
+                        {{ __('records.import.types_empty') }}
+                    </p>
+                    <div id="import-types-fields" class="space-y-3">
+                        <p id="import-types-found" class="font-body text-body-sm text-on-surface-variant"></p>
+                        @foreach ($typeLabels as $value => $label)
+                            <div class="grid grid-cols-1 items-center gap-2 sm:grid-cols-2 sm:gap-4">
+                                <x-atoms.label for="import-type-{{ $value }}">{{ $label }}</x-atoms.label>
+                                <x-atoms.input
+                                    name="import_type_{{ $value }}"
+                                    id="import-type-{{ $value }}"
+                                    data-import-type="{{ $value }}"
+                                    placeholder="{{ __('records.import.types_placeholder') }}"
+                                    autocomplete="off"
+                                />
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+
+                <div class="space-y-3">
                     <h2 class="font-heading text-title-md font-semibold text-on-surface">{{ __('records.import.accounts_title') }}</h2>
                     <p class="font-body text-body-sm text-on-surface-variant">{{ __('records.import.accounts_hint') }}</p>
                     <p id="import-accounts-empty" class="hidden rounded-lg border border-warning/20 bg-warning/10 px-4 py-3 font-body text-sm text-on-surface">
