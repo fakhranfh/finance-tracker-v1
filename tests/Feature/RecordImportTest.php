@@ -392,6 +392,21 @@ it('skips transfers without a distinct destination account', function () {
     expect($response->json('data.imported'))->toBe(1)->and($response->json('data.skipped'))->toBe(2);
 });
 
+it('imports rows whose amount is zero', function () {
+    $csv = 'Date,Type,Amount
+2026-10-01,expense,0
+2026-10-02,income,"0,00"
+2026-10-03,expense,abc
+';
+
+    $response = runImport(uploadImport($csv), mapping: ['recorded_at' => 0, 'type' => 1, 'amount' => 2])->assertOk();
+
+    expect($response->json('data.imported'))->toBe(2)
+        ->and($response->json('data.skipped'))->toBe(1)
+        ->and(Record::where('type', 'expense')->value('amount'))->toBe('0.00')
+        ->and(Record::where('type', 'income')->value('amount'))->toBe('0.00');
+});
+
 it('reads amounts written the Indonesian way', function () {
     $csv = "Date,Amount\n2026-10-01,\"Rp 1.250.000,50\"\n2026-10-02,\"-2,500\"\n";
 

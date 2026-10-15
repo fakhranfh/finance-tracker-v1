@@ -283,7 +283,7 @@ class RecordImportService
 
                 $message = match (true) {
                     $recordedAt === null => 'invalid_date',
-                    $amount === null || abs($amount) < 0.01 || abs($amount) > 9999999999.99 => 'invalid_amount',
+                    $amount === null || abs($amount) > 9999999999.99 => 'invalid_amount',
                     $type === null => 'invalid_type',
                     $type === RecordType::Transfer && $toAccountValue === null => 'missing_destination',
                     $type === RecordType::Transfer && $this->key($toAccountValue) === $this->key($accountValue ?? '') => 'same_account',
