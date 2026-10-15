@@ -158,9 +158,9 @@ class RecordImportService
         }
 
         $slice = array_slice($rows, $offset, $this->batchSize(), true);
-        $state['found']['types'] += $this->distinct($slice, [$mapping['type'] ?? null])->all();
-        $state['found']['accounts'] += $this->distinct($slice, [$mapping['account'] ?? null, $mapping['to_account'] ?? null])->all();
-        $state['found']['categories'] += $this->distinct($slice, [$mapping['category'] ?? null])->all();
+        $state['found']['types'] = $this->mergeFound($state['found']['types'], $this->distinct($slice, [$mapping['type'] ?? null]));
+        $state['found']['accounts'] = $this->mergeFound($state['found']['accounts'], $this->distinct($slice, [$mapping['account'] ?? null, $mapping['to_account'] ?? null]));
+        $state['found']['categories'] = $this->mergeFound($state['found']['categories'], $this->distinct($slice, [$mapping['category'] ?? null]));
         $state['offset'] = $offset + count($slice);
 
         $progress = $this->progressOf($state['offset'], count($rows));
@@ -185,13 +185,13 @@ class RecordImportService
                     'found' => $typeValues,
                     'suggestion' => $this->suggestTypeTexts($typeValues),
                 ],
-                'accounts' => collect($state['found']['accounts'])->map(fn ($value, $key) => [
+                'accounts' => collect($state['found']['accounts'])->map(fn ($value) => [
                     'value' => (string) $value,
-                    'suggestion' => $accountIds->has($key) ? ['action' => 'existing', 'id' => $accountIds[$key]] : ['action' => 'create'],
+                    'suggestion' => $accountIds->has($this->key((string) $value)) ? ['action' => 'existing', 'id' => $accountIds[$this->key((string) $value)]] : ['action' => 'create'],
                 ])->values()->all(),
-                'categories' => collect($state['found']['categories'])->map(fn ($value, $key) => [
+                'categories' => collect($state['found']['categories'])->map(fn ($value) => [
                     'value' => (string) $value,
-                    'suggestion' => $categoryIds->has($key) ? ['action' => 'existing', 'id' => $categoryIds[$key]] : ['action' => 'create'],
+                    'suggestion' => $categoryIds->has($this->key((string) $value)) ? ['action' => 'existing', 'id' => $categoryIds[$this->key((string) $value)]] : ['action' => 'create'],
                 ])->values()->all(),
                 'existing_accounts' => $accounts->map->only(['id', 'name'])->values()->all(),
                 'existing_categories' => $categories->map(fn ($category) => ['id' => $category->id, 'name' => $category->name, 'type' => $category->type->value])->values()->all(),
@@ -465,6 +465,25 @@ class RecordImportService
         }
 
         return $mapping;
+    }
+
+    /**
+     * Add the newly found values to the list kept so far. A list, not a keyed map: MySQL reorders the keys of a JSON object.
+     *
+     * @param  array<int, string>  $found
+     * @return array<int, string>
+     */
+    private function mergeFound(array $found, Collection $new): array
+    {
+        $seen = array_flip(array_map(fn ($value) => $this->key((string) $value), $found));
+
+        foreach ($new as $key => $value) {
+            if (! isset($seen[$key])) {
+                $found[] = $value;
+            }
+        }
+
+        return $found;
     }
 
     /**
