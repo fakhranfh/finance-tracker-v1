@@ -174,6 +174,16 @@ return [
         'view_records' => 'View records',
         'import_another' => 'Import another file',
         'failed' => 'Something went wrong.',
+        'progress' => [
+            'upload_title' => 'Uploading your file',
+            'uploading' => 'Sending the file to the server. Keep this page open.',
+            'reading' => 'File received. Reading its columns and rows...',
+            'values_title' => 'Reading your data',
+            'values' => 'Looking through the file for the types, accounts and categories in it, so you can map them next.',
+            'run_title' => 'Importing records',
+            'run' => 'Creating the records, accounts and categories from your file. Keep this page open until it finishes.',
+            'rows' => ':done of :total rows',
+        ],
         'errors' => [
             'invalid_date' => 'The date could not be read.',
             'invalid_amount' => 'The amount could not be read or is out of range.',

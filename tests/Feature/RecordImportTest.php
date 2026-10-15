@@ -407,6 +407,43 @@ it('imports rows whose amount is zero', function () {
         ->and(Record::where('type', 'income')->value('amount'))->toBe('0.00');
 });
 
+it('works through a big file in batches, reporting progress and surviving a repeated batch', function () {
+    config(['import.batch_size' => 4]);
+    $rows = collect(range(1, 10))->map(fn ($i) => "2026-10-01,{$i},Bank ".($i % 3))->implode('
+');
+    $import = uploadImport("Date,Amount,Account
+{$rows}
+");
+    $mapping = ['recorded_at' => 0, 'amount' => 1, 'account' => 2];
+    $user = test()->user;
+    $call = fn (string $path, array $body) => test()->actingAs($user)->postJson("/api/records/imports/{$import['id']}/{$path}", $body)->assertOk();
+
+    // Scanning the values: 4 rows per call.
+    $first = $call('values', ['mapping' => $mapping, 'offset' => 0]);
+    expect($first->json('progress'))->toBe(['offset' => 4, 'total' => 10, 'percent' => 40, 'done' => false])
+        ->and($first->json('data.values'))->toBeNull();
+    $call('values', ['mapping' => $mapping, 'offset' => 4])->assertJsonPath('progress.offset', 8);
+    $last = $call('values', ['mapping' => $mapping, 'offset' => 8]);
+    expect($last->json('progress'))->toBe(['offset' => 10, 'total' => 10, 'percent' => 100, 'done' => true])
+        ->and(collect($last->json('data.values.accounts'))->pluck('value')->all())->toBe(['Bank 1', 'Bank 2', 'Bank 0'])
+        ->and($last->json('data.step'))->toBe('values');
+
+    // Importing: 4 rows per call; repeating a batch that already ran does not run it again.
+    $body = ['types' => [], 'accounts' => [['value' => 'Bank 1', 'action' => 'create'], ['value' => 'Bank 2', 'action' => 'create'], ['value' => 'Bank 0', 'action' => 'create']], 'categories' => []];
+    $one = $call('run', [...$body, 'offset' => 0]);
+    expect($one->json('progress.done'))->toBeFalse()->and($one->json('data.imported'))->toBe(4);
+    $again = $call('run', [...$body, 'offset' => 0])->json();
+    expect(Record::count())->toBe(4)->and($again['progress']['offset'])->toBe(4);
+
+    $call('run', [...$body, 'offset' => 4])->assertJsonPath('data.imported', 8);
+    $done = $call('run', [...$body, 'offset' => 8]);
+    expect($done->json('progress'))->toBe(['offset' => 10, 'total' => 10, 'percent' => 100, 'done' => true])
+        ->and($done->json('data.imported'))->toBe(10)
+        ->and(Record::count())->toBe(10)
+        ->and(Account::whereIn('name', ['Bank 0', 'Bank 1', 'Bank 2'])->count())->toBe(3)
+        ->and(RecordImport::count())->toBe(0);
+});
+
 it('reads amounts written the Indonesian way', function () {
     $csv = "Date,Amount\n2026-10-01,\"Rp 1.250.000,50\"\n2026-10-02,\"-2,500\"\n";
 

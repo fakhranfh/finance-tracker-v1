@@ -155,6 +155,40 @@ test.describe('Import records', () => {
         await expect(page.getByText(firstName)).toHaveCount(0);
     });
 
+    test('shows a progress circle explaining what each step is doing', async ({ page }) => {
+        const { email, password } = seedUser();
+        const stamp = Date.now();
+
+        await login(page, email, password);
+        await page.goto('/records/import');
+
+        // Hold the requests back a moment so the progress page can be seen.
+        for (const step of ['values', 'run']) {
+            await page.route(`**/api/records/imports/*/${step}`, async (route) => {
+                await new Promise((resolve) => setTimeout(resolve, 800));
+                await route.continue();
+            });
+        }
+
+        await page.locator('#file').setInputFiles(csvFile(['Date,Amount,Note', `2026-10-03,-5000,e2e progress ${stamp}`]));
+        await page.getByRole('button', { name: 'Upload and continue' }).click();
+        await expect(page.getByText('Step 2 of 4')).toBeVisible();
+
+        await page.getByRole('button', { name: 'Continue', exact: true }).click();
+        const progress = page.getByRole('progressbar');
+        await expect(progress).toBeVisible();
+        await expect(progress.getByText('Reading your data')).toBeVisible();
+        await expect(progress.getByText(/Looking through the file/)).toBeVisible();
+        await expect(page.getByText('Step 3 of 4')).toBeVisible();
+
+        await page.getByRole('button', { name: 'Import records' }).click();
+        await expect(progress).toBeVisible();
+        await expect(progress.getByText('Importing records')).toBeVisible();
+        await expect(progress.getByText(/^\d+%$/)).toBeVisible();
+        await expect(page.getByText('1 records imported.')).toBeVisible();
+        await expect(progress).toBeHidden();
+    });
+
     test('requires the date and amount columns', async ({ page }) => {
         const { email, password } = seedUser();
 

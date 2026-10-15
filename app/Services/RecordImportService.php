@@ -103,15 +103,10 @@ class RecordImportService
     {
         $this->deleteStale();
 
-        $path = Storage::disk('local')->putFileAs(self::DIRECTORY, $file, Str::uuid().'.'.strtolower($file->getClientOriginalExtension()));
+        $sheet = $this->parseUpload($file);
+        $path = self::DIRECTORY.'/'.Str::uuid().'.json';
 
-        try {
-            $sheet = $this->readFile($path, 'file');
-        } catch (ValidationException $e) {
-            Storage::disk('local')->delete($path);
-
-            throw $e;
-        }
+        Storage::disk('local')->put($path, json_encode($sheet, JSON_THROW_ON_ERROR | JSON_INVALID_UTF8_SUBSTITUTE));
 
         return $this->recordImportRepository->create([
             'user_id' => $userId,
@@ -145,45 +140,63 @@ class RecordImportService
     }
 
     /**
-     * Store the column mapping, find the distinct accounts and categories in the mapped columns (each
-     * with the existing one it most likely stands for, plus what exists to choose from) and move to
-     * the values step.
+     * Store the column mapping, find the distinct types, accounts and categories in the mapped columns
+     * (each account and category with the existing one it most likely stands for, plus what exists to
+     * choose from) and move to the values step. The file is scanned config('import.batch_size') rows per call: call again
+     * with the returned offset until it is done.
      *
      * @param  array<string, int|null>  $mapping
+     * @return array{import: RecordImport, progress: array{offset: int, total: int, percent: int, done: bool}}
      */
-    public function loadValues(RecordImport $import, array $mapping): RecordImport
+    public function loadValues(RecordImport $import, array $mapping, int $offset = 0): array
     {
         $rows = $this->readFile($import->path, 'import')['rows'];
+        $state = $this->stateFor($import, 'values', $offset, ['found' => ['types' => [], 'accounts' => [], 'categories' => []]]);
+
+        if ($offset !== $state['offset']) {
+            return ['import' => $import, 'progress' => $this->progressOf($state['offset'], count($rows))];
+        }
+
+        $slice = array_slice($rows, $offset, $this->batchSize(), true);
+        $state['found']['types'] += $this->distinct($slice, [$mapping['type'] ?? null])->all();
+        $state['found']['accounts'] += $this->distinct($slice, [$mapping['account'] ?? null, $mapping['to_account'] ?? null])->all();
+        $state['found']['categories'] += $this->distinct($slice, [$mapping['category'] ?? null])->all();
+        $state['offset'] = $offset + count($slice);
+
+        $progress = $this->progressOf($state['offset'], count($rows));
+
+        if (! $progress['done']) {
+            return ['import' => $this->recordImportRepository->update($import, ['mapping' => $mapping, 'progress' => $state]), 'progress' => $progress];
+        }
+
         $accounts = $this->accountRepository->allNamed();
         $categories = $this->categoryRepository->allNamed();
         $accountIds = $accounts->mapWithKeys(fn ($account) => [$this->key($account->name) => $account->id]);
         $categoryIds = $categories->reverse()->mapWithKeys(fn ($category) => [$this->key($category->name) => $category->id]);
+        $typeValues = array_values(array_map('strval', $state['found']['types']));
 
-        $typeValues = $this->distinct($rows, [$mapping['type'] ?? null]);
-        $accountValues = $this->distinct($rows, [$mapping['account'] ?? null, $mapping['to_account'] ?? null]);
-        $categoryValues = $this->distinct($rows, [$mapping['category'] ?? null]);
-
-        return $this->recordImportRepository->update($import, [
+        return ['import' => $this->recordImportRepository->update($import, [
             'mapping' => $mapping,
             'step' => RecordImportStep::Values->value,
             'choices' => [],
+            'progress' => null,
             'values' => [
                 'types' => [
-                    'found' => $typeValues->values()->all(),
-                    'suggestion' => $this->suggestTypeTexts($typeValues->values()->all()),
+                    'found' => $typeValues,
+                    'suggestion' => $this->suggestTypeTexts($typeValues),
                 ],
-                'accounts' => $accountValues->map(fn (string $value, string $key) => [
-                    'value' => $value,
+                'accounts' => collect($state['found']['accounts'])->map(fn ($value, $key) => [
+                    'value' => (string) $value,
                     'suggestion' => $accountIds->has($key) ? ['action' => 'existing', 'id' => $accountIds[$key]] : ['action' => 'create'],
                 ])->values()->all(),
-                'categories' => $categoryValues->map(fn (string $value, string $key) => [
-                    'value' => $value,
+                'categories' => collect($state['found']['categories'])->map(fn ($value, $key) => [
+                    'value' => (string) $value,
                     'suggestion' => $categoryIds->has($key) ? ['action' => 'existing', 'id' => $categoryIds[$key]] : ['action' => 'create'],
                 ])->values()->all(),
                 'existing_accounts' => $accounts->map->only(['id', 'name'])->values()->all(),
                 'existing_categories' => $categories->map(fn ($category) => ['id' => $category->id, 'name' => $category->name, 'type' => $category->type->value])->values()->all(),
             ],
-        ]);
+        ]), 'progress' => $progress];
     }
 
     /**
@@ -204,9 +217,11 @@ class RecordImportService
      * @param  array<string, string|null>  $types  The values of the type column that mean each record type, separated by commas (e.g. income => "Pemasukan, Masuk"). Values left out are recognized by name.
      * @param  array<int, array{value: string, action: string, id?: int|null, name?: string|null}>  $accounts
      * @param  array<int, array{value: string, action: string, id?: int|null, name?: string|null}>  $categories
-     * @return array{imported: int, skipped: int, errors: array<int, array{row: int, message: string}>, created_accounts: array<int, string>, created_categories: array<int, string>}
+     *                                                                                                           The file is worked through config('import.batch_size') rows per call: call again with the returned offset until it
+     *                                                                                                           is done. The result so far comes back every time, and the import is removed after the last batch.
+     * @return array{result: array{imported: int, skipped: int, errors: array<int, array{row: int, message: string}>, created_accounts: array<int, string>, created_categories: array<int, string>}, progress: array{offset: int, total: int, percent: int, done: bool}}
      */
-    public function import(RecordImport $import, array $types, array $accounts, array $categories, string $timezone): array
+    public function import(RecordImport $import, array $types, array $accounts, array $categories, string $timezone, int $offset = 0): array
     {
         $mapping = $import->mapping ?? [];
 
@@ -215,18 +230,25 @@ class RecordImportService
         }
 
         $rows = $this->readFile($import->path, 'import')['rows'];
+        $state = $this->stateFor($import, 'run', $offset, ['imported' => 0, 'skipped' => 0, 'errors' => [], 'created_accounts' => [], 'created_categories' => []], resume: true);
+
+        if ($offset !== $state['offset']) {
+            return ['result' => Arr::only($state, ['imported', 'skipped', 'errors', 'created_accounts', 'created_categories']), 'progress' => $this->progressOf($state['offset'], count($rows))];
+        }
+
+        $slice = array_slice($rows, $offset, $this->batchSize(), true);
         $accountMap = collect($accounts)->mapWithKeys(fn (array $entry) => [$this->key($entry['value']) => $entry]);
         $typeMap = $this->typeMap($types);
         $categoryMap = collect($categories)->mapWithKeys(fn (array $entry) => [$this->key($entry['value']) => $entry]);
         $accountIds = $this->accountRepository->allNamed()->mapWithKeys(fn ($account) => [$this->key($account->name) => $account->id])->all();
         $categoriesById = $this->categoryRepository->allNamed()->keyBy('id');
         $categoryIdsByNameAndType = $categoriesById->mapWithKeys(fn ($category) => [$this->key($category->name).'|'.$category->type->value => $category->id])->all();
-        $createdCategories = [];
 
-        $created = [];
-        $errors = [];
-        $imported = 0;
-        $skipped = 0;
+        $createdCategories = $state['created_categories'];
+        $created = $state['created_accounts'];
+        $errors = $state['errors'];
+        $imported = $state['imported'];
+        $skipped = $state['skipped'];
 
         $resolveAccount = function (?string $value) use ($accountMap, &$accountIds, &$created): int {
             $entry = $value === null ? null : $accountMap->get($this->key($value));
@@ -268,8 +290,8 @@ class RecordImportService
             return $categoryIdsByNameAndType[$key];
         };
 
-        $this->recordRepository->transaction(function () use ($rows, $mapping, $typeMap, $timezone, $resolveCategory, $resolveAccount, &$errors, &$imported, &$skipped): void {
-            foreach ($rows as $rowNumber => $row) {
+        $this->recordRepository->transaction(function () use ($slice, $mapping, $typeMap, $timezone, $resolveCategory, $resolveAccount, &$errors, &$imported, &$skipped): void {
+            foreach ($slice as $rowNumber => $row) {
                 $cell = fn (string $field) => isset($mapping[$field]) ? ($row[$mapping[$field]] ?? null) : null;
 
                 $recordedAt = $this->parseDate($cell('recorded_at'), $timezone);
@@ -310,15 +332,79 @@ class RecordImportService
             }
         });
 
-        $this->discard($import);
-
-        return [
+        $state = [
+            'offset' => $offset + count($slice),
             'imported' => $imported,
             'skipped' => $skipped,
             'errors' => array_slice($errors, 0, self::MAX_REPORTED_ERRORS),
             'created_accounts' => array_values(array_unique($created)),
             'created_categories' => array_values(array_unique($createdCategories)),
         ];
+        $progress = $this->progressOf($state['offset'], count($rows));
+
+        if ($progress['done']) {
+            $this->discard($import);
+        } else {
+            $this->recordImportRepository->update($import, ['progress' => ['phase' => 'run', ...$state]]);
+        }
+
+        return ['result' => Arr::only($state, ['imported', 'skipped', 'errors', 'created_accounts', 'created_categories']), 'progress' => $progress];
+    }
+
+    private function batchSize(): int
+    {
+        return max(1, (int) config('import.batch_size', 500));
+    }
+
+    /**
+     * The state of a batched step: what the previous batch left when continuing (offset above 0, or always
+     * with $resume, so a step with side effects is never started over), a fresh one otherwise. The caller
+     * compares its offset with the state's and carries on from the state's when they differ.
+     *
+     * @param  array<string, mixed>  $initial
+     * @return array<string, mixed>
+     */
+    private function stateFor(RecordImport $import, string $phase, int $offset, array $initial, bool $resume = false): array
+    {
+        $stored = $import->progress;
+
+        if (($stored['phase'] ?? null) === $phase && ($resume || $offset > 0)) {
+            return $stored;
+        }
+
+        return ['phase' => $phase, 'offset' => 0, ...$initial];
+    }
+
+    /**
+     * @return array{offset: int, total: int, percent: int, done: bool}
+     */
+    private function progressOf(int $offset, int $total): array
+    {
+        $offset = min($offset, $total);
+
+        return ['offset' => $offset, 'total' => $total, 'percent' => (int) floor($offset / max($total, 1) * 100), 'done' => $offset >= $total];
+    }
+
+    /**
+     * Read the first sheet of an uploaded file.
+     *
+     * @return array{header: array<int, string>, rows: array<int, array<int, string|int|float|null>>}
+     */
+    private function parseUpload(UploadedFile $file): array
+    {
+        try {
+            $sheet = $this->reader->read($file->getRealPath(), self::MAX_ROWS);
+        } catch (TooManyRowsException) {
+            throw ValidationException::withMessages(['file' => __('records.import.too_many_rows', ['max' => self::MAX_ROWS])]);
+        } catch (Throwable) {
+            throw ValidationException::withMessages(['file' => __('records.import.unreadable')]);
+        }
+
+        if ($sheet['rows'] === []) {
+            throw ValidationException::withMessages(['file' => __('records.import.empty')]);
+        }
+
+        return $sheet;
     }
 
     /**
@@ -330,6 +416,10 @@ class RecordImportService
 
         if (! $disk->exists($path)) {
             throw ValidationException::withMessages([$errorField => __('records.import.expired')]);
+        }
+
+        if (str_ends_with($path, '.json')) {
+            return json_decode($disk->get($path), true, flags: JSON_THROW_ON_ERROR);
         }
 
         try {

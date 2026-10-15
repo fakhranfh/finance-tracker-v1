@@ -19,8 +19,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property array<string, int|null>|null $mapping
  * @property array<string, mixed>|null $values
  * @property array<string, string>|null $choices
+ * @property array<string, mixed>|null $progress Where a batched step (scanning the values, importing) stopped.
  */
-#[Fillable(['user_id', 'filename', 'path', 'row_count', 'step', 'columns', 'sample', 'mapping', 'values', 'choices'])]
+#[Fillable(['user_id', 'filename', 'path', 'row_count', 'step', 'columns', 'sample', 'mapping', 'values', 'choices', 'progress'])]
 class RecordImport extends Model
 {
     use HasUserTimezone;
@@ -40,6 +41,7 @@ class RecordImport extends Model
             'mapping' => 'array',
             'values' => 'array',
             'choices' => 'array',
+            'progress' => 'array',
         ];
     }
 

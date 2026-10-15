@@ -47,20 +47,32 @@ class RecordImportController extends Controller
         return new RecordImportResource($this->recordImportService->save($this->findOrFail($request, $import), $request->validated()));
     }
 
-    public function values(RecordImportValuesRequest $request, int $import): RecordImportResource
+    public function values(RecordImportValuesRequest $request, int $import): JsonResponse
     {
-        return new RecordImportResource($this->recordImportService->loadValues($this->findOrFail($request, $import), $request->validated('mapping')));
+        $loaded = $this->recordImportService->loadValues(
+            $this->findOrFail($request, $import),
+            $request->validated('mapping'),
+            $request->integer('offset'),
+        );
+
+        return response()->json([
+            'data' => (new RecordImportResource($loaded['import']))->resolve(),
+            'progress' => $loaded['progress'],
+        ]);
     }
 
     public function run(ImportRecordsRequest $request, int $import): JsonResponse
     {
-        return response()->json(['data' => $this->recordImportService->import(
+        $ran = $this->recordImportService->import(
             $this->findOrFail($request, $import),
             $request->validated('types') ?? [],
             $request->validated('accounts'),
             $request->validated('categories'),
             $request->user()?->timezone ?: config('app.timezone', 'UTC'),
-        )]);
+            $request->integer('offset'),
+        );
+
+        return response()->json(['data' => $ran['result'], 'progress' => $ran['progress']]);
     }
 
     public function destroy(Request $request, int $import): Response

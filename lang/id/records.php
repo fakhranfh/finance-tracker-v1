@@ -174,6 +174,16 @@ return [
         'view_records' => 'Lihat catatan',
         'import_another' => 'Impor file lain',
         'failed' => 'Terjadi kesalahan.',
+        'progress' => [
+            'upload_title' => 'Mengunggah file',
+            'uploading' => 'Mengirim file ke server. Jangan tutup halaman ini.',
+            'reading' => 'File diterima. Membaca kolom dan barisnya...',
+            'values_title' => 'Membaca data kamu',
+            'values' => 'Mencari jenis, akun, dan kategori di dalam file supaya bisa kamu petakan berikutnya.',
+            'run_title' => 'Mengimpor catatan',
+            'run' => 'Membuat catatan, akun, dan kategori dari file kamu. Jangan tutup halaman ini sampai selesai.',
+            'rows' => ':done dari :total baris',
+        ],
         'errors' => [
             'invalid_date' => 'Tanggal tidak dapat dibaca.',
             'invalid_amount' => 'Jumlah tidak dapat dibaca atau di luar batas.',

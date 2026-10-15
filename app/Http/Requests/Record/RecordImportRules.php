@@ -13,6 +13,16 @@ final class RecordImportRules
     private const FIELDS = ['recorded_at', 'amount', 'type', 'account', 'to_account', 'category', 'note'];
 
     /**
+     * The row to continue a batched step from.
+     *
+     * @return array<string, array<mixed>>
+     */
+    public static function offset(): array
+    {
+        return ['offset' => ['sometimes', 'integer', 'min:0']];
+    }
+
+    /**
      * The column mapping to run with: the date and amount columns are required.
      *
      * @return array<string, array<mixed>>
@@ -20,6 +30,7 @@ final class RecordImportRules
     public static function mapping(): array
     {
         return [
+            ...self::offset(),
             'mapping' => ['required', 'array'],
             ...self::columnRules(['recorded_at', 'amount'], ['required', 'integer', 'min:0']),
             ...self::columnRules(array_diff(self::FIELDS, ['recorded_at', 'amount']), ['nullable', 'integer', 'min:0']),
@@ -47,6 +58,7 @@ final class RecordImportRules
     public static function values(): array
     {
         return [
+            ...self::offset(),
             'types' => ['present', 'array'],
             'types.income' => ['nullable', 'string', 'max:500'],
             'types.expense' => ['nullable', 'string', 'max:500'],

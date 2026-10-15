@@ -2,6 +2,7 @@ import { hideSnackbar } from '../shared/error-snackbar.js';
 import { clearFieldErrors, showFieldErrors, showGenericError, validateForm } from '../shared/field-errors.js';
 import { setButtonLoading } from '../shared/loading-state.js';
 import { formatDateTime } from '../shared/datetime.js';
+import { setProgress } from '../shared/progress-circle.js';
 import { closeModal, openModal } from '../shared/modal.js';
 import { del, get, post, put, upload } from '../shared/http.js';
 import { searchableSelect } from '../shared/searchable-select.js';
@@ -14,6 +15,7 @@ const fill = (template, values) => Object.entries(values).reduce((text, [key, va
 const STEPS = ['upload', 'columns', 'values', 'result'];
 const sections = Object.fromEntries(STEPS.map((step) => [step, document.getElementById(`import-step-${step}`)]));
 const skeleton = document.getElementById('import-skeleton');
+const progressView = document.getElementById('import-progress-view');
 const forms = {
     upload: document.getElementById('import-upload-form'),
     columns: document.getElementById('import-columns-form'),
@@ -40,12 +42,13 @@ function saveProgress(patch) {
     put(routes.records.importShow(state.id), patch).catch(() => {});
 }
 
-/** Show one step (or the loading skeleton when `step` is null) and say where the user is. */
+/** Show one step (the loading skeleton when `step` is null, the progress circle when it is 'progress') and say where the user is. */
 function show(step) {
     Object.values(sections).forEach((section) => section.classList.add('hidden'));
     skeleton.classList.toggle('hidden', step !== null);
+    progressView.classList.toggle('hidden', step !== 'progress');
 
-    if (step === null) {
+    if (step === null || step === 'progress') {
         return;
     }
 
@@ -247,6 +250,44 @@ function renderResult(result) {
     skipped.classList.toggle('hidden', result.skipped === 0);
 }
 
+/** Replace the page with the progress circle, saying what is going on. */
+function showProgress(title, description, percent = 0, detail = '') {
+    show('progress');
+    setProgress(progressView, { percent, title, description, detail });
+}
+
+/**
+ * Call a batched endpoint until the server says it is done, moving the progress circle along. The server
+ * answers with `progress` ({ offset, total, percent, done }); it carries on from its own offset, so a
+ * repeated or resumed call never does the same rows twice. Resolves to the last response, or the failed one.
+ */
+async function runBatches(url, payload, { title, description }) {
+    let offset = 0;
+
+    showProgress(title, description);
+
+    for (;;) {
+        const response = await post(url, { ...payload, offset });
+
+        if (!response.ok) {
+            return response;
+        }
+
+        const { progress } = response.data;
+
+        setProgress(progressView, {
+            percent: progress.percent,
+            detail: fill(labels.progress.rows, { done: progress.offset, total: progress.total }),
+        });
+
+        if (progress.done) {
+            return response;
+        }
+
+        offset = progress.offset;
+    }
+}
+
 /** Open an import where its saved progress left off. */
 function resume(item) {
     state.id = item.id;
@@ -359,14 +400,26 @@ forms.upload.addEventListener('submit', async (event) => {
     }
 
     try {
-        const { ok, status, data } = await upload(routes.records.imports, new FormData(forms.upload));
+        const formData = new FormData(forms.upload);
+
+        showProgress(labels.progress.uploadTitle, labels.progress.uploading);
+
+        const { ok, status, data } = await upload(routes.records.imports, formData, (percent) => {
+            // Once every byte is sent the server still reads the file, which cannot be measured.
+            setProgress(progressView, percent < 100
+                ? { percent }
+                : { percent: 99, description: labels.progress.reading });
+        });
 
         if (ok) {
+            setProgress(progressView, { percent: 100 });
             resume(data.data);
         } else {
+            show('upload');
             showFailure(forms.upload, status, data, 'file');
         }
     } catch {
+        show('upload');
         showGenericError(forms.upload, labels.failed, 'file');
     } finally {
         setButtonLoading(button, false);
@@ -383,10 +436,12 @@ forms.columns.addEventListener('submit', async (event) => {
     }
 
     state.mapping = currentMapping();
-    show(null);
 
     try {
-        const { ok, status, data } = await post(routes.records.importValues(state.id), { mapping: state.mapping });
+        const { ok, status, data } = await runBatches(routes.records.importValues(state.id), { mapping: state.mapping }, {
+            title: labels.progress.valuesTitle,
+            description: labels.progress.values,
+        });
 
         if (ok) {
             state.step = 'values';
@@ -428,10 +483,13 @@ forms.values.addEventListener('submit', async (event) => {
     }
 
     try {
-        const { ok, status, data } = await post(routes.records.importRun(state.id), {
+        const { ok, status, data } = await runBatches(routes.records.importRun(state.id), {
             types: Object.fromEntries(typeInputs.map((input) => [input.dataset.importType, input.value])),
             accounts: [...accountList.querySelectorAll('select')].map(choiceOf),
             categories: [...categoryList.querySelectorAll('select')].map(choiceOf),
+        }, {
+            title: labels.progress.runTitle,
+            description: labels.progress.run,
         });
 
         if (ok) {
@@ -441,9 +499,11 @@ forms.values.addEventListener('submit', async (event) => {
             renderResult(data.data);
             show('result');
         } else {
+            show('values');
             showFailure(forms.values, status, data, 'import');
         }
     } catch {
+        show('values');
         showGenericError(forms.values, labels.failed, 'import');
     } finally {
         setButtonLoading(button, false);

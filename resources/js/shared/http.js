@@ -75,8 +75,50 @@ export async function getAll(url) {
 
 export const post = (url, payload) => request(url, { method: 'POST', payload });
 
-/** POST a FormData body (e.g. a file upload). */
-export const upload = (url, formData) => request(url, { method: 'POST', payload: formData });
+/**
+ * POST a FormData body (e.g. a file upload). With `onProgress`, the percentage of the body sent
+ * (0-100) is reported while it goes out; fetch cannot do that, so this goes through XMLHttpRequest.
+ */
+export function upload(url, formData, onProgress) {
+    if (!onProgress) {
+        return request(url, { method: 'POST', payload: formData });
+    }
+
+    return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        const token = getApiToken();
+
+        xhr.open('POST', url);
+        xhr.setRequestHeader('Accept', 'application/json');
+        xhr.setRequestHeader('X-CSRF-TOKEN', csrfToken());
+        if (token) {
+            xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+        }
+
+        xhr.upload.addEventListener('progress', (event) => {
+            if (event.lengthComputable) {
+                onProgress((event.loaded / event.total) * 100);
+            }
+        });
+        xhr.addEventListener('error', () => reject(new Error('Network error')));
+        xhr.addEventListener('load', () => {
+            if (xhr.status === 401 && window.location.pathname !== routes.pages.login) {
+                clearApiToken();
+                window.location.href = routes.pages.login;
+            }
+
+            let data = {};
+            try {
+                data = JSON.parse(xhr.responseText);
+            } catch {
+                data = {};
+            }
+
+            resolve({ ok: xhr.status >= 200 && xhr.status < 300, status: xhr.status, data });
+        });
+        xhr.send(formData);
+    });
+}
 
 export const put = (url, payload) => request(url, { method: 'PUT', payload });
 

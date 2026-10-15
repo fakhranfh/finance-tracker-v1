@@ -20,6 +20,8 @@
 
         <x-organisms.record-import-skeleton id="import-skeleton" class="hidden" />
 
+        <x-organisms.progress-circle id="import-progress-view" class="hidden" />
+
         <section id="import-step-upload" class="space-y-6 rounded-lg border border-outline-variant bg-surface p-6">
             <div id="import-progress" class="hidden space-y-2">
                 <h2 class="font-heading text-title-md font-semibold text-on-surface">{{ __('records.import.resume_title') }}</h2>
