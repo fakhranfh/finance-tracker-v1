@@ -48,6 +48,9 @@
                     {{ __('records.actions.generate') }}
                 </x-atoms.button>
             @endif
+            <x-atoms.button href="{{ route('records.import') }}" variant="secondary" id="import-records">
+                {{ __('records.import.action') }}
+            </x-atoms.button>
             <x-atoms.button type="button" variant="secondary" data-export-format="xlsx">
                 {{ __('records.actions.export_excel') }}
             </x-atoms.button>

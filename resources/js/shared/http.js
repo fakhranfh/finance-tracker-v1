@@ -17,7 +17,10 @@ async function request(url, { method = 'GET', payload } = {}) {
         headers.Authorization = `Bearer ${token}`;
     }
 
-    if (payload !== undefined) {
+    const isForm = payload instanceof FormData;
+
+    // A FormData body sets its own multipart Content-Type (with the boundary).
+    if (payload !== undefined && !isForm) {
         headers['Content-Type'] = 'application/json';
     }
 
@@ -25,7 +28,7 @@ async function request(url, { method = 'GET', payload } = {}) {
         method,
         headers,
         credentials: 'same-origin',
-        body: payload !== undefined ? JSON.stringify(payload) : undefined,
+        body: payload === undefined || isForm ? payload : JSON.stringify(payload),
     });
 
     if (response.status === 401 && window.location.pathname !== routes.pages.login) {
@@ -71,6 +74,9 @@ export async function getAll(url) {
 }
 
 export const post = (url, payload) => request(url, { method: 'POST', payload });
+
+/** POST a FormData body (e.g. a file upload). */
+export const upload = (url, formData) => request(url, { method: 'POST', payload: formData });
 
 export const put = (url, payload) => request(url, { method: 'PUT', payload });
 

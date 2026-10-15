@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\RecordType;
+use Illuminate\Support\Facades\Lang;
 use Illuminate\View\View;
 
 class RecordPageController extends Controller
@@ -18,6 +19,14 @@ class RecordPageController extends Controller
         ]);
     }
 
+    public function import(): View
+    {
+        return view('records.import', [
+            'fields' => $this->importFields(),
+            'labels' => $this->importLabels(),
+        ]);
+    }
+
     public function create(): View
     {
         return view('records.form', ['id' => null, 'typeLabels' => $this->typeLabels()]);
@@ -26,6 +35,50 @@ class RecordPageController extends Controller
     public function edit(int $id): View
     {
         return view('records.form', ['id' => $id, 'typeLabels' => $this->typeLabels()]);
+    }
+
+    /**
+     * The record fields a spreadsheet column can be mapped to.
+     *
+     * @return array<int, array{key: string, label: string, hint: string|null, required: bool}>
+     */
+    private function importFields(): array
+    {
+        return collect(['recorded_at', 'amount', 'type', 'account', 'to_account', 'category', 'note'])
+            ->map(fn (string $key) => [
+                'key' => $key,
+                'label' => __("records.import.fields.{$key}"),
+                'hint' => Lang::has("records.import.field_hints.{$key}") ? __("records.import.field_hints.{$key}") : null,
+                'required' => in_array($key, ['recorded_at', 'amount'], true),
+            ])
+            ->all();
+    }
+
+    /**
+     * Texts the import page's JS shows.
+     *
+     * @return array<string, mixed>
+     */
+    private function importLabels(): array
+    {
+        return [
+            'steps' => array_values(__('records.import.steps')),
+            'stepLabel' => __('records.import.step_label', ['step' => ':step', 'total' => ':total', 'name' => ':name']),
+            'example' => __('records.import.example', ['value' => ':value']),
+            'createAccount' => __('records.import.create_account', ['name' => ':name']),
+            'existingAccounts' => __('records.import.existing_accounts'),
+            'unmappedAccount' => __('records.import.unmapped_account'),
+            'uncategorized' => __('records.fields.no_category'),
+            'createCategory' => __('records.import.create_category', ['name' => ':name']),
+            'createdCategories' => __('records.import.created_categories', ['names' => ':names']),
+            'incomeCategories' => __('records.import.income_categories'),
+            'expenseCategories' => __('records.import.expense_categories'),
+            'imported' => __('records.import.imported', ['count' => ':count']),
+            'skipped' => __('records.import.skipped', ['count' => ':count']),
+            'createdAccounts' => __('records.import.created_accounts', ['names' => ':names']),
+            'errorRow' => __('records.import.error_row', ['row' => ':row', 'message' => ':message']),
+            'failed' => __('records.import.failed'),
+        ];
     }
 
     /**

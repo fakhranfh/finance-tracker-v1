@@ -1628,6 +1628,178 @@
                 ]
             }
         },
+        "/records/import/preview": {
+            "post": {
+                "tags": [
+                    "Records"
+                ],
+                "summary": "Upload a spreadsheet to import records from",
+                "description": "Accepts an xlsx, xls or csv file (max 5 MB, 5000 rows; the first row is the header). Returns a token for the next steps, the columns, a few sample rows and the column each record field most likely comes from.",
+                "operationId": "8832db8aa2718b497ee7cc091b7c1dc8",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "properties": {
+                                    "file": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Token, columns, sample rows and suggested mapping"
+                    },
+                    "422": {
+                        "description": "Not a readable spreadsheet, empty, or too large"
+                    }
+                }
+            }
+        },
+        "/records/import/values": {
+            "post": {
+                "tags": [
+                    "Records"
+                ],
+                "summary": "List the accounts and categories found in the mapped columns",
+                "description": "Maps record fields to column indexes (recorded_at and amount are required). Returns each distinct account and category value of the file with the existing one it most likely stands for, and the existing accounts and categories to choose from.",
+                "operationId": "6614ef615d1d8ac35e1bae48222b4e56",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "token": {
+                                        "type": "string",
+                                        "example": "3f2b8c1e-0000-4000-8000-000000000000.xlsx"
+                                    },
+                                    "mapping": {
+                                        "type": "object",
+                                        "example": {
+                                            "recorded_at": 0,
+                                            "type": 1,
+                                            "account": 2,
+                                            "to_account": 3,
+                                            "category": 4,
+                                            "amount": 5,
+                                            "note": 6
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Distinct accounts and categories with suggestions"
+                    },
+                    "422": {
+                        "description": "Validation error or expired upload"
+                    }
+                }
+            }
+        },
+        "/records/import": {
+            "post": {
+                "tags": [
+                    "Records"
+                ],
+                "summary": "Import the uploaded spreadsheet as records",
+                "description": "Accounts are mapped to an existing account (\"existing\" with id), created (\"create\", named after the value unless a name is given) or sent to the \"Unmapped\" account (\"unmapped\"); rows without an account also go there. Categories are mapped to an existing category (\"existing\" with id), created (\"create\", named after the value unless a name is given, one per record type) or left uncategorized (\"none\"); an existing category of another type than the record is swapped for the same-named one of the record type, created if missing. Invalid rows are skipped and reported. Without a type column the amount sign decides: negative is an expense.",
+                "operationId": "c019bdb57b4df62e530c517cce7fe76e",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "token": {
+                                        "type": "string"
+                                    },
+                                    "mapping": {
+                                        "type": "object"
+                                    },
+                                    "accounts": {
+                                        "type": "array",
+                                        "items": {
+                                            "properties": {
+                                                "value": {
+                                                    "type": "string",
+                                                    "example": "BCA"
+                                                },
+                                                "action": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "existing",
+                                                        "create",
+                                                        "unmapped"
+                                                    ]
+                                                },
+                                                "id": {
+                                                    "type": "integer",
+                                                    "nullable": true
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "nullable": true
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "categories": {
+                                        "type": "array",
+                                        "items": {
+                                            "properties": {
+                                                "value": {
+                                                    "type": "string",
+                                                    "example": "Food"
+                                                },
+                                                "action": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "existing",
+                                                        "create",
+                                                        "none"
+                                                    ]
+                                                },
+                                                "id": {
+                                                    "type": "integer",
+                                                    "nullable": true
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "nullable": true
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Imported and skipped counts, skipped rows with reasons, created accounts"
+                    },
+                    "422": {
+                        "description": "Validation error or expired upload"
+                    }
+                }
+            }
+        },
         "/records": {
             "get": {
                 "tags": [

@@ -5,6 +5,7 @@ namespace App\Repositories\Category;
 use App\Models\Category;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 
 class CategoryRepository implements CategoryRepositoryInterface
 {
@@ -80,8 +81,13 @@ class CategoryRepository implements CategoryRepositoryInterface
         $category->delete();
     }
 
-    public function namesOf(array $ids): \Illuminate\Support\Collection
+    public function namesOf(array $ids): Collection
     {
         return Category::query()->whereIn('id', $ids)->pluck('name');
+    }
+
+    public function allNamed(): Collection
+    {
+        return Category::query()->orderBy('name')->get(['id', 'name', 'type']);
     }
 }

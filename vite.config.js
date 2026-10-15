@@ -22,6 +22,7 @@ export default defineConfig({
                 'resources/js/accounts/summary.js',
                 'resources/js/records/index.js',
                 'resources/js/records/form.js',
+                'resources/js/records/import.js',
                 'resources/js/categories/index.js',
                 'resources/js/categories/form.js',
                 'resources/js/goals/index.js',

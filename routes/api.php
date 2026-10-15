@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\GoalController;
 use App\Http\Controllers\Api\GoalSavingController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\RecordController;
+use App\Http\Controllers\Api\RecordImportController;
 use App\Http\Controllers\Api\SubGoalController;
 use App\Http\Middleware\EnsureLocalEnvironment;
 use App\Http\Middleware\EnsureNoUsersExist;
@@ -64,6 +65,9 @@ Route::middleware('web')->name('api.')->group(function (): void {
         Route::get('/records/export/{format}', [RecordController::class, 'export'])
             ->whereIn('format', ['xlsx', 'pdf'])
             ->name('records.export');
+        Route::post('/records/import/preview', [RecordImportController::class, 'preview'])->name('records.import.preview');
+        Route::post('/records/import/values', [RecordImportController::class, 'values'])->name('records.import.values');
+        Route::post('/records/import', [RecordImportController::class, 'store'])->name('records.import.store');
         Route::get('/records/summary', [RecordController::class, 'summary'])->name('records.summary');
         Route::delete('/records', [RecordController::class, 'bulkDestroy'])->name('records.bulk-destroy');
         Route::post('/records/generate', [RecordController::class, 'generate'])

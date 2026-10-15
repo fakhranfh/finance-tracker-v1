@@ -4,6 +4,7 @@ namespace App\Repositories\Category;
 
 use App\Models\Category;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 
 interface CategoryRepositoryInterface
 {
@@ -57,7 +58,14 @@ interface CategoryRepositoryInterface
      * The names of the given categories.
      *
      * @param  array<int, int|string>  $ids
-     * @return \Illuminate\Support\Collection<int, string>
+     * @return Collection<int, string>
      */
-    public function namesOf(array $ids): \Illuminate\Support\Collection;
+    public function namesOf(array $ids): Collection;
+
+    /**
+     * Every category's ID, name and type, by name.
+     *
+     * @return Collection<int, Category>
+     */
+    public function allNamed(): Collection;
 }

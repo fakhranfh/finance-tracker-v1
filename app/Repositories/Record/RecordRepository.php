@@ -4,6 +4,7 @@ namespace App\Repositories\Record;
 
 use App\Enums\RecordType;
 use App\Models\Record;
+use App\Repositories\Concerns\RunsTransactions;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
@@ -12,6 +13,8 @@ use Illuminate\Support\LazyCollection;
 
 class RecordRepository implements RecordRepositoryInterface
 {
+    use RunsTransactions;
+
     public function find(int $id): ?Record
     {
         return Record::query()->with(['account', 'toAccount', 'category'])->find($id);

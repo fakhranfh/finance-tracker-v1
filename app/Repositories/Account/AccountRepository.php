@@ -5,6 +5,7 @@ namespace App\Repositories\Account;
 use App\Models\Account;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class AccountRepository implements AccountRepositoryInterface
@@ -118,8 +119,13 @@ class AccountRepository implements AccountRepositoryInterface
         return (int) (Account::query()->max('sort_order') ?? 0) + 1;
     }
 
-    public function namesOf(array $ids): \Illuminate\Support\Collection
+    public function namesOf(array $ids): Collection
     {
         return Account::query()->whereIn('id', $ids)->pluck('name');
+    }
+
+    public function allNamed(): Collection
+    {
+        return Account::query()->orderBy('name')->get(['id', 'name']);
     }
 }

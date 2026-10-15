@@ -4,6 +4,7 @@ namespace App\Repositories\Account;
 
 use App\Models\Account;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 
 interface AccountRepositoryInterface
 {
@@ -78,7 +79,14 @@ interface AccountRepositoryInterface
      * The names of the given accounts.
      *
      * @param  array<int, int>  $ids
-     * @return \Illuminate\Support\Collection<int, string>
+     * @return Collection<int, string>
      */
-    public function namesOf(array $ids): \Illuminate\Support\Collection;
+    public function namesOf(array $ids): Collection;
+
+    /**
+     * Every account's ID and name, by name.
+     *
+     * @return Collection<int, Account>
+     */
+    public function allNamed(): Collection;
 }

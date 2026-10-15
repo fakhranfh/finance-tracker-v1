@@ -93,4 +93,14 @@ interface RecordRepositoryInterface
      * Delete every record that touches the account, one by one so the record observer still syncs balances and totals.
      */
     public function deleteAllForAccount(int $accountId): void;
+
+    /**
+     * Run the callback inside a database transaction and return its result.
+     *
+     * @template T
+     *
+     * @param  \Closure(): T  $callback
+     * @return T
+     */
+    public function transaction(\Closure $callback): mixed;
 }

@@ -46,6 +46,9 @@ export const routes = {
         generate: endpoint('/records/generate'),
         summary: endpoint('/records/summary'),
         export: (format) => endpoint(`/records/export/${format}`),
+        importPreview: endpoint('/records/import/preview'),
+        importValues: endpoint('/records/import/values'),
+        import: endpoint('/records/import'),
     },
     categories: {
         index: endpoint('/categories'),
@@ -83,6 +86,7 @@ export const routes = {
         accountSummary: (id) => `/accounts/${id}/summary`,
         records: '/records',
         recordCreate: '/records/create',
+        recordImport: '/records/import',
         recordEdit: (id) => `/records/${id}/edit`,
         categories: '/categories',
         categoryCreate: '/categories/create',

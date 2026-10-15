@@ -60,6 +60,7 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::get('/accounts/{id}/summary', [AccountPageController::class, 'summary'])->name('accounts.summary');
 
     Route::get('/records', [RecordPageController::class, 'index'])->name('records.index');
+    Route::get('/records/import', [RecordPageController::class, 'import'])->name('records.import');
     Route::get('/records/create', [RecordPageController::class, 'create'])->name('records.create');
     Route::get('/records/{id}/edit', [RecordPageController::class, 'edit'])->name('records.edit');
 
