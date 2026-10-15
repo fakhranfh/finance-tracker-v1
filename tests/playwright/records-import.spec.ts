@@ -17,8 +17,8 @@ async function createAccount(page, name: string) {
     await expect(page).toHaveURL('/accounts');
 }
 
-function csvFile(rows: string[]) {
-    return { name: 'records.csv', mimeType: 'text/csv', buffer: Buffer.from(rows.join('\n')) };
+function csvFile(rows: string[], name = 'records.csv') {
+    return { name, mimeType: 'text/csv', buffer: Buffer.from(rows.join('\n')) };
 }
 
 test.describe('Import records', () => {
@@ -93,6 +93,63 @@ test.describe('Import records', () => {
 
         await page.getByRole('link', { name: 'View records' }).click();
         await expect(page.getByRole('row', { name: new RegExp(`e2e unmapped ${stamp}`) })).toContainText('Unmapped');
+    });
+
+    test('keeps progress on the server and lets several imports stay open', async ({ page }) => {
+        const { email, password } = seedUser();
+        const stamp = Date.now();
+        const firstName = `first-${stamp}.csv`;
+        const secondName = `second-${stamp}.csv`;
+
+        await login(page, email, password);
+        await page.goto('/records/import');
+
+        await page.locator('#file').setInputFiles(csvFile(['Date,Account,Amount', `2026-10-05,Resume Bank ${stamp},1000`], firstName));
+        await page.getByRole('button', { name: 'Upload and continue' }).click();
+        await expect(page.getByText('Step 2 of 4')).toBeVisible();
+        await expect(page).toHaveURL(/\/records\/import\?import=\d+$/);
+
+        // A reload resumes the same import at the same step.
+        await page.reload();
+        await expect(page.getByText('Step 2 of 4')).toBeVisible();
+        await expect(page.locator('[data-import-field="account"]')).toHaveValue('1');
+
+        await page.getByRole('button', { name: 'Continue', exact: true }).click();
+        await expect(page.getByText('Step 3 of 4')).toBeVisible();
+        await page.getByLabel(`Resume Bank ${stamp}`, { exact: true }).fill('unmapped');
+        await page.getByRole('option', { name: 'Unmapped account' }).click();
+        // Wait for the choice to be saved before leaving.
+        await page.waitForResponse((response) => response.request().method() === 'PUT' && response.url().includes('/api/records/imports/'));
+
+        // Start a second import while the first is unfinished.
+        await page.goto('/records/import');
+        await expect(page.getByRole('heading', { name: 'Imports in progress' })).toBeVisible();
+        await expect(page.getByText(firstName)).toBeVisible();
+
+        await page.locator('#file').setInputFiles(csvFile(['Date,Amount', '2026-10-06,500'], secondName));
+        await page.getByRole('button', { name: 'Upload and continue' }).click();
+        await expect(page.getByText('Step 2 of 4')).toBeVisible();
+
+        await page.getByRole('button', { name: 'Back', exact: true }).click();
+        await expect(page.getByText('Step 1 of 4')).toBeVisible();
+        await expect(page.getByText(firstName)).toBeVisible();
+        await expect(page.getByText(secondName)).toBeVisible();
+
+        // Discard the second one.
+        await page.getByRole('button', { name: `Discard: ${secondName}` }).click();
+        await page.locator('#confirm-discard-import').click();
+        await expect(page.getByText(secondName)).toHaveCount(0);
+
+        // The first one is still at step 3 with its choice.
+        await page.getByRole('button', { name: `Resume: ${firstName}` }).click();
+        await expect(page.getByText('Step 3 of 4')).toBeVisible();
+        await expect(page.locator(`select[data-value="Resume Bank ${stamp}"]`)).toHaveValue('unmapped');
+
+        await page.getByRole('button', { name: 'Import records' }).click();
+        await expect(page.getByText('1 records imported.')).toBeVisible();
+
+        await page.goto('/records/import');
+        await expect(page.getByText(firstName)).toHaveCount(0);
     });
 
     test('requires the date and amount columns', async ({ page }) => {

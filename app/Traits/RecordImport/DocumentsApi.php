@@ -10,10 +10,19 @@ use OpenApi\Attributes as OA;
  */
 trait DocumentsApi
 {
+    #[OA\Get(
+        path: '/records/imports',
+        summary: 'List unfinished record imports',
+        description: 'The current user\'s uploads that have not been imported or discarded, most recently worked on first. Any number can be open at once.',
+        tags: ['Records'],
+        responses: [new OA\Response(response: 200, description: 'Unfinished imports (id, filename, step, row_count, updated_at)')]
+    )]
+    private function documentIndexEndpoint(): void {}
+
     #[OA\Post(
-        path: '/records/import/preview',
+        path: '/records/imports',
         summary: 'Upload a spreadsheet to import records from',
-        description: 'Accepts an xlsx, xls or csv file (max 5 MB, 5000 rows; the first row is the header). Returns a token for the next steps, the columns, a few sample rows and the column each record field most likely comes from.',
+        description: 'Accepts an xlsx, xls or csv file (max 5 MB, 5000 rows; the first row is the header) and starts a new import at the columns step. The response holds the columns, a few sample rows and the mapping the column names suggest.',
         tags: ['Records'],
         requestBody: new OA\RequestBody(
             required: true,
@@ -23,22 +32,57 @@ trait DocumentsApi
             )
         ),
         responses: [
-            new OA\Response(response: 200, description: 'Token, columns, sample rows and suggested mapping'),
+            new OA\Response(response: 201, description: 'The new import'),
             new OA\Response(response: 422, description: 'Not a readable spreadsheet, empty, or too large'),
         ]
     )]
-    private function documentPreviewEndpoint(): void {}
+    private function documentStoreEndpoint(): void {}
+
+    #[OA\Get(
+        path: '/records/imports/{id}',
+        summary: 'Show an unfinished import with its saved progress',
+        tags: ['Records'],
+        parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],
+        responses: [
+            new OA\Response(response: 200, description: 'Step, columns, sample, mapping, values and choices'),
+            new OA\Response(response: 404, description: 'Not found, or not the user\'s import'),
+        ]
+    )]
+    private function documentShowEndpoint(): void {}
+
+    #[OA\Put(
+        path: '/records/imports/{id}',
+        summary: 'Save the progress of an import',
+        description: 'Any of step (columns or values; values only once the values are loaded), mapping (record field to column index, or null) and choices (what was picked for each account and category).',
+        tags: ['Records'],
+        parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],
+        requestBody: new OA\RequestBody(
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: 'step', type: 'string', enum: ['columns', 'values']),
+                    new OA\Property(property: 'mapping', type: 'object', example: ['recorded_at' => 0, 'amount' => 5, 'note' => null]),
+                    new OA\Property(property: 'choices', type: 'object'),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: 'The import'),
+            new OA\Response(response: 404, description: 'Not found'),
+            new OA\Response(response: 422, description: 'Validation error'),
+        ]
+    )]
+    private function documentUpdateEndpoint(): void {}
 
     #[OA\Post(
-        path: '/records/import/values',
-        summary: 'List the accounts and categories found in the mapped columns',
-        description: 'Maps record fields to column indexes (recorded_at and amount are required). Returns each distinct account and category value of the file with the existing one it most likely stands for, and the existing accounts and categories to choose from.',
+        path: '/records/imports/{id}/values',
+        summary: 'Map the columns and list the accounts and categories found in them',
+        description: 'Stores the mapping (recorded_at and amount are required), then returns each distinct account and category value of the file with the existing one it most likely stands for, plus the existing accounts and categories to choose from, and moves the import to the values step.',
         tags: ['Records'],
+        parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
                 properties: [
-                    new OA\Property(property: 'token', type: 'string', example: '3f2b8c1e-0000-4000-8000-000000000000.xlsx'),
                     new OA\Property(
                         property: 'mapping',
                         type: 'object',
@@ -48,23 +92,23 @@ trait DocumentsApi
             )
         ),
         responses: [
-            new OA\Response(response: 200, description: 'Distinct accounts and categories with suggestions'),
-            new OA\Response(response: 422, description: 'Validation error or expired upload'),
+            new OA\Response(response: 200, description: 'The import with its values'),
+            new OA\Response(response: 404, description: 'Not found'),
+            new OA\Response(response: 422, description: 'Validation error or the file is gone'),
         ]
     )]
     private function documentValuesEndpoint(): void {}
 
     #[OA\Post(
-        path: '/records/import',
+        path: '/records/imports/{id}/run',
         summary: 'Import the uploaded spreadsheet as records',
-        description: 'Accounts are mapped to an existing account ("existing" with id), created ("create", named after the value unless a name is given) or sent to the "Unmapped" account ("unmapped"); rows without an account also go there. Categories are mapped to an existing category ("existing" with id), created ("create", named after the value unless a name is given, one per record type) or left uncategorized ("none"); an existing category of another type than the record is swapped for the same-named one of the record type, created if missing. Invalid rows are skipped and reported. Without a type column the amount sign decides: negative is an expense.',
+        description: 'Accounts are mapped to an existing account ("existing" with id), created ("create", named after the value unless a name is given) or sent to the "Unmapped" account ("unmapped"); rows without an account also go there. Categories are mapped to an existing category, created (one per record type) or left uncategorized ("none"); an existing category of another type than the record is swapped for the same-named one of the record type, created if missing. Invalid rows are skipped and reported. Without a type column the amount sign decides: negative is an expense. The import is removed afterwards.',
         tags: ['Records'],
+        parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
                 properties: [
-                    new OA\Property(property: 'token', type: 'string'),
-                    new OA\Property(property: 'mapping', type: 'object'),
                     new OA\Property(
                         property: 'accounts',
                         type: 'array',
@@ -89,9 +133,22 @@ trait DocumentsApi
             )
         ),
         responses: [
-            new OA\Response(response: 200, description: 'Imported and skipped counts, skipped rows with reasons, created accounts'),
-            new OA\Response(response: 422, description: 'Validation error or expired upload'),
+            new OA\Response(response: 200, description: 'Imported and skipped counts, skipped rows with reasons, created accounts and categories'),
+            new OA\Response(response: 404, description: 'Not found'),
+            new OA\Response(response: 422, description: 'Validation error or the file is gone'),
         ]
     )]
-    private function documentStoreEndpoint(): void {}
+    private function documentRunEndpoint(): void {}
+
+    #[OA\Delete(
+        path: '/records/imports/{id}',
+        summary: 'Discard an unfinished import and its file',
+        tags: ['Records'],
+        parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],
+        responses: [
+            new OA\Response(response: 204, description: 'Import discarded'),
+            new OA\Response(response: 404, description: 'Not found'),
+        ]
+    )]
+    private function documentDestroyEndpoint(): void {}
 }

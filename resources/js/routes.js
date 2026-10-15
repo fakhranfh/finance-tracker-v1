@@ -46,9 +46,10 @@ export const routes = {
         generate: endpoint('/records/generate'),
         summary: endpoint('/records/summary'),
         export: (format) => endpoint(`/records/export/${format}`),
-        importPreview: endpoint('/records/import/preview'),
-        importValues: endpoint('/records/import/values'),
-        import: endpoint('/records/import'),
+        imports: endpoint('/records/imports'),
+        importShow: (id) => endpoint(`/records/imports/${id}`),
+        importValues: (id) => endpoint(`/records/imports/${id}/values`),
+        importRun: (id) => endpoint(`/records/imports/${id}/run`),
     },
     categories: {
         index: endpoint('/categories'),

@@ -1628,14 +1628,27 @@
                 ]
             }
         },
-        "/records/import/preview": {
+        "/records/imports": {
+            "get": {
+                "tags": [
+                    "Records"
+                ],
+                "summary": "List unfinished record imports",
+                "description": "The current user's uploads that have not been imported or discarded, most recently worked on first. Any number can be open at once.",
+                "operationId": "ce1c063c1d3b36c70d0ef3cc9debda1d",
+                "responses": {
+                    "200": {
+                        "description": "Unfinished imports (id, filename, step, row_count, updated_at)"
+                    }
+                }
+            },
             "post": {
                 "tags": [
                     "Records"
                 ],
                 "summary": "Upload a spreadsheet to import records from",
-                "description": "Accepts an xlsx, xls or csv file (max 5 MB, 5000 rows; the first row is the header). Returns a token for the next steps, the columns, a few sample rows and the column each record field most likely comes from.",
-                "operationId": "8832db8aa2718b497ee7cc091b7c1dc8",
+                "description": "Accepts an xlsx, xls or csv file (max 5 MB, 5000 rows; the first row is the header) and starts a new import at the columns step. The response holds the columns, a few sample rows and the mapping the column names suggest.",
+                "operationId": "e0a28bed7b9d07091fc07696efecf1d5",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -1653,8 +1666,8 @@
                     }
                 },
                 "responses": {
-                    "200": {
-                        "description": "Token, columns, sample rows and suggested mapping"
+                    "201": {
+                        "description": "The new import"
                     },
                     "422": {
                         "description": "Not a readable spreadsheet, empty, or too large"
@@ -1662,24 +1675,140 @@
                 }
             }
         },
-        "/records/import/values": {
+        "/records/imports/{id}": {
+            "get": {
+                "tags": [
+                    "Records"
+                ],
+                "summary": "Show an unfinished import with its saved progress",
+                "operationId": "254ffb19002241c9c461fd351b1e2fa6",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Step, columns, sample, mapping, values and choices"
+                    },
+                    "404": {
+                        "description": "Not found, or not the user's import"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Records"
+                ],
+                "summary": "Save the progress of an import",
+                "description": "Any of step (columns or values; values only once the values are loaded), mapping (record field to column index, or null) and choices (what was picked for each account and category).",
+                "operationId": "87645607af64b23441dea19f494825fa",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "step": {
+                                        "type": "string",
+                                        "enum": [
+                                            "columns",
+                                            "values"
+                                        ]
+                                    },
+                                    "mapping": {
+                                        "type": "object",
+                                        "example": {
+                                            "recorded_at": 0,
+                                            "amount": 5,
+                                            "note": null
+                                        }
+                                    },
+                                    "choices": {
+                                        "type": "object"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The import"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Records"
+                ],
+                "summary": "Discard an unfinished import and its file",
+                "operationId": "52c1992fb43b0f4af4b7fe067f24139c",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Import discarded"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                }
+            }
+        },
+        "/records/imports/{id}/values": {
             "post": {
                 "tags": [
                     "Records"
                 ],
-                "summary": "List the accounts and categories found in the mapped columns",
-                "description": "Maps record fields to column indexes (recorded_at and amount are required). Returns each distinct account and category value of the file with the existing one it most likely stands for, and the existing accounts and categories to choose from.",
-                "operationId": "6614ef615d1d8ac35e1bae48222b4e56",
+                "summary": "Map the columns and list the accounts and categories found in them",
+                "description": "Stores the mapping (recorded_at and amount are required), then returns each distinct account and category value of the file with the existing one it most likely stands for, plus the existing accounts and categories to choose from, and moves the import to the values step.",
+                "operationId": "241bd1fd113108b00288b4493dbf2fb6",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
                 "requestBody": {
                     "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
                                 "properties": {
-                                    "token": {
-                                        "type": "string",
-                                        "example": "3f2b8c1e-0000-4000-8000-000000000000.xlsx"
-                                    },
                                     "mapping": {
                                         "type": "object",
                                         "example": {
@@ -1700,34 +1829,41 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Distinct accounts and categories with suggestions"
+                        "description": "The import with its values"
+                    },
+                    "404": {
+                        "description": "Not found"
                     },
                     "422": {
-                        "description": "Validation error or expired upload"
+                        "description": "Validation error or the file is gone"
                     }
                 }
             }
         },
-        "/records/import": {
+        "/records/imports/{id}/run": {
             "post": {
                 "tags": [
                     "Records"
                 ],
                 "summary": "Import the uploaded spreadsheet as records",
-                "description": "Accounts are mapped to an existing account (\"existing\" with id), created (\"create\", named after the value unless a name is given) or sent to the \"Unmapped\" account (\"unmapped\"); rows without an account also go there. Categories are mapped to an existing category (\"existing\" with id), created (\"create\", named after the value unless a name is given, one per record type) or left uncategorized (\"none\"); an existing category of another type than the record is swapped for the same-named one of the record type, created if missing. Invalid rows are skipped and reported. Without a type column the amount sign decides: negative is an expense.",
-                "operationId": "c019bdb57b4df62e530c517cce7fe76e",
+                "description": "Accounts are mapped to an existing account (\"existing\" with id), created (\"create\", named after the value unless a name is given) or sent to the \"Unmapped\" account (\"unmapped\"); rows without an account also go there. Categories are mapped to an existing category, created (one per record type) or left uncategorized (\"none\"); an existing category of another type than the record is swapped for the same-named one of the record type, created if missing. Invalid rows are skipped and reported. Without a type column the amount sign decides: negative is an expense. The import is removed afterwards.",
+                "operationId": "6dcd31ee5da9de30e3497eed3c62df3c",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
                 "requestBody": {
                     "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
                                 "properties": {
-                                    "token": {
-                                        "type": "string"
-                                    },
-                                    "mapping": {
-                                        "type": "object"
-                                    },
                                     "accounts": {
                                         "type": "array",
                                         "items": {
@@ -1792,10 +1928,13 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Imported and skipped counts, skipped rows with reasons, created accounts"
+                        "description": "Imported and skipped counts, skipped rows with reasons, created accounts and categories"
+                    },
+                    "404": {
+                        "description": "Not found"
                     },
                     "422": {
-                        "description": "Validation error or expired upload"
+                        "description": "Validation error or the file is gone"
                     }
                 }
             }

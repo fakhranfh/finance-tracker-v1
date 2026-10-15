@@ -1,7 +1,9 @@
 import { hideSnackbar } from '../shared/error-snackbar.js';
 import { clearFieldErrors, showFieldErrors, showGenericError, validateForm } from '../shared/field-errors.js';
 import { setButtonLoading } from '../shared/loading-state.js';
-import { post, upload } from '../shared/http.js';
+import { formatDateTime } from '../shared/datetime.js';
+import { closeModal, openModal } from '../shared/modal.js';
+import { del, get, post, put, upload } from '../shared/http.js';
 import { searchableSelect } from '../shared/searchable-select.js';
 import { routes } from '../routes.js';
 
@@ -20,21 +22,44 @@ const forms = {
 const fieldSelects = [...forms.columns.querySelectorAll('[data-import-field]')];
 const fieldPickers = fieldSelects.map((select) => searchableSelect(select));
 
-const state = { token: null, columns: [], sample: [], mapping: {} };
+/**
+ * The import being worked on. Its progress (step, column choices, value choices) lives on the server,
+ * so it survives a reload, a closed tab and another device, and several imports can be open at once.
+ */
+const state = { id: null, step: null, columns: [], sample: [], mapping: {} };
+
+function setUrl(id) {
+    history.replaceState(null, '', id ? `${routes.pages.recordImport}?import=${id}` : routes.pages.recordImport);
+}
+
+function saveProgress(patch) {
+    if (state.id === null) {
+        return;
+    }
+
+    put(routes.records.importShow(state.id), patch).catch(() => {});
+}
 
 /** Show one step (or the loading skeleton when `step` is null) and say where the user is. */
 function show(step) {
     Object.values(sections).forEach((section) => section.classList.add('hidden'));
     skeleton.classList.toggle('hidden', step !== null);
 
-    if (step !== null) {
-        sections[step].classList.remove('hidden');
-        document.getElementById('import-step-label').textContent = fill(labels.stepLabel, {
-            step: STEPS.indexOf(step) + 1,
-            total: STEPS.length,
-            name: labels.steps[STEPS.indexOf(step)],
-        });
+    if (step === null) {
+        return;
     }
+
+    if ((step === 'columns' || step === 'values') && state.step !== step) {
+        state.step = step;
+        saveProgress({ step });
+    }
+
+    sections[step].classList.remove('hidden');
+    document.getElementById('import-step-label').textContent = fill(labels.stepLabel, {
+        step: STEPS.indexOf(step) + 1,
+        total: STEPS.length,
+        name: labels.steps[STEPS.indexOf(step)],
+    });
 }
 
 function beginSubmit(form) {
@@ -76,23 +101,29 @@ function showExample(select) {
     target.textContent = example === '' ? '' : fill(labels.example, { value: example });
 }
 
-function renderColumns(preview) {
-    state.token = preview.token;
-    state.columns = preview.columns;
-    state.sample = preview.sample;
+function currentMapping() {
+    return Object.fromEntries(fieldSelects.map((select) => [select.dataset.importField, select.value === '' ? null : Number(select.value)]));
+}
+
+function renderColumns(item) {
+    state.columns = item.columns;
+    state.sample = item.sample;
 
     fieldSelects.forEach((select) => {
         select.replaceChildren(
             select.options[0],
-            ...preview.columns.map((column) => new Option(column.name, column.index)),
+            ...item.columns.map((column) => new Option(column.name, column.index)),
         );
-        select.value = preview.suggested_mapping[select.dataset.importField] ?? '';
+        select.value = item.mapping[select.dataset.importField] ?? '';
         showExample(select);
     });
     fieldPickers.forEach((picker) => picker.refresh());
 }
 
-fieldSelects.forEach((select) => select.addEventListener('change', () => showExample(select)));
+fieldSelects.forEach((select) => select.addEventListener('change', () => {
+    showExample(select);
+    saveProgress({ mapping: currentMapping() });
+}));
 
 let valueRowCount = 0;
 
@@ -120,11 +151,28 @@ function optionGroup(label, options) {
     return group;
 }
 
-function renderValues(values) {
-    const accountList = document.getElementById('import-accounts-list');
-    const categoryList = document.getElementById('import-categories-list');
+const accountList = document.getElementById('import-accounts-list');
+const categoryList = document.getElementById('import-categories-list');
+const choiceKey = (list, select) => `${list.dataset.importList}|${select.dataset.value}`;
 
-    const pickers = [];
+function saveChoices() {
+    saveProgress({
+        choices: Object.fromEntries(
+            [accountList, categoryList].flatMap((list) => [...list.querySelectorAll('select')].map((select) => [choiceKey(list, select), select.value])),
+        ),
+    });
+}
+
+[accountList, categoryList].forEach((list) => list.addEventListener('change', saveChoices));
+
+function renderValues(values, choices = {}) {
+    const restore = (list, select) => {
+        const saved = choices[choiceKey(list, select)];
+
+        if (saved !== undefined && [...select.options].some((option) => option.value === saved)) {
+            select.value = saved;
+        }
+    };
 
     accountList.replaceChildren(...values.accounts.map((entry) => {
         const select = document.createElement('select');
@@ -136,10 +184,10 @@ function renderValues(values) {
             new Option(labels.unmappedAccount, 'unmapped'),
         );
         select.value = entry.suggestion.action === 'existing' ? `existing:${entry.suggestion.id}` : 'create';
+        restore(accountList, select);
 
         return valueRow(entry.value, select);
     }));
-    pickers.push(...accountList.querySelectorAll('select'));
     document.getElementById('import-accounts-empty').classList.toggle('hidden', values.accounts.length > 0);
 
     const categoryOptions = (type) => values.existing_categories
@@ -157,24 +205,24 @@ function renderValues(values) {
             optionGroup(labels.expenseCategories, categoryOptions('expense')),
         );
         select.value = entry.suggestion.action === 'existing' ? String(entry.suggestion.id) : 'create';
+        restore(categoryList, select);
 
         return valueRow(entry.value, select);
     }));
-    pickers.push(...categoryList.querySelectorAll('select'));
-    pickers.forEach((select) => searchableSelect(select));
     document.getElementById('import-categories-empty').classList.toggle('hidden', values.categories.length > 0);
+
+    [accountList, categoryList].forEach((list) => list.querySelectorAll('select').forEach((select) => searchableSelect(select)));
 }
 
 function renderResult(result) {
     const accounts = document.getElementById('import-result-accounts');
+    const categories = document.getElementById('import-result-categories');
     const skipped = document.getElementById('import-result-skipped');
 
     document.getElementById('import-result-imported').textContent = fill(labels.imported, { count: result.imported });
 
     accounts.textContent = fill(labels.createdAccounts, { names: result.created_accounts.join(', ') });
     accounts.classList.toggle('hidden', result.created_accounts.length === 0);
-
-    const categories = document.getElementById('import-result-categories');
 
     categories.textContent = fill(labels.createdCategories, { names: result.created_categories.join(', ') });
     categories.classList.toggle('hidden', result.created_categories.length === 0);
@@ -190,6 +238,107 @@ function renderResult(result) {
     skipped.classList.toggle('hidden', result.skipped === 0);
 }
 
+/** Open an import where its saved progress left off. */
+function resume(item) {
+    state.id = item.id;
+    state.step = item.step;
+    setUrl(item.id);
+    renderColumns(item);
+
+    if (item.step === 'values' && item.values) {
+        state.mapping = item.mapping;
+        renderValues(item.values, item.choices);
+        show('values');
+    } else {
+        show('columns');
+    }
+}
+
+/** Back to the upload step; the import stays open in the "in progress" list. */
+function leave() {
+    state.id = null;
+    state.step = null;
+    setUrl(null);
+    forms.upload.reset();
+    clearFieldErrors(forms.upload);
+    show('upload');
+    loadProgressList();
+}
+
+const progressPanel = document.getElementById('import-progress');
+const progressList = document.getElementById('import-progress-list');
+let discarding = null;
+
+function progressRow(item) {
+    const row = document.createElement('li');
+    const info = document.createElement('div');
+    const name = document.createElement('p');
+    const detail = document.createElement('p');
+    const actions = document.createElement('div');
+    const resumeButton = document.createElement('button');
+    const discardButton = document.createElement('button');
+
+    row.className = 'flex flex-wrap items-center justify-between gap-3 py-3';
+    row.dataset.importId = item.id;
+    name.className = 'break-all font-body text-body-md font-medium text-on-surface';
+    name.textContent = item.filename;
+    detail.className = 'font-body text-body-sm text-on-surface-variant';
+    detail.textContent = [labels.steps[item.step === 'values' ? 2 : 1], fill(labels.rowCount, { count: item.row_count }), formatDateTime(item.updated_at)].join(' · ');
+    info.append(name, detail);
+
+    actions.className = 'flex items-center gap-4';
+    resumeButton.type = 'button';
+    resumeButton.className = 'cursor-pointer font-body text-body-md font-medium text-primary hover:underline';
+    resumeButton.textContent = labels.resume;
+    resumeButton.setAttribute('aria-label', `${labels.resume}: ${item.filename}`);
+    resumeButton.addEventListener('click', () => openImport(item.id));
+    discardButton.type = 'button';
+    discardButton.className = 'cursor-pointer font-body text-body-md text-error hover:underline';
+    discardButton.textContent = labels.discard;
+    discardButton.setAttribute('aria-label', `${labels.discard}: ${item.filename}`);
+    discardButton.addEventListener('click', () => {
+        discarding = item.id;
+        openModal('discard-import-modal');
+    });
+    actions.append(resumeButton, discardButton);
+    row.append(info, actions);
+
+    return row;
+}
+
+async function loadProgressList() {
+    const { ok, data } = await get(routes.records.imports);
+
+    progressList.replaceChildren(...(ok ? data.data : []).map(progressRow));
+    progressPanel.classList.toggle('hidden', !ok || data.data.length === 0);
+}
+
+async function openImport(id) {
+    show(null);
+
+    const { ok, data } = await get(routes.records.importShow(id));
+
+    if (ok) {
+        resume(data.data);
+    } else {
+        leave();
+    }
+}
+
+document.getElementById('confirm-discard-import').addEventListener('click', async (event) => {
+    const button = event.currentTarget;
+
+    setButtonLoading(button, true);
+
+    try {
+        await del(routes.records.importShow(discarding));
+        closeModal('discard-import-modal');
+        await loadProgressList();
+    } finally {
+        setButtonLoading(button, false);
+    }
+});
+
 forms.upload.addEventListener('submit', async (event) => {
     event.preventDefault();
 
@@ -200,11 +349,10 @@ forms.upload.addEventListener('submit', async (event) => {
     }
 
     try {
-        const { ok, status, data } = await upload(routes.records.importPreview, new FormData(forms.upload));
+        const { ok, status, data } = await upload(routes.records.imports, new FormData(forms.upload));
 
         if (ok) {
-            renderColumns(data.data);
-            show('columns');
+            resume(data.data);
         } else {
             showFailure(forms.upload, status, data, 'file');
         }
@@ -224,26 +372,25 @@ forms.columns.addEventListener('submit', async (event) => {
         return;
     }
 
-    state.mapping = Object.fromEntries(
-        fieldSelects.filter((select) => select.value !== '').map((select) => [select.dataset.importField, Number(select.value)]),
-    );
+    state.mapping = currentMapping();
     show(null);
 
     try {
-        const { ok, status, data } = await post(routes.records.importValues, { token: state.token, mapping: state.mapping });
+        const { ok, status, data } = await post(routes.records.importValues(state.id), { mapping: state.mapping });
 
         if (ok) {
-            renderValues(data.data);
+            state.step = 'values';
+            renderValues(data.data.values);
             show('values');
 
             return;
         }
 
         show('columns');
-        showFailure(forms.columns, status, data, 'token');
+        showFailure(forms.columns, status, data, 'import');
     } catch {
         show('columns');
-        showGenericError(forms.columns, labels.failed, 'token');
+        showGenericError(forms.columns, labels.failed, 'import');
     } finally {
         setButtonLoading(button, false);
     }
@@ -271,14 +418,15 @@ forms.values.addEventListener('submit', async (event) => {
     }
 
     try {
-        const { ok, status, data } = await post(routes.records.import, {
-            token: state.token,
-            mapping: state.mapping,
-            accounts: [...document.querySelectorAll('#import-accounts-list select')].map(choiceOf),
-            categories: [...document.querySelectorAll('#import-categories-list select')].map(choiceOf),
+        const { ok, status, data } = await post(routes.records.importRun(state.id), {
+            accounts: [...accountList.querySelectorAll('select')].map(choiceOf),
+            categories: [...categoryList.querySelectorAll('select')].map(choiceOf),
         });
 
         if (ok) {
+            state.id = null;
+            state.step = null;
+            setUrl(null);
             renderResult(data.data);
             show('result');
         } else {
@@ -294,12 +442,19 @@ forms.values.addEventListener('submit', async (event) => {
 document.querySelectorAll('[data-import-back]').forEach((button) => {
     button.addEventListener('click', () => {
         if (button.dataset.importBack === 'upload') {
-            forms.upload.reset();
-            clearFieldErrors(forms.upload);
+            leave();
+        } else {
+            show(button.dataset.importBack);
         }
-
-        show(button.dataset.importBack);
     });
 });
 
-show('upload');
+const requestedId = Number(new URLSearchParams(window.location.search).get('import'));
+
+if (requestedId > 0) {
+    await openImport(requestedId);
+} else {
+    show('upload');
+}
+
+loadProgressList();

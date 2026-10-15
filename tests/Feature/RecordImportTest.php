@@ -3,6 +3,7 @@
 use App\Models\Account;
 use App\Models\Category;
 use App\Models\Record;
+use App\Models\RecordImport;
 use App\Models\User;
 use App\Services\RecordImportService;
 use Illuminate\Http\UploadedFile;
@@ -27,94 +28,167 @@ beforeEach(function () {
     $this->user = User::factory()->create(['timezone' => 'Asia/Jakarta']);
 });
 
-function uploadImport(string $csv, string $name = 'records.csv'): array
+/** Upload a file as a new import and return the created import. */
+function uploadImport(string $csv, string $name = 'records.csv', ?User $user = null): array
 {
-    $response = test()->actingAs(test()->user)->postJson('/api/records/import/preview', [
+    return test()->actingAs($user ?? test()->user)->postJson('/api/records/imports', [
         'file' => UploadedFile::fake()->createWithContent($name, $csv),
-    ]);
-
-    return $response->assertOk()->json('data');
+    ])->assertCreated()->json('data');
 }
 
-function runImport(string $token, array $accounts = [], array $categories = [], array $mapping = IMPORT_MAPPING)
+function loadImportValues(int $id, array $mapping = IMPORT_MAPPING)
 {
-    return test()->actingAs(test()->user)->postJson('/api/records/import', [
-        'token' => $token,
-        'mapping' => $mapping,
+    return test()->actingAs(test()->user)->postJson("/api/records/imports/{$id}/values", ['mapping' => $mapping]);
+}
+
+/** Run an import: store the mapping (as the values step does), then import with the given choices. */
+function runImport(array $import, array $accounts = [], array $categories = [], array $mapping = IMPORT_MAPPING)
+{
+    loadImportValues($import['id'], $mapping)->assertOk();
+
+    return test()->actingAs(test()->user)->postJson("/api/records/imports/{$import['id']}/run", [
         'accounts' => $accounts,
         'categories' => $categories,
     ]);
 }
 
 it('rejects a guest from every import endpoint', function () {
-    $this->postJson('/api/records/import/preview')->assertStatus(401);
-    $this->postJson('/api/records/import/values')->assertStatus(401);
-    $this->postJson('/api/records/import')->assertStatus(401);
+    $this->getJson('/api/records/imports')->assertStatus(401);
+    $this->postJson('/api/records/imports')->assertStatus(401);
+    $this->getJson('/api/records/imports/1')->assertStatus(401);
+    $this->putJson('/api/records/imports/1')->assertStatus(401);
+    $this->postJson('/api/records/imports/1/values')->assertStatus(401);
+    $this->postJson('/api/records/imports/1/run')->assertStatus(401);
+    $this->deleteJson('/api/records/imports/1')->assertStatus(401);
 });
 
 it('renders the import page', function () {
     $this->actingAs($this->user)->get('/records/import')->assertOk();
 });
 
-it('previews an uploaded file with its columns, sample rows and a suggested mapping', function () {
-    $preview = uploadImport(IMPORT_CSV);
+it('stores an upload with its columns, sample rows and a suggested mapping', function () {
+    $import = uploadImport(IMPORT_CSV);
 
-    expect($preview['row_count'])->toBe(5)
-        ->and(collect($preview['columns'])->pluck('name')->all())->toBe(['Date', 'Type', 'Account', 'To Account', 'Category', 'Amount', 'Note'])
-        ->and($preview['sample'][0][2])->toBe('Cash')
-        ->and($preview['suggested_mapping'])->toMatchArray(IMPORT_MAPPING)
-        ->and($preview['token'])->toMatch('/^[0-9a-f-]{36}\.csv$/');
+    expect($import['row_count'])->toBe(5)
+        ->and($import['step'])->toBe('columns')
+        ->and($import['filename'])->toBe('records.csv')
+        ->and(collect($import['columns'])->pluck('name')->all())->toBe(['Date', 'Type', 'Account', 'To Account', 'Category', 'Amount', 'Note'])
+        ->and($import['sample'][0][2])->toBe('Cash')
+        ->and($import['mapping'])->toMatchArray(IMPORT_MAPPING);
+
+    expect(RecordImport::count())->toBe(1);
+    Storage::disk('local')->assertExists(RecordImport::first()->path);
 });
 
 it('rejects a file that is not a spreadsheet', function () {
-    $this->actingAs($this->user)->postJson('/api/records/import/preview', [
+    $this->actingAs($this->user)->postJson('/api/records/imports', [
         'file' => UploadedFile::fake()->create('notes.pdf', 10, 'application/pdf'),
     ])->assertStatus(422)->assertJsonValidationErrors('file');
 });
 
 it('rejects a file with only a header row', function () {
-    $this->actingAs($this->user)->postJson('/api/records/import/preview', [
+    $this->actingAs($this->user)->postJson('/api/records/imports', [
         'file' => UploadedFile::fake()->createWithContent('empty.csv', "Date,Amount\n"),
     ])->assertStatus(422)->assertJsonValidationErrors('file');
+
+    expect(RecordImport::count())->toBe(0);
+});
+
+it('keeps several unfinished imports open at once, newest work first', function () {
+    $first = uploadImport(IMPORT_CSV, 'first.csv');
+    $second = uploadImport("Date,Amount\n2026-10-01,100\n", 'second.csv');
+    RecordImport::whereKey($first['id'])->update(['updated_at' => now()->addMinute()]);
+
+    $list = $this->actingAs($this->user)->getJson('/api/records/imports')->assertOk()->json('data');
+
+    expect(collect($list)->pluck('id')->all())->toBe([$first['id'], $second['id']])
+        ->and($list[0])->toMatchArray(['filename' => 'first.csv', 'step' => 'columns', 'row_count' => 5])
+        ->and($list[0])->not->toHaveKey('columns');
+});
+
+it('keeps every user\'s imports private', function () {
+    $mine = uploadImport(IMPORT_CSV);
+    $other = User::factory()->create();
+
+    $this->actingAs($other)->getJson('/api/records/imports')->assertOk()->assertJsonCount(0, 'data');
+    $this->actingAs($other)->getJson("/api/records/imports/{$mine['id']}")->assertNotFound();
+    $this->actingAs($other)->putJson("/api/records/imports/{$mine['id']}", ['step' => 'columns'])->assertNotFound();
+    $this->actingAs($other)->postJson("/api/records/imports/{$mine['id']}/values", ['mapping' => IMPORT_MAPPING])->assertNotFound();
+    $this->actingAs($other)->postJson("/api/records/imports/{$mine['id']}/run", ['accounts' => [], 'categories' => []])->assertNotFound();
+    $this->actingAs($other)->deleteJson("/api/records/imports/{$mine['id']}")->assertNotFound();
+
+    expect(RecordImport::count())->toBe(1);
+});
+
+it('saves progress and gives it back when the import is opened again', function () {
+    $import = uploadImport(IMPORT_CSV);
+
+    $this->actingAs($this->user)->putJson("/api/records/imports/{$import['id']}", [
+        'mapping' => [...IMPORT_MAPPING, 'note' => null],
+        'choices' => ['account|Cash' => 'unmapped'],
+    ])->assertOk();
+
+    $shown = $this->actingAs($this->user)->getJson("/api/records/imports/{$import['id']}")->assertOk()->json('data');
+
+    expect($shown['mapping']['note'])->toBeNull()
+        ->and($shown['mapping']['amount'])->toBe(5)
+        ->and($shown['choices'])->toBe(['account|Cash' => 'unmapped'])
+        ->and($shown['step'])->toBe('columns');
+});
+
+it('only moves to the values step once the values are loaded', function () {
+    $import = uploadImport(IMPORT_CSV);
+
+    $this->actingAs($this->user)->putJson("/api/records/imports/{$import['id']}", ['step' => 'values'])
+        ->assertOk()->assertJsonPath('data.step', 'columns');
+
+    loadImportValues($import['id'])->assertOk()->assertJsonPath('data.step', 'values');
+
+    $this->actingAs($this->user)->putJson("/api/records/imports/{$import['id']}", ['step' => 'columns'])
+        ->assertOk()->assertJsonPath('data.step', 'columns');
+    $this->actingAs($this->user)->putJson("/api/records/imports/{$import['id']}", ['step' => 'values'])
+        ->assertOk()->assertJsonPath('data.step', 'values');
+});
+
+it('rejects an unknown step', function () {
+    $import = uploadImport(IMPORT_CSV);
+
+    $this->actingAs($this->user)->putJson("/api/records/imports/{$import['id']}", ['step' => 'result'])
+        ->assertStatus(422)->assertJsonValidationErrors('step');
 });
 
 it('lists the distinct accounts and categories of the mapped columns with suggestions', function () {
     $cash = Account::factory()->create(['name' => 'cash']);
     $food = Category::factory()->create(['name' => 'FOOD']);
-    $preview = uploadImport(IMPORT_CSV);
+    $import = uploadImport(IMPORT_CSV);
 
-    $response = $this->actingAs($this->user)->postJson('/api/records/import/values', [
-        'token' => $preview['token'],
-        'mapping' => IMPORT_MAPPING,
-    ])->assertOk();
+    $response = loadImportValues($import['id'])->assertOk();
 
-    $accounts = collect($response->json('data.accounts'))->keyBy('value');
+    $accounts = collect($response->json('data.values.accounts'))->keyBy('value');
     expect($accounts->keys()->all())->toBe(['Cash', 'BCA', 'Wallet'])
         ->and($accounts['Cash']['suggestion'])->toBe(['action' => 'existing', 'id' => $cash->id])
         ->and($accounts['BCA']['suggestion'])->toBe(['action' => 'create']);
 
-    $categories = collect($response->json('data.categories'))->keyBy('value');
+    $categories = collect($response->json('data.values.categories'))->keyBy('value');
     expect($categories->keys()->all())->toBe(['Food', 'Gift'])
         ->and($categories['Food']['suggestion'])->toBe(['action' => 'existing', 'id' => $food->id])
         ->and($categories['Gift']['suggestion'])->toBe(['action' => 'create']);
 });
 
 it('requires the date and amount columns to be mapped', function () {
-    $preview = uploadImport(IMPORT_CSV);
+    $import = uploadImport(IMPORT_CSV);
 
-    $this->actingAs($this->user)->postJson('/api/records/import/values', [
-        'token' => $preview['token'],
-        'mapping' => ['type' => 1],
-    ])->assertStatus(422)->assertJsonValidationErrors(['mapping.recorded_at', 'mapping.amount']);
+    loadImportValues($import['id'], ['type' => 1])
+        ->assertStatus(422)->assertJsonValidationErrors(['mapping.recorded_at', 'mapping.amount']);
 });
 
 it('imports records mapping existing, new and unmapped accounts and categories', function () {
     $cash = Account::factory()->create(['name' => 'Cash', 'last_balance' => 0]);
     $food = Category::factory()->create(['name' => 'Food']);
-    $preview = uploadImport(IMPORT_CSV);
+    $import = uploadImport(IMPORT_CSV);
 
     $response = runImport(
-        $preview['token'],
+        $import,
         [
             ['value' => 'Cash', 'action' => 'existing', 'id' => $cash->id],
             ['value' => 'BCA', 'action' => 'create'],
@@ -158,13 +232,61 @@ it('imports records mapping existing, new and unmapped accounts and categories',
         ->and((float) $cash->refresh()->last_balance)->toBe(-75000.0);
 });
 
+it('removes the import and its file once imported, leaving other imports alone', function () {
+    $done = uploadImport(IMPORT_CSV);
+    $other = uploadImport("Date,Amount\n2026-10-01,100\n", 'other.csv');
+    $path = RecordImport::findOrFail($done['id'])->path;
+
+    runImport($done)->assertOk();
+
+    Storage::disk('local')->assertMissing($path);
+    expect(RecordImport::pluck('id')->all())->toBe([$other['id']]);
+
+    $this->actingAs($this->user)->postJson("/api/records/imports/{$done['id']}/run", ['accounts' => [], 'categories' => []])->assertNotFound();
+});
+
+it('discards an import together with its file', function () {
+    $import = uploadImport(IMPORT_CSV);
+    $path = RecordImport::findOrFail($import['id'])->path;
+
+    $this->actingAs($this->user)->deleteJson("/api/records/imports/{$import['id']}")->assertNoContent();
+
+    Storage::disk('local')->assertMissing($path);
+    expect(RecordImport::count())->toBe(0);
+});
+
+it('refuses to run an import whose columns are not mapped yet', function () {
+    $import = uploadImport(IMPORT_CSV);
+    RecordImport::whereKey($import['id'])->update(['mapping' => json_encode(['recorded_at' => null, 'amount' => null])]);
+
+    $this->actingAs($this->user)->postJson("/api/records/imports/{$import['id']}/run", ['accounts' => [], 'categories' => []])
+        ->assertStatus(422)->assertJsonValidationErrors('import');
+});
+
+it('reports an import whose file is gone', function () {
+    $import = uploadImport(IMPORT_CSV);
+    Storage::disk('local')->delete(RecordImport::findOrFail($import['id'])->path);
+
+    loadImportValues($import['id'])->assertStatus(422)->assertJsonValidationErrors('import');
+});
+
+it('drops imports nobody touched for a month when a new file is uploaded', function () {
+    $old = uploadImport(IMPORT_CSV, 'old.csv');
+    $path = RecordImport::findOrFail($old['id'])->path;
+    RecordImport::whereKey($old['id'])->update(['updated_at' => now()->subDays(31)]);
+
+    $fresh = uploadImport(IMPORT_CSV, 'fresh.csv');
+
+    Storage::disk('local')->assertMissing($path);
+    expect(RecordImport::pluck('id')->all())->toBe([$fresh['id']]);
+});
+
 it('puts every record in the unmapped account when no account column is mapped, and reuses it', function () {
     $csv = "Date,Amount\n2026-10-01,-1500\n2026-10-02,2500\n";
     $mapping = ['recorded_at' => 0, 'amount' => 1];
 
     foreach ([1, 2] as $run) {
-        $preview = uploadImport($csv);
-        runImport($preview['token'], mapping: $mapping)->assertOk()->assertJsonPath('data.imported', 2);
+        runImport(uploadImport($csv), mapping: $mapping)->assertOk()->assertJsonPath('data.imported', 2);
     }
 
     $unmapped = Account::where('name', RecordImportService::UNMAPPED_ACCOUNT)->get();
@@ -177,10 +299,9 @@ it('puts every record in the unmapped account when no account column is mapped, 
 
 it('creates the categories that do not exist, one per record type', function () {
     $csv = "Date,Type,Amount,Category\n2026-10-01,expense,100,Gift\n2026-10-02,income,200,Gift\n2026-10-03,expense,300,Gift\n2026-10-04,transfer,400,Gift\n";
-    $preview = uploadImport($csv);
 
     $response = runImport(
-        $preview['token'],
+        uploadImport($csv),
         categories: [['value' => 'Gift', 'action' => 'create']],
         mapping: ['recorded_at' => 0, 'type' => 1, 'amount' => 2, 'category' => 3],
     )->assertOk();
@@ -194,9 +315,11 @@ it('creates the categories that do not exist, one per record type', function () 
 });
 
 it('leaves a record uncategorized when its category is not mapped', function () {
-    $preview = uploadImport("Date,Amount,Category\n2026-10-01,-100,Gift\n");
-
-    runImport($preview['token'], categories: [['value' => 'Gift', 'action' => 'none']], mapping: ['recorded_at' => 0, 'amount' => 1, 'category' => 2])->assertOk();
+    runImport(
+        uploadImport("Date,Amount,Category\n2026-10-01,-100,Gift\n"),
+        categories: [['value' => 'Gift', 'action' => 'none']],
+        mapping: ['recorded_at' => 0, 'amount' => 1, 'category' => 2],
+    )->assertOk();
 
     expect(Record::firstOrFail()->category_id)->toBeNull()->and(Category::count())->toBe(0);
 });
@@ -204,10 +327,9 @@ it('leaves a record uncategorized when its category is not mapped', function () 
 it('swaps a mapped category for the same-named one of the record type, creating it when missing', function () {
     $incomeOnly = Category::factory()->income()->create(['name' => 'Bonus']);
     $csv = "Date,Type,Amount,Category\n2026-10-01,expense,100,Bonus\n2026-10-02,income,200,Bonus\n";
-    $preview = uploadImport($csv);
 
     runImport(
-        $preview['token'],
+        uploadImport($csv),
         categories: [['value' => 'Bonus', 'action' => 'existing', 'id' => $incomeOnly->id]],
         mapping: ['recorded_at' => 0, 'type' => 1, 'amount' => 2, 'category' => 3],
     )->assertOk()->assertJsonPath('data.imported', 2);
@@ -220,10 +342,9 @@ it('swaps a mapped category for the same-named one of the record type, creating 
 
 it('skips transfers without a distinct destination account', function () {
     $csv = "Date,Type,Account,To,Amount\n2026-10-01,transfer,A,,100\n2026-10-02,transfer,A,A,100\n2026-10-03,transfer,A,B,100\n";
-    $preview = uploadImport($csv);
 
     $response = runImport(
-        $preview['token'],
+        uploadImport($csv),
         [['value' => 'A', 'action' => 'create'], ['value' => 'B', 'action' => 'create']],
         mapping: ['recorded_at' => 0, 'type' => 1, 'account' => 2, 'to_account' => 3, 'amount' => 4],
     )->assertOk();
@@ -233,9 +354,8 @@ it('skips transfers without a distinct destination account', function () {
 
 it('reads amounts written the Indonesian way', function () {
     $csv = "Date,Amount\n2026-10-01,\"Rp 1.250.000,50\"\n2026-10-02,\"-2,500\"\n";
-    $preview = uploadImport($csv);
 
-    runImport($preview['token'], mapping: ['recorded_at' => 0, 'amount' => 1])->assertOk();
+    runImport(uploadImport($csv), mapping: ['recorded_at' => 0, 'amount' => 1])->assertOk();
 
     expect(Record::where('type', 'income')->value('amount'))->toBe('1250000.50')
         ->and(Record::where('type', 'expense')->value('amount'))->toBe('2500.00');
@@ -250,22 +370,15 @@ it('imports an xlsx file with real date cells', function () {
     $path = tempnam(sys_get_temp_dir(), 'imp').'.xlsx';
     (new Xlsx($sheet))->save($path);
 
-    $preview = $this->actingAs($this->user)->postJson('/api/records/import/preview', [
+    $import = $this->actingAs($this->user)->postJson('/api/records/imports', [
         'file' => new UploadedFile($path, 'records.xlsx', null, null, true),
-    ])->assertOk()->json('data');
+    ])->assertCreated()->json('data');
 
-    runImport($preview['token'], mapping: ['recorded_at' => 0, 'amount' => 1, 'note' => 2])->assertOk()->assertJsonPath('data.imported', 1);
+    runImport($import, mapping: ['recorded_at' => 0, 'amount' => 1, 'note' => 2])->assertOk()->assertJsonPath('data.imported', 1);
 
     $record = Record::firstOrFail();
     expect($record->recorded_at->setTimezone('Asia/Jakarta')->format('Y-m-d H:i'))->toBe('2026-10-02 12:00')
         ->and($record->note)->toBe('From excel');
 
     unlink($path);
-});
-
-it('removes the uploaded file once imported', function () {
-    $preview = uploadImport(IMPORT_CSV);
-
-    runImport($preview['token'])->assertOk();
-    runImport($preview['token'])->assertStatus(422)->assertJsonValidationErrors('token');
 });

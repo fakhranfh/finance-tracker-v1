@@ -2,28 +2,42 @@
 
 namespace App\Http\Requests\Record;
 
+use App\Enums\RecordImportStep;
 use Illuminate\Validation\Rule;
 
 /**
- * Shared validation for the record import steps: the uploaded file's token and the column mapping.
+ * Shared validation for the record import steps: the column mapping, saved progress and the value choices.
  */
 final class RecordImportRules
 {
+    private const FIELDS = ['recorded_at', 'amount', 'type', 'account', 'to_account', 'category', 'note'];
+
     /**
+     * The column mapping to run with: the date and amount columns are required.
+     *
      * @return array<string, array<mixed>>
      */
     public static function mapping(): array
     {
         return [
-            'token' => ['required', 'string', 'regex:/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(xlsx|xls|csv)$/'],
             'mapping' => ['required', 'array'],
-            'mapping.recorded_at' => ['required', 'integer', 'min:0'],
-            'mapping.amount' => ['required', 'integer', 'min:0'],
-            'mapping.type' => ['nullable', 'integer', 'min:0'],
-            'mapping.account' => ['nullable', 'integer', 'min:0'],
-            'mapping.to_account' => ['nullable', 'integer', 'min:0'],
-            'mapping.category' => ['nullable', 'integer', 'min:0'],
-            'mapping.note' => ['nullable', 'integer', 'min:0'],
+            ...self::columnRules(['recorded_at', 'amount'], ['required', 'integer', 'min:0']),
+            ...self::columnRules(array_diff(self::FIELDS, ['recorded_at', 'amount']), ['nullable', 'integer', 'min:0']),
+        ];
+    }
+
+    /**
+     * Progress saved along the way: any part of it, the mapping still incomplete.
+     *
+     * @return array<string, array<mixed>>
+     */
+    public static function progress(): array
+    {
+        return [
+            'step' => ['sometimes', Rule::enum(RecordImportStep::class)],
+            'mapping' => ['sometimes', 'array'],
+            ...self::columnRules(self::FIELDS, ['nullable', 'integer', 'min:0']),
+            'choices' => ['sometimes', 'array', 'max:10000'],
         ];
     }
 
@@ -44,5 +58,21 @@ final class RecordImportRules
             'categories.*.id' => ['required_if:categories.*.action,existing', 'nullable', 'integer', 'exists:categories,id'],
             'categories.*.name' => ['nullable', 'string', 'max:255'],
         ];
+    }
+
+    /**
+     * @param  iterable<int, string>  $fields
+     * @param  array<int, string>  $rules
+     * @return array<string, array<int, string>>
+     */
+    private static function columnRules(iterable $fields, array $rules): array
+    {
+        $result = [];
+
+        foreach ($fields as $field) {
+            $result["mapping.{$field}"] = $rules;
+        }
+
+        return $result;
     }
 }

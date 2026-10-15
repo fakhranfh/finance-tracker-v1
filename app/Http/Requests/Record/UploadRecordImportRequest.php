@@ -5,7 +5,7 @@ namespace App\Http\Requests\Record;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
-class PreviewRecordImportRequest extends FormRequest
+class UploadRecordImportRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.

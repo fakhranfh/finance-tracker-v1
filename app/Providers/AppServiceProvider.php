@@ -16,6 +16,8 @@ use App\Repositories\GoalSaving\GoalSavingRepository;
 use App\Repositories\GoalSaving\GoalSavingRepositoryInterface;
 use App\Repositories\Record\RecordRepository;
 use App\Repositories\Record\RecordRepositoryInterface;
+use App\Repositories\RecordImport\RecordImportRepository;
+use App\Repositories\RecordImport\RecordImportRepositoryInterface;
 use App\Repositories\SubGoal\SubGoalRepository;
 use App\Repositories\SubGoal\SubGoalRepositoryInterface;
 use App\Repositories\User\UserRepository;
@@ -39,6 +41,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(GoalSavingRepositoryInterface::class, GoalSavingRepository::class);
         $this->app->bind(CategoryRepositoryInterface::class, CategoryRepository::class);
         $this->app->bind(RecordRepositoryInterface::class, RecordRepository::class);
+        $this->app->bind(RecordImportRepositoryInterface::class, RecordImportRepository::class);
         $this->app->bind(AccountRepositoryInterface::class, AccountRepository::class);
         $this->app->bind(AccountBalanceRepositoryInterface::class, AccountBalanceRepository::class);
         $this->app->bind(AccountSummaryRepositoryInterface::class, AccountSummaryRepository::class);

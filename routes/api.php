@@ -65,9 +65,13 @@ Route::middleware('web')->name('api.')->group(function (): void {
         Route::get('/records/export/{format}', [RecordController::class, 'export'])
             ->whereIn('format', ['xlsx', 'pdf'])
             ->name('records.export');
-        Route::post('/records/import/preview', [RecordImportController::class, 'preview'])->name('records.import.preview');
-        Route::post('/records/import/values', [RecordImportController::class, 'values'])->name('records.import.values');
-        Route::post('/records/import', [RecordImportController::class, 'store'])->name('records.import.store');
+        Route::get('/records/imports', [RecordImportController::class, 'index'])->name('records.imports.index');
+        Route::post('/records/imports', [RecordImportController::class, 'store'])->name('records.imports.store');
+        Route::get('/records/imports/{import}', [RecordImportController::class, 'show'])->whereNumber('import')->name('records.imports.show');
+        Route::put('/records/imports/{import}', [RecordImportController::class, 'update'])->whereNumber('import')->name('records.imports.update');
+        Route::post('/records/imports/{import}/values', [RecordImportController::class, 'values'])->whereNumber('import')->name('records.imports.values');
+        Route::post('/records/imports/{import}/run', [RecordImportController::class, 'run'])->whereNumber('import')->name('records.imports.run');
+        Route::delete('/records/imports/{import}', [RecordImportController::class, 'destroy'])->whereNumber('import')->name('records.imports.destroy');
         Route::get('/records/summary', [RecordController::class, 'summary'])->name('records.summary');
         Route::delete('/records', [RecordController::class, 'bulkDestroy'])->name('records.bulk-destroy');
         Route::post('/records/generate', [RecordController::class, 'generate'])

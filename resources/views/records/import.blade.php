@@ -20,7 +20,13 @@
 
         <x-organisms.record-import-skeleton id="import-skeleton" class="hidden" />
 
-        <section id="import-step-upload" class="rounded-lg border border-outline-variant bg-surface p-6">
+        <section id="import-step-upload" class="space-y-6 rounded-lg border border-outline-variant bg-surface p-6">
+            <div id="import-progress" class="hidden space-y-2">
+                <h2 class="font-heading text-title-md font-semibold text-on-surface">{{ __('records.import.resume_title') }}</h2>
+                <p class="font-body text-body-sm text-on-surface-variant">{{ __('records.import.resume_hint') }}</p>
+                <ul id="import-progress-list" class="divide-y divide-outline-variant"></ul>
+            </div>
+
             <form id="import-upload-form" class="space-y-5" novalidate>
                 @csrf
 
@@ -61,7 +67,7 @@
                     </div>
                 @endforeach
 
-                <x-atoms.form-error for="token" />
+                <x-atoms.form-error for="import" />
 
                 <div class="flex items-center gap-3">
                     <x-atoms.button type="submit">
@@ -82,7 +88,7 @@
                     <p id="import-accounts-empty" class="hidden rounded-lg border border-warning/20 bg-warning/10 px-4 py-3 font-body text-sm text-on-surface">
                         {{ __('records.import.accounts_empty') }}
                     </p>
-                    <div id="import-accounts-list" class="space-y-3"></div>
+                    <div id="import-accounts-list" class="space-y-3" data-import-list="account"></div>
                 </div>
 
                 <div class="space-y-3">
@@ -91,10 +97,9 @@
                     <p id="import-categories-empty" class="hidden rounded-lg border border-warning/20 bg-warning/10 px-4 py-3 font-body text-sm text-on-surface">
                         {{ __('records.import.categories_empty') }}
                     </p>
-                    <div id="import-categories-list" class="space-y-3"></div>
+                    <div id="import-categories-list" class="space-y-3" data-import-list="category"></div>
                 </div>
 
-                <x-atoms.form-error for="token" />
                 <x-atoms.form-error for="import" />
 
                 <div class="flex items-center gap-3">
@@ -128,6 +133,17 @@
             </div>
         </section>
     </div>
+
+    <x-organisms.modal id="discard-import-modal" :title="__('records.import.discard_confirm')">
+        <div class="flex justify-end gap-3">
+            <x-atoms.button type="button" variant="secondary" data-modal-close>
+                {{ __('records.actions.cancel') }}
+            </x-atoms.button>
+            <x-atoms.button type="button" id="confirm-discard-import" variant="danger">
+                {{ __('records.import.discard') }}
+            </x-atoms.button>
+        </div>
+    </x-organisms.modal>
 @endsection
 
 @push('scripts')

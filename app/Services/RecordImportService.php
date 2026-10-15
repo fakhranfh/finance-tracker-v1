@@ -2,15 +2,19 @@
 
 namespace App\Services;
 
+use App\Enums\RecordImportStep;
 use App\Enums\RecordType;
 use App\Imports\SpreadsheetReader;
 use App\Imports\TooManyRowsException;
+use App\Models\RecordImport;
 use App\Repositories\Account\AccountRepositoryInterface;
 use App\Repositories\Category\CategoryRepositoryInterface;
 use App\Repositories\Record\RecordRepositoryInterface;
+use App\Repositories\RecordImport\RecordImportRepositoryInterface;
 use Carbon\CarbonImmutable;
 use DateTimeImmutable;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -21,7 +25,8 @@ use Throwable;
 /**
  * Imports records from an uploaded spreadsheet in three steps: upload (preview the columns),
  * map the columns to record fields and list the accounts and categories found in them, then
- * import with those accounts and categories mapped.
+ * import with those accounts and categories mapped. Each upload is a stored RecordImport that keeps
+ * its progress until it is imported or discarded, so the user can leave, come back, and run several at once.
  */
 class RecordImportService
 {
@@ -33,6 +38,8 @@ class RecordImportService
     private const DIRECTORY = 'record-imports';
 
     private const SAMPLE_ROWS = 5;
+
+    private const STALE_AFTER_DAYS = 30;
 
     private const MAX_REPORTED_ERRORS = 50;
 
@@ -67,48 +74,86 @@ class RecordImportService
         protected RecordRepositoryInterface $recordRepository,
         protected AccountRepositoryInterface $accountRepository,
         protected CategoryRepositoryInterface $categoryRepository,
+        protected RecordImportRepositoryInterface $recordImportRepository,
     ) {}
 
     /**
-     * Keep the uploaded file for the next steps and describe it: its columns, a few sample rows
-     * and the column each record field most likely comes from.
+     * A user's unfinished imports, most recently worked on first.
      *
-     * @return array{token: string, row_count: int, columns: array<int, array{index: int, name: string}>, sample: array<int, array<int, mixed>>, suggested_mapping: array<string, int|null>}
+     * @return Collection<int, RecordImport>
      */
-    public function preview(UploadedFile $file): array
+    public function list(int $userId): Collection
+    {
+        return $this->recordImportRepository->forUser($userId);
+    }
+
+    /**
+     * Find one of the user's unfinished imports.
+     */
+    public function find(int $userId, int $id): ?RecordImport
+    {
+        return $this->recordImportRepository->find($userId, $id);
+    }
+
+    /**
+     * Keep the uploaded file as a new import and describe it: its columns, a few sample rows and
+     * the column each record field most likely comes from. Any number of imports can be open at once.
+     */
+    public function upload(int $userId, UploadedFile $file): RecordImport
     {
         $this->deleteStale();
 
-        $token = Str::uuid().'.'.strtolower($file->getClientOriginalExtension());
-        Storage::disk('local')->putFileAs(self::DIRECTORY, $file, $token);
+        $path = Storage::disk('local')->putFileAs(self::DIRECTORY, $file, Str::uuid().'.'.strtolower($file->getClientOriginalExtension()));
 
         try {
-            $sheet = $this->read($token, 'file');
+            $sheet = $this->readFile($path, 'file');
         } catch (ValidationException $e) {
-            Storage::disk('local')->delete($this->path($token));
+            Storage::disk('local')->delete($path);
 
             throw $e;
         }
 
-        return [
-            'token' => $token,
+        return $this->recordImportRepository->create([
+            'user_id' => $userId,
+            'filename' => $file->getClientOriginalName(),
+            'path' => $path,
             'row_count' => count($sheet['rows']),
+            'step' => RecordImportStep::Columns->value,
             'columns' => collect($sheet['header'])->map(fn (string $name, int $index) => ['index' => $index, 'name' => $name])->all(),
             'sample' => array_slice($sheet['rows'], 0, self::SAMPLE_ROWS),
-            'suggested_mapping' => $this->suggestMapping($sheet['header']),
-        ];
+            'mapping' => $this->suggestMapping($sheet['header']),
+        ]);
     }
 
     /**
-     * The distinct accounts and categories found in the mapped columns, each with the existing
-     * one it most likely stands for, plus what exists to choose from.
+     * Remember the progress made: the step, the column mapping and the choices for accounts and categories.
+     * The values step only counts once the values have been loaded.
+     *
+     * @param  array{step?: string, mapping?: array<string, int|null>, choices?: array<string, string>}  $data
+     */
+    public function save(RecordImport $import, array $data): RecordImport
+    {
+        if (($data['step'] ?? null) === RecordImportStep::Values->value && $import->values === null) {
+            unset($data['step']);
+        }
+
+        if (isset($data['choices'])) {
+            $data['choices'] = array_filter($data['choices'], 'is_string');
+        }
+
+        return $this->recordImportRepository->update($import, Arr::only($data, ['step', 'mapping', 'choices']));
+    }
+
+    /**
+     * Store the column mapping, find the distinct accounts and categories in the mapped columns (each
+     * with the existing one it most likely stands for, plus what exists to choose from) and move to
+     * the values step.
      *
      * @param  array<string, int|null>  $mapping
-     * @return array<string, mixed>
      */
-    public function values(string $token, array $mapping): array
+    public function loadValues(RecordImport $import, array $mapping): RecordImport
     {
-        $rows = $this->read($token, 'token')['rows'];
+        $rows = $this->readFile($import->path, 'import')['rows'];
         $accounts = $this->accountRepository->allNamed();
         $categories = $this->categoryRepository->allNamed();
         $accountIds = $accounts->mapWithKeys(fn ($account) => [$this->key($account->name) => $account->id]);
@@ -117,18 +162,32 @@ class RecordImportService
         $accountValues = $this->distinct($rows, [$mapping['account'] ?? null, $mapping['to_account'] ?? null]);
         $categoryValues = $this->distinct($rows, [$mapping['category'] ?? null]);
 
-        return [
-            'accounts' => $accountValues->map(fn (string $value, string $key) => [
-                'value' => $value,
-                'suggestion' => $accountIds->has($key) ? ['action' => 'existing', 'id' => $accountIds[$key]] : ['action' => 'create'],
-            ])->values()->all(),
-            'categories' => $categoryValues->map(fn (string $value, string $key) => [
-                'value' => $value,
-                'suggestion' => $categoryIds->has($key) ? ['action' => 'existing', 'id' => $categoryIds[$key]] : ['action' => 'create'],
-            ])->values()->all(),
-            'existing_accounts' => $accounts->map->only(['id', 'name'])->values()->all(),
-            'existing_categories' => $categories->map(fn ($category) => ['id' => $category->id, 'name' => $category->name, 'type' => $category->type->value])->values()->all(),
-        ];
+        return $this->recordImportRepository->update($import, [
+            'mapping' => $mapping,
+            'step' => RecordImportStep::Values->value,
+            'choices' => [],
+            'values' => [
+                'accounts' => $accountValues->map(fn (string $value, string $key) => [
+                    'value' => $value,
+                    'suggestion' => $accountIds->has($key) ? ['action' => 'existing', 'id' => $accountIds[$key]] : ['action' => 'create'],
+                ])->values()->all(),
+                'categories' => $categoryValues->map(fn (string $value, string $key) => [
+                    'value' => $value,
+                    'suggestion' => $categoryIds->has($key) ? ['action' => 'existing', 'id' => $categoryIds[$key]] : ['action' => 'create'],
+                ])->values()->all(),
+                'existing_accounts' => $accounts->map->only(['id', 'name'])->values()->all(),
+                'existing_categories' => $categories->map(fn ($category) => ['id' => $category->id, 'name' => $category->name, 'type' => $category->type->value])->values()->all(),
+            ],
+        ]);
+    }
+
+    /**
+     * Throw the import away together with its file.
+     */
+    public function discard(RecordImport $import): void
+    {
+        Storage::disk('local')->delete($import->path);
+        $this->recordImportRepository->delete($import);
     }
 
     /**
@@ -137,14 +196,19 @@ class RecordImportService
      * rows without an account. Categories that are not mapped (or do not fit the record's type)
      * leave the record uncategorized.
      *
-     * @param  array<string, int|null>  $mapping
      * @param  array<int, array{value: string, action: string, id?: int|null, name?: string|null}>  $accounts
      * @param  array<int, array{value: string, action: string, id?: int|null, name?: string|null}>  $categories
      * @return array{imported: int, skipped: int, errors: array<int, array{row: int, message: string}>, created_accounts: array<int, string>, created_categories: array<int, string>}
      */
-    public function import(string $token, array $mapping, array $accounts, array $categories, string $timezone): array
+    public function import(RecordImport $import, array $accounts, array $categories, string $timezone): array
     {
-        $rows = $this->read($token, 'token')['rows'];
+        $mapping = $import->mapping ?? [];
+
+        if (! isset($mapping['recorded_at'], $mapping['amount'])) {
+            throw ValidationException::withMessages(['import' => __('records.import.unmapped_columns')]);
+        }
+
+        $rows = $this->readFile($import->path, 'import')['rows'];
         $accountMap = collect($accounts)->mapWithKeys(fn (array $entry) => [$this->key($entry['value']) => $entry]);
         $categoryMap = collect($categories)->mapWithKeys(fn (array $entry) => [$this->key($entry['value']) => $entry]);
         $accountIds = $this->accountRepository->allNamed()->mapWithKeys(fn ($account) => [$this->key($account->name) => $account->id])->all();
@@ -238,7 +302,7 @@ class RecordImportService
             }
         });
 
-        Storage::disk('local')->delete($this->path($token));
+        $this->discard($import);
 
         return [
             'imported' => $imported,
@@ -252,16 +316,16 @@ class RecordImportService
     /**
      * @return array{header: array<int, string>, rows: array<int, array<int, string|int|float|null>>}
      */
-    private function read(string $token, string $errorField): array
+    private function readFile(string $path, string $errorField): array
     {
         $disk = Storage::disk('local');
 
-        if (! $disk->exists($this->path($token))) {
+        if (! $disk->exists($path)) {
             throw ValidationException::withMessages([$errorField => __('records.import.expired')]);
         }
 
         try {
-            $sheet = $this->reader->read($disk->path($this->path($token)), self::MAX_ROWS);
+            $sheet = $this->reader->read($disk->path($path), self::MAX_ROWS);
         } catch (TooManyRowsException) {
             throw ValidationException::withMessages([$errorField => __('records.import.too_many_rows', ['max' => self::MAX_ROWS])]);
         } catch (Throwable) {
@@ -342,20 +406,11 @@ class RecordImportService
         return mb_strtolower(trim($value));
     }
 
-    private function path(string $token): string
-    {
-        return self::DIRECTORY.'/'.$token;
-    }
-
+    /** Imports nobody has touched for a month are dropped with their files. */
     private function deleteStale(): void
     {
-        $disk = Storage::disk('local');
-        $cutoff = now()->subDay()->getTimestamp();
-
-        foreach ($disk->files(self::DIRECTORY) as $file) {
-            if ($disk->lastModified($file) < $cutoff) {
-                $disk->delete($file);
-            }
+        foreach ($this->recordImportRepository->deleteOlderThan(now()->subDays(self::STALE_AFTER_DAYS)) as $path) {
+            Storage::disk('local')->delete($path);
         }
     }
 
