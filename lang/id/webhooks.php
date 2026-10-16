@@ -1,0 +1,110 @@
+<?php
+
+return [
+    'title' => 'Kelola Webhook',
+    'subtitle' => 'Lihat, tambah, ubah, dan hapus webhook.',
+    'create' => 'Tambah webhook',
+    'edit' => 'Ubah webhook',
+    'back' => 'Kembali ke daftar webhook',
+
+    'table' => [
+        'name' => 'Nama',
+        'token' => 'Token',
+        'is_active' => 'Aktif',
+        'created_at' => 'Dibuat',
+        'actions' => 'Aksi',
+        'empty' => 'Belum ada webhook.',
+        'search' => 'Cari nama atau token...',
+        'per_page' => 'Item per halaman',
+        'selected' => 'dipilih',
+        'show_more' => 'Tampilkan lebih banyak',
+        'show_less' => 'Tampilkan lebih sedikit',
+        'select_all_matching' => 'Pilih semua :total webhook',
+        'all_selected' => 'Semua :total webhook dipilih.',
+        'clear_selection' => 'Batalkan pilihan',
+    ],
+
+    'guide' => [
+        'title' => 'Cara memakai webhook',
+        'step_create' => 'Klik "Tambah webhook" dan beri nama. Token rahasia dibuat otomatis.',
+        'step_copy' => 'Buka webhook lewat Ubah lalu salin token-nya (tampil di bawah judul) dan URL Webhook-nya. Siapa pun yang memegang token bisa menambah catatan, jadi jaga kerahasiaannya.',
+        'step_send' => 'Dari aplikasi atau otomasi Anda, kirim request POST dengan body JSON ke URL tersebut dan taruh token di header X-Webhook-Token (contoh di bawah).',
+        'step_test' => 'Opsional: buka webhook lewat Ubah, lalu klik "Uji webhook" untuk memeriksa contoh payload di halamannya sendiri tanpa menyimpan apa pun.',
+        'step_ips' => 'Opsional: batasi siapa yang boleh memanggil webhook dengan mengisi alamat IP (atau rentang CIDR) yang diizinkan di halaman Ubah. Request dari IP lain akan mendapat 403.',
+        'step_response' => 'Jika berhasil, respons 201 dikembalikan dan catatan baru muncul di Kelola Catatan.',
+        'example' => 'Contoh request',
+        'field_type' => 'type: income, expense, atau transfer (wajib).',
+        'field_account' => 'account_name: nama akun sumber persis seperti di aplikasi (wajib). Untuk transfer kirim juga to_account_id.',
+        'field_category' => 'category_id: opsional, dan harus kategori dengan tipe yang sama.',
+        'field_amount' => 'amount: angka lebih dari 0, maksimal 2 desimal (wajib).',
+        'field_recorded_at' => 'recorded_at: tanggal dan waktu catatan (wajib). note bersifat opsional.',
+        'errors' => '401 berarti token tidak ada atau salah, 404 berarti webhook nonaktif, 422 berarti data tidak valid, dan 429 berarti terlalu banyak request (batas 60 per menit).',
+    ],
+
+    'test' => [
+        'back' => 'Kembali ke ubah webhook',
+        'title' => 'Uji webhook',
+        'description' => 'Periksa payload Anda sebelum menghubungkan aplikasi lain. Ini hanya uji coba: tidak ada data yang disimpan.',
+        'payload' => 'Contoh payload (JSON)',
+        'send' => 'Kirim uji coba',
+        'success' => 'Uji coba berhasil. Payload valid dan tidak ada catatan yang disimpan.',
+        'inactive' => 'Webhook ini nonaktif, sehingga request asli akan ditolak dengan 404.',
+    ],
+
+    'errors' => [
+        'invalid_token' => 'Token webhook tidak ada atau tidak valid.',
+        'ip_not_allowed' => 'Alamat IP ini tidak diizinkan memakai webhook ini.',
+        'invalid_ip' => 'Alamat IP tidak valid: :ip.',
+        'too_many_ips' => 'Maksimal :max alamat IP yang bisa di-whitelist.',
+    ],
+
+    'logs' => [
+        'title' => 'Log webhook',
+        'subtitle' => 'Setiap panggilan ke webhook ini dan hasilnya. 500 log terbaru disimpan.',
+        'clear' => 'Hapus log',
+        'confirm_clear' => 'Yakin ingin menghapus semua log webhook ini?',
+        'inactive' => 'Webhook ini nonaktif.',
+        'table' => [
+            'time' => 'Waktu',
+            'status' => 'Status',
+            'message' => 'Pesan',
+            'origin' => 'Origin',
+            'ip' => 'Alamat IP',
+            'payload' => 'Payload',
+            'empty' => 'Belum ada panggilan yang tercatat.',
+            'search' => 'Cari berdasarkan pesan, origin, IP, atau status...',
+        ],
+    ],
+
+    'fields' => [
+        'allowed_ips' => 'Alamat IP yang diizinkan',
+        'allowed_ips_hint' => 'Satu per baris, misalnya 203.0.113.5 atau 198.51.100.0/24. Kosongkan untuk menerima request dari IP mana saja. Jika diisi, hanya request dari alamat ini yang diterima.',
+        'url' => 'URL Webhook',
+        'name' => 'Nama',
+        'token' => 'Token',
+        'is_active' => 'Aktif',
+    ],
+
+    'actions' => [
+        'test' => 'Uji',
+        'copy' => 'Salin',
+        'copied' => 'Tersalin!',
+        'edit' => 'Ubah',
+        'delete' => 'Hapus',
+        'save' => 'Simpan',
+        'cancel' => 'Batal',
+        'confirm_delete' => 'Yakin ingin menghapus webhook ini?',
+        'delete_selected' => 'Hapus yang dipilih',
+        'confirm_bulk_delete' => 'Yakin ingin menghapus webhook yang dipilih?',
+        'generate' => 'Generate',
+        'generate_count' => 'Jumlah webhook yang akan dibuat',
+        'autofill' => 'Isi otomatis',
+    ],
+
+    'flash' => [
+        'created' => 'Webhook berhasil ditambahkan.',
+        'updated' => 'Webhook berhasil diperbarui.',
+        'deleted' => 'Webhook berhasil dihapus.',
+        'generated' => 'Webhook palsu berhasil dibuat.',
+    ],
+];

@@ -8,6 +8,7 @@ use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\ProfilePageController;
 use App\Http\Controllers\RecordPageController;
 use App\Http\Controllers\SubGoalPageController;
+use App\Http\Controllers\WebhookPageController;
 use App\Http\Middleware\EnsureNoUsersExist;
 use App\Models\User;
 use Illuminate\Auth\Notifications\ResetPassword;
@@ -77,4 +78,10 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::get('/goals/{goalId}/sub-goals/edit', [SubGoalPageController::class, 'edit'])->whereNumber('goalId')->name('goals.sub-goals.edit');
     Route::get('/goals/{goalId}/sub-goals/{id}/edit', [SubGoalPageController::class, 'editItem'])->whereNumber(['goalId', 'id'])->name('goals.sub-goals.edit-item');
     Route::get('/goals/{goalId}/sub-goals/{id}', [SubGoalPageController::class, 'show'])->whereNumber(['goalId', 'id'])->name('goals.sub-goals.show');
+
+    Route::get('/webhooks', [WebhookPageController::class, 'index'])->name('webhooks.index');
+    Route::get('/webhooks/create', [WebhookPageController::class, 'create'])->name('webhooks.create');
+    Route::get('/webhooks/{id}/edit', [WebhookPageController::class, 'edit'])->name('webhooks.edit');
+    Route::get('/webhooks/{id}/test', [WebhookPageController::class, 'test'])->whereNumber('id')->name('webhooks.test');
+    Route::get('/webhooks/{id}/logs', [WebhookPageController::class, 'logs'])->whereNumber('id')->name('webhooks.logs');
 });

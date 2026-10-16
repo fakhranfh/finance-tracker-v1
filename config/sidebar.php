@@ -7,6 +7,7 @@ return [
         ['label' => 'dashboard.nav.records', 'route' => 'records.index', 'active' => 'records.*', 'icon' => 'cube', 'description' => 'dashboard.welcome.features.records'],
         ['label' => 'dashboard.nav.categories', 'route' => 'categories.index', 'active' => 'categories.*', 'icon' => 'tag', 'description' => 'dashboard.welcome.features.categories'],
         ['label' => 'dashboard.nav.goals', 'route' => 'goals.index', 'active' => 'goals.*', 'icon' => 'cube', 'description' => 'dashboard.welcome.features.goals'],
+        ['label' => 'dashboard.nav.webhooks', 'route' => 'webhooks.index', 'active' => 'webhooks.*', 'icon' => 'cube', 'description' => 'dashboard.welcome.features.webhooks'],
     ],
 
     'icons' => [

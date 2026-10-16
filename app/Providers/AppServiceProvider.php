@@ -22,6 +22,10 @@ use App\Repositories\SubGoal\SubGoalRepository;
 use App\Repositories\SubGoal\SubGoalRepositoryInterface;
 use App\Repositories\User\UserRepository;
 use App\Repositories\User\UserRepositoryInterface;
+use App\Repositories\Webhook\WebhookRepository;
+use App\Repositories\Webhook\WebhookRepositoryInterface;
+use App\Repositories\WebhookLog\WebhookLogRepository;
+use App\Repositories\WebhookLog\WebhookLogRepositoryInterface;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -36,6 +40,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        $this->app->bind(WebhookRepositoryInterface::class, WebhookRepository::class);
+        $this->app->bind(WebhookLogRepositoryInterface::class, WebhookLogRepository::class);
         $this->app->bind(SubGoalRepositoryInterface::class, SubGoalRepository::class);
         $this->app->bind(GoalRepositoryInterface::class, GoalRepository::class);
         $this->app->bind(GoalSavingRepositoryInterface::class, GoalSavingRepository::class);

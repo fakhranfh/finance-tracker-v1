@@ -75,6 +75,17 @@ export const routes = {
         subGoals: (id) => endpoint(`/goals/${id}/sub-goals`),
         subGoal: (id, subGoalId) => endpoint(`/goals/${id}/sub-goals/${subGoalId}`),
     },
+    webhooks: {
+        index: endpoint('/webhooks'),
+        show: (id) => endpoint(`/webhooks/${id}`),
+        store: endpoint('/webhooks'),
+        update: (id) => endpoint(`/webhooks/${id}`),
+        destroy: (id) => endpoint(`/webhooks/${id}`),
+        bulkDestroy: endpoint('/webhooks'),
+        generate: endpoint('/webhooks/generate'),
+        test: (id) => endpoint(`/webhooks/${id}/test`),
+        logs: (id) => endpoint(`/webhooks/${id}/logs`),
+    },
     pages: {
         home: '/',
         login: '/login',
@@ -100,5 +111,10 @@ export const routes = {
         goalSubGoalShow: (id, subGoalId) => `/goals/${id}/sub-goals/${subGoalId}`,
         goalSubGoalEdit: (id, subGoalId) => `/goals/${id}/sub-goals/${subGoalId}/edit`,
         goalSubGoals: (id) => `/goals/${id}/sub-goals`,
+        webhooks: '/webhooks',
+        webhookCreate: '/webhooks/create',
+        webhookEdit: (id) => `/webhooks/${id}/edit`,
+        webhookTest: (id) => `/webhooks/${id}/test`,
+        webhookLogs: (id) => `/webhooks/${id}/logs`,
     },
 };

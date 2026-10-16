@@ -124,6 +124,11 @@ class AccountRepository implements AccountRepositoryInterface
         return Account::query()->whereIn('id', $ids)->pluck('name');
     }
 
+    public function findByName(string $name): ?Account
+    {
+        return Account::query()->where('name', $name)->orderBy('id')->first();
+    }
+
     public function allNamed(): Collection
     {
         return Account::query()->orderBy('name')->get(['id', 'name']);

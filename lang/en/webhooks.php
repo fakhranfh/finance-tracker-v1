@@ -1,0 +1,110 @@
+<?php
+
+return [
+    'title' => 'Manage Webhooks',
+    'subtitle' => 'View, create, edit, and remove webhooks.',
+    'create' => 'Add webhook',
+    'edit' => 'Edit webhook',
+    'back' => 'Back to webhooks',
+
+    'table' => [
+        'name' => 'Name',
+        'token' => 'Token',
+        'is_active' => 'Is Active',
+        'created_at' => 'Created',
+        'actions' => 'Actions',
+        'empty' => 'No webhooks found.',
+        'search' => 'Search by name or token...',
+        'per_page' => 'Items per page',
+        'selected' => 'selected',
+        'show_more' => 'Show more',
+        'show_less' => 'Show less',
+        'select_all_matching' => 'Select all :total webhooks',
+        'all_selected' => 'All :total webhooks selected.',
+        'clear_selection' => 'Clear selection',
+    ],
+
+    'guide' => [
+        'title' => 'How to use webhooks',
+        'step_create' => 'Click "Add webhook" and give it a name. A secret token is generated automatically.',
+        'step_copy' => 'Open the webhook with Edit and copy its token (shown under the title) and the Webhook URL. Anyone with the token can add records, so keep it private.',
+        'step_send' => 'From your app or automation, send a POST request with a JSON body to that URL and put the token in the X-Webhook-Token header (example below).',
+        'step_test' => 'Optional: open the webhook with Edit, then click "Test webhook" to validate a sample payload on its own page without saving anything.',
+        'step_ips' => 'Optional: restrict who can call the webhook by listing allowed IP addresses (or CIDR ranges) on its Edit page. Requests from any other IP get 403.',
+        'step_response' => 'A successful request returns 201 and the new record appears under Manage Records.',
+        'example' => 'Example request',
+        'field_type' => 'type: income, expense or transfer (required).',
+        'field_account' => 'account_name: the exact name of the source account (required). For transfers also send to_account_id.',
+        'field_category' => 'category_id: optional, and must be a category of the same type.',
+        'field_amount' => 'amount: a number greater than 0, up to 2 decimals (required).',
+        'field_recorded_at' => 'recorded_at: date and time of the record (required). note is optional.',
+        'errors' => '401 means the token is missing or wrong, 404 means the webhook is inactive, 422 means the data is invalid, and 429 means too many requests (limit 60 per minute).',
+    ],
+
+    'test' => [
+        'back' => 'Back to edit webhook',
+        'title' => 'Test webhook',
+        'description' => 'Check your payload before connecting another app. This is a dry run: nothing is saved.',
+        'payload' => 'Sample payload (JSON)',
+        'send' => 'Send test',
+        'success' => 'Test passed. The payload is valid and no record was saved.',
+        'inactive' => 'This webhook is inactive, so real requests would be rejected with 404.',
+    ],
+
+    'errors' => [
+        'invalid_token' => 'Missing or invalid webhook token.',
+        'ip_not_allowed' => 'This IP address is not allowed to use this webhook.',
+        'invalid_ip' => 'Invalid IP address: :ip.',
+        'too_many_ips' => 'You can whitelist at most :max IP addresses.',
+    ],
+
+    'logs' => [
+        'title' => 'Webhook logs',
+        'subtitle' => 'Every call to this webhook and how it ended. The latest 500 are kept.',
+        'clear' => 'Clear logs',
+        'confirm_clear' => 'Are you sure you want to clear all logs of this webhook?',
+        'inactive' => 'This webhook is inactive.',
+        'table' => [
+            'time' => 'Time',
+            'status' => 'Status',
+            'message' => 'Message',
+            'origin' => 'Origin',
+            'ip' => 'IP address',
+            'payload' => 'Payload',
+            'empty' => 'No calls logged yet.',
+            'search' => 'Search by message, origin, IP or status...',
+        ],
+    ],
+
+    'fields' => [
+        'allowed_ips' => 'Allowed IP addresses',
+        'allowed_ips_hint' => 'One per line, e.g. 203.0.113.5 or 198.51.100.0/24. Leave empty to accept requests from any IP. When set, only requests from these addresses are accepted.',
+        'url' => 'Webhook URL',
+        'name' => 'Name',
+        'token' => 'Token',
+        'is_active' => 'Is Active',
+    ],
+
+    'actions' => [
+        'test' => 'Test',
+        'copy' => 'Copy',
+        'copied' => 'Copied!',
+        'edit' => 'Edit',
+        'delete' => 'Delete',
+        'save' => 'Save',
+        'cancel' => 'Cancel',
+        'confirm_delete' => 'Are you sure you want to delete this webhook?',
+        'delete_selected' => 'Delete selected',
+        'confirm_bulk_delete' => 'Are you sure you want to delete the selected webhooks?',
+        'generate' => 'Generate',
+        'generate_count' => 'Number of webhooks to generate',
+        'autofill' => 'Autofill',
+    ],
+
+    'flash' => [
+        'created' => 'Webhook created successfully.',
+        'updated' => 'Webhook updated successfully.',
+        'deleted' => 'Webhook deleted successfully.',
+        'generated' => 'Fake webhooks generated successfully.',
+    ],
+];

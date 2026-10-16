@@ -14,6 +14,11 @@ interface AccountRepositoryInterface
     public function find(int $id): ?Account;
 
     /**
+     * Find the first account with the given name.
+     */
+    public function findByName(string $name): ?Account;
+
+    /**
      * Paginate accounts, optionally filtered by search and sorted by column.
      */
     public function paginate(int $perPage, ?string $search = null, ?string $sort = null, string $direction = 'asc'): LengthAwarePaginator;

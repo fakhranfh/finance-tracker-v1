@@ -18,6 +18,9 @@ use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\RecordController;
 use App\Http\Controllers\Api\RecordImportController;
 use App\Http\Controllers\Api\SubGoalController;
+use App\Http\Controllers\Api\WebhookController;
+use App\Http\Controllers\Api\WebhookLogController;
+use App\Http\Controllers\Api\WebhookRecordController;
 use App\Http\Middleware\EnsureLocalEnvironment;
 use App\Http\Middleware\EnsureNoUsersExist;
 use Illuminate\Support\Facades\Route;
@@ -117,6 +120,17 @@ Route::middleware('web')->name('api.')->group(function (): void {
         Route::put('/goals/{goal}/sub-goals/{subGoal}', [SubGoalController::class, 'update'])
             ->scopeBindings()
             ->name('goals.sub-goals.update');
+        Route::delete('/webhooks', [WebhookController::class, 'bulkDestroy'])->name('webhooks.bulk-destroy');
+        Route::post('/webhooks/generate', [WebhookController::class, 'generate'])
+            ->middleware(EnsureLocalEnvironment::class)
+            ->name('webhooks.generate');
+        Route::get('/webhooks/{webhook}/logs', [WebhookLogController::class, 'index'])->name('webhooks.logs.index');
+        Route::delete('/webhooks/{webhook}/logs', [WebhookLogController::class, 'destroy'])->name('webhooks.logs.destroy');
+        Route::post('/webhooks/{webhook}/test', [WebhookController::class, 'test'])->name('webhooks.test');
+        Route::resource('webhooks', WebhookController::class)
+            ->parameters(['webhooks' => 'webhook'])
+            ->except('create', 'edit')
+            ->names('webhooks');
         Route::post('/logout', LogoutController::class)->name('logout');
     });
 
@@ -125,3 +139,7 @@ Route::middleware('web')->name('api.')->group(function (): void {
         Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
     });
 });
+
+Route::post('/webhooks/records', WebhookRecordController::class)
+    ->middleware('throttle:60,1')
+    ->name('api.webhooks.records.store');

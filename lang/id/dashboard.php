@@ -8,6 +8,7 @@ return [
         'records' => 'Kelola Catatan',
         'categories' => 'Kelola Kategori',
         'goals' => 'Kelola Target',
+        'webhooks' => 'Kelola Webhook',
     ],
     'welcome' => [
         'greeting' => 'Selamat datang, :name!',
@@ -19,6 +20,7 @@ return [
             'records' => 'Catat setiap pemasukan dan pengeluaran. Filter dan tinjau riwayat transaksi, serta lihat berapa yang masuk dan keluar.',
             'categories' => 'Kelompokkan catatan Anda ke dalam kategori seperti makanan, transportasi, atau gaji agar terlihat ke mana uang Anda pergi.',
             'goals' => 'Buat target tabungan dengan jumlah target atau daftar sub target, pantau progres, dan lihat riwayat menabung.',
+            'webhooks' => 'Buat URL webhook agar aplikasi atau otomasi lain dapat menambahkan catatan ke finance tracker Anda.',
         ],
     ],
     'topbar' => [

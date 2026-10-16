@@ -2754,6 +2754,497 @@
                     }
                 }
             }
+        },
+        "/webhooks/{id}/logs": {
+            "get": {
+                "tags": [
+                    "Webhooks"
+                ],
+                "summary": "List webhook logs",
+                "description": "Every call to the webhook public endpoint (status, origin, IP, payload, created record), newest first. The latest 500 are kept.",
+                "operationId": "ca7a59fbbc7a055873f48e264275fe85",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "status_code",
+                                "created_at"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "direction",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "asc",
+                                "desc"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 10
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated list of logs"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Webhooks"
+                ],
+                "summary": "Clear webhook logs",
+                "operationId": "89b496d17df1c880434ca66b767e5011",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Logs cleared"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                }
+            }
+        },
+        "/webhooks/records": {
+            "post": {
+                "tags": [
+                    "Webhooks"
+                ],
+                "summary": "Add a record through a webhook",
+                "description": "Public endpoint authenticated by the webhook token in the X-Webhook-Token header. Accepts the same payload as POST /records. A missing or unknown token returns 401 and an inactive webhook 404.",
+                "operationId": "dab96d151cbe3ec1279190df4d91613e",
+                "parameters": [
+                    {
+                        "name": "X-Webhook-Token",
+                        "in": "header",
+                        "description": "The webhook token.",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "type": {
+                                        "type": "string",
+                                        "example": "expense",
+                                        "enum": [
+                                            "income",
+                                            "expense",
+                                            "transfer"
+                                        ]
+                                    },
+                                    "account_name": {
+                                        "description": "Name of the source account.",
+                                        "type": "string",
+                                        "example": "Cash"
+                                    },
+                                    "to_account_id": {
+                                        "description": "Required for transfers, ignored otherwise.",
+                                        "type": "integer",
+                                        "nullable": true
+                                    },
+                                    "category_id": {
+                                        "type": "integer",
+                                        "nullable": true
+                                    },
+                                    "amount": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 9.99
+                                    },
+                                    "note": {
+                                        "type": "string",
+                                        "example": "Coffee",
+                                        "nullable": true
+                                    },
+                                    "recorded_at": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "example": "2026-01-15T10:30:00+07:00"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Record created"
+                    },
+                    "403": {
+                        "description": "The caller IP address is not in the webhook whitelist"
+                    },
+                    "401": {
+                        "description": "Missing or unknown webhook token"
+                    },
+                    "404": {
+                        "description": "Inactive webhook"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    },
+                    "429": {
+                        "description": "Too many requests"
+                    }
+                }
+            }
+        },
+        "/webhooks": {
+            "get": {
+                "tags": [
+                    "Webhooks"
+                ],
+                "summary": "List webhooks",
+                "operationId": "1ed9eb72be2ea8d351a921e4d4f99dba",
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "direction",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "asc",
+                                "desc"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 10
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated list of webhooks"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Webhooks"
+                ],
+                "summary": "Create a webhook",
+                "operationId": "88e680f56cd170c2a78d33c00e3049f9",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Sample name"
+                                    },
+                                    "allowed_ips": {
+                                        "description": "Whitelisted IP addresses or CIDR ranges, one per line (or comma separated). Empty allows every address.",
+                                        "type": "string",
+                                        "example": "203.0.113.5\n198.51.100.0/24",
+                                        "nullable": true
+                                    },
+                                    "is_active": {
+                                        "type": "boolean",
+                                        "example": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Webhook created"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Webhooks"
+                ],
+                "summary": "Bulk delete webhooks",
+                "operationId": "ce013a0de9efee88a3cd95fad34e24ee",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "ids": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "all": {
+                                        "type": "boolean"
+                                    },
+                                    "search": {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "Webhooks deleted"
+                    }
+                }
+            }
+        },
+        "/webhooks/{id}/test": {
+            "post": {
+                "tags": [
+                    "Webhooks"
+                ],
+                "summary": "Test a webhook",
+                "description": "Dry run: validates the payload like POST /webhooks/{token}/records and checks that the webhook is active, but saves nothing.",
+                "operationId": "7d28c948933a9941b466d1134486b54b",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "type": {
+                                        "type": "string",
+                                        "example": "expense",
+                                        "enum": [
+                                            "income",
+                                            "expense",
+                                            "transfer"
+                                        ]
+                                    },
+                                    "account_name": {
+                                        "type": "string",
+                                        "example": "Cash"
+                                    },
+                                    "amount": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 12.5
+                                    },
+                                    "recorded_at": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    },
+                                    "ip": {
+                                        "description": "IP address to check against the whitelist (only needed when IPs are whitelisted).",
+                                        "type": "string",
+                                        "example": "203.0.113.5"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Payload is valid and the webhook is active"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "403": {
+                        "description": "IP address is not whitelisted"
+                    },
+                    "409": {
+                        "description": "Webhook is inactive"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                }
+            }
+        },
+        "/webhooks/{id}": {
+            "get": {
+                "tags": [
+                    "Webhooks"
+                ],
+                "summary": "Show a webhook",
+                "operationId": "c3ea455a43b6cab7b89b1c33c6de5348",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The webhook"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Webhooks"
+                ],
+                "summary": "Update a webhook",
+                "operationId": "17afcb4a1c9177f01a95eaafae046bda",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Sample name"
+                                    },
+                                    "allowed_ips": {
+                                        "description": "Whitelisted IP addresses or CIDR ranges, one per line (or comma separated). Empty allows every address.",
+                                        "type": "string",
+                                        "example": "203.0.113.5\n198.51.100.0/24",
+                                        "nullable": true
+                                    },
+                                    "is_active": {
+                                        "type": "boolean",
+                                        "example": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Webhook updated"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Webhooks"
+                ],
+                "summary": "Delete a webhook",
+                "operationId": "0dacded42546f9ea8a3491d86228d8d8",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Webhook deleted"
+                    }
+                }
+            }
         }
     },
     "components": {
@@ -2802,6 +3293,10 @@
         {
             "name": "Categories",
             "description": "Record category endpoints"
+        },
+        {
+            "name": "Webhooks",
+            "description": "Webhook management and public record intake endpoints"
         },
         {
             "name": "Sub Goals",
