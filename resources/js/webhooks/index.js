@@ -38,6 +38,8 @@ function activeToggle(item) {
     return label;
 }
 
+const testLabel = document.getElementById('webhooks-table').dataset.labelTest;
+
 createTable({
     ids: {
         table: 'webhooks-table',
@@ -64,7 +66,8 @@ createTable({
             activeToggle(item),
             formatDateTime(item.created_at),
         ],
-        viewUrl: routes.pages.webhookTest(item.id),
+        viewUrl: routes.pages.webhookShow(item.id),
+        extraActions: [{ label: testLabel, url: `${routes.pages.webhookTest(item.id)}?from=index` }],
         editUrl: routes.pages.webhookEdit(item.id),
         locked: false,
     }),

@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\RecordType;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class WebhookPageController extends Controller
@@ -20,15 +22,28 @@ class WebhookPageController extends Controller
 
     public function create(): View
     {
-        return view('webhooks.form', ['id' => null]);
+        return view('webhooks.form', ['id' => null, 'recordTypes' => $this->recordTypes()]);
     }
 
-    public function test(int $id): View
+    public function test(Request $request, int $id): View
     {
-        return view('webhooks.test', ['id' => $id]);
+        return view('webhooks.test', ['id' => $id] + $this->backLink($request, $id));
     }
 
-    public function logs(int $id): View
+    public function show(int $id): View
+    {
+        $fields = [
+            'status' => __('webhooks.show.status'),
+            'allowed_ips' => __('webhooks.fields.allowed_ips'),
+            'allowed_account_ids' => __('webhooks.fields.allowed_account_ids'),
+            'allowed_types' => __('webhooks.fields.allowed_types'),
+            'created_at' => __('webhooks.table.created_at'),
+        ];
+
+        return view('webhooks.show', ['id' => $id, 'fields' => $fields, 'recordTypes' => $this->recordTypes()]);
+    }
+
+    public function logs(Request $request, int $id): View
     {
         $tableHeaders = [
             ['label' => __('webhooks.logs.table.time'), 'sort' => 'created_at'],
@@ -40,11 +55,40 @@ class WebhookPageController extends Controller
             '',
         ];
 
-        return view('webhooks.logs', ['id' => $id, 'tableHeaders' => $tableHeaders]);
+        return view('webhooks.logs', ['id' => $id, 'tableHeaders' => $tableHeaders] + $this->backLink($request, $id));
     }
 
     public function edit(int $id): View
     {
-        return view('webhooks.form', ['id' => $id]);
+        return view('webhooks.form', ['id' => $id, 'recordTypes' => $this->recordTypes()]);
+    }
+
+    /**
+     * Where the Back link of the test and logs pages leads: the page they were opened from
+     * (?from=show|edit|index), the edit page by default.
+     *
+     * @return array{from: string, backUrl: string, backLabel: string}
+     */
+    private function backLink(Request $request, int $id): array
+    {
+        $from = in_array($request->query('from'), ['show', 'edit', 'index'], true) ? $request->query('from') : 'edit';
+
+        return [
+            'from' => $from,
+            'backUrl' => match ($from) {
+                'show' => route('webhooks.show', $id),
+                'index' => route('webhooks.index'),
+                default => route('webhooks.edit', $id),
+            },
+            'backLabel' => __('webhooks.back_to.'.$from),
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function recordTypes(): array
+    {
+        return collect(RecordType::cases())->mapWithKeys(fn (RecordType $type) => [$type->value => $type->label()])->all();
     }
 }

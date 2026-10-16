@@ -113,6 +113,7 @@ export const routes = {
         goalSubGoals: (id) => `/goals/${id}/sub-goals`,
         webhooks: '/webhooks',
         webhookCreate: '/webhooks/create',
+        webhookShow: (id) => `/webhooks/${id}`,
         webhookEdit: (id) => `/webhooks/${id}/edit`,
         webhookTest: (id) => `/webhooks/${id}/test`,
         webhookLogs: (id) => `/webhooks/${id}/logs`,

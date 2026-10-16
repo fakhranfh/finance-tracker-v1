@@ -65,9 +65,7 @@ class WebhookController extends Controller
             return response()->json(['message' => __('webhooks.test.inactive')], 409);
         }
 
-        if (! $webhook->allowsIp($request->input('ip'))) {
-            return response()->json(['message' => __('webhooks.errors.ip_not_allowed')], 403);
-        }
+        $this->webhookManagementService->prepareRecord($webhook, $request->validated(), $request->input('ip'));
 
         return response()->json([
             'message' => __('webhooks.test.success'),

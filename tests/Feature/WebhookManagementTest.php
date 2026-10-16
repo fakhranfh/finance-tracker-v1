@@ -298,3 +298,75 @@ it('checks the IP on the webhook test endpoint', function () {
     $this->actingAs($actor)->postJson("/api/webhooks/{$webhook->id}/test", webhookPayload($account) + ['ip' => '192.0.2.1'])->assertForbidden();
     $this->actingAs($actor)->postJson("/api/webhooks/{$webhook->id}/test", webhookPayload($account) + ['ip' => '203.0.113.5'])->assertOk();
 });
+
+it('saves allowed accounts and types and returns them', function () {
+    $actor = User::factory()->create();
+    $account = Account::factory()->create();
+
+    $this->actingAs($actor)->postJson('/api/webhooks', [
+        'name' => 'Restricted',
+        'is_active' => true,
+        'allowed_account_ids' => [$account->id, $account->id],
+        'allowed_types' => ['expense'],
+    ])->assertStatus(201)
+        ->assertJsonPath('data.allowed_account_ids', [$account->id])
+        ->assertJsonPath('data.allowed_types', ['expense']);
+});
+
+it('rejects unknown allowed accounts and types', function () {
+    $actor = User::factory()->create();
+
+    $this->actingAs($actor)->postJson('/api/webhooks', [
+        'name' => 'Bad',
+        'is_active' => true,
+        'allowed_account_ids' => [999999],
+        'allowed_types' => ['gift'],
+    ])->assertStatus(422)->assertJsonValidationErrors(['allowed_account_ids.0', 'allowed_types.0']);
+});
+
+it('clears the restrictions when empty lists are submitted', function () {
+    $actor = User::factory()->create();
+    $account = Account::factory()->create();
+    $webhook = Webhook::factory()->create(['allowed_account_ids' => [$account->id], 'allowed_types' => ['income']]);
+
+    $this->actingAs($actor)->putJson("/api/webhooks/{$webhook->id}", [
+        'name' => $webhook->name,
+        'is_active' => true,
+        'allowed_account_ids' => [],
+        'allowed_types' => [],
+    ])->assertOk()->assertJsonPath('data.allowed_account_ids', [])->assertJsonPath('data.allowed_types', []);
+});
+
+it('only accepts the allowed record types', function () {
+    $webhook = Webhook::factory()->create(['allowed_types' => ['income']]);
+    $account = Account::factory()->create();
+
+    $this->withHeader('X-Webhook-Token', $webhook->token)
+        ->postJson('/api/webhooks/records', webhookPayload($account))->assertForbidden();
+    $this->withHeader('X-Webhook-Token', $webhook->token)
+        ->postJson('/api/webhooks/records', ['type' => 'income'] + webhookPayload($account))->assertStatus(201);
+});
+
+it('only accepts the allowed accounts, including the destination of a transfer', function () {
+    $allowed = Account::factory()->create();
+    $other = Account::factory()->create();
+    $webhook = Webhook::factory()->create(['allowed_account_ids' => [$allowed->id]]);
+
+    $this->withHeader('X-Webhook-Token', $webhook->token)
+        ->postJson('/api/webhooks/records', webhookPayload($other))->assertForbidden();
+    $this->withHeader('X-Webhook-Token', $webhook->token)
+        ->postJson('/api/webhooks/records', ['type' => 'transfer', 'to_account_id' => $other->id] + webhookPayload($allowed))->assertForbidden();
+    $this->withHeader('X-Webhook-Token', $webhook->token)
+        ->postJson('/api/webhooks/records', webhookPayload($allowed))->assertStatus(201);
+});
+
+it('applies the type and account restrictions on the test endpoint', function () {
+    $actor = User::factory()->create();
+    $allowed = Account::factory()->create();
+    $other = Account::factory()->create();
+    $webhook = Webhook::factory()->create(['allowed_account_ids' => [$allowed->id], 'allowed_types' => ['expense']]);
+
+    $this->actingAs($actor)->postJson("/api/webhooks/{$webhook->id}/test", webhookPayload($other))->assertForbidden();
+    $this->actingAs($actor)->postJson("/api/webhooks/{$webhook->id}/test", ['type' => 'income'] + webhookPayload($allowed))->assertForbidden();
+    $this->actingAs($actor)->postJson("/api/webhooks/{$webhook->id}/test", webhookPayload($allowed))->assertOk();
+});

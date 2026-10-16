@@ -4,6 +4,8 @@ const ICON_EDIT =
     '<svg class="h-5 w-5 sm:hidden" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/></svg>';
 const ICON_VIEW =
     '<svg class="h-5 w-5 sm:hidden" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"/></svg>';
+const ICON_EXTRA =
+    '<svg class="h-5 w-5 sm:hidden" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M6.3 2.84A1.5 1.5 0 004 4.11v11.78a1.5 1.5 0 002.3 1.27l9.34-5.89a1.5 1.5 0 000-2.54L6.3 2.84z"/></svg>';
 const ICON_DELETE =
     '<svg class="h-5 w-5 sm:hidden" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>';
 
@@ -14,6 +16,7 @@ const ICON_DELETE =
  * render({ id, cells, editUrl, onDelete, locked }):
  *   cells    text (or a DOM node, e.g. an icon) for each data column (first is emphasised)
  *   locked   row can't be selected or deleted (e.g. the current user)
+ *   extraActions  [{ label, url }] links shown after the view link (e.g. a "Test" page)
  *   onEdit   edit button handler, used instead of the editUrl link (e.g. to open a modal)
  *   readOnly row has no edit or delete action at all
  *   noEdit   row has no edit action but can still be deleted
@@ -22,7 +25,7 @@ export function createTableRow({ tbody, selection, selectAll }) {
     const labels = tbody.dataset;
 
     return {
-        render({ id, cells, viewUrl = null, editUrl, onEdit = null, onDelete, locked = false, readOnly = false, noEdit = false }) {
+        render({ id, cells, viewUrl = null, extraActions = [], editUrl, onEdit = null, onDelete, locked = false, readOnly = false, noEdit = false }) {
             const row = document.createElement('tr');
 
             // Without a checkbox column (table selectable="false") the leading cell is left out.
@@ -90,6 +93,17 @@ export function createTableRow({ tbody, selection, selectAll }) {
                 viewLink.lastChild.textContent = labels.labelView;
                 actions.append(viewLink);
             }
+
+            extraActions.forEach(({ label, url }) => {
+                const link = document.createElement('a');
+
+                link.href = url;
+                link.className = 'inline-flex items-center font-medium text-primary hover:underline';
+                link.title = label;
+                link.innerHTML = `${ICON_EXTRA}<span class="max-sm:sr-only"></span>`;
+                link.lastChild.textContent = label;
+                actions.append(link);
+            });
 
             if (!readOnly && !noEdit) {
                 const editLink = document.createElement(onEdit ? 'button' : 'a');

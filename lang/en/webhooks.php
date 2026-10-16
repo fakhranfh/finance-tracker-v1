@@ -6,6 +6,11 @@ return [
     'create' => 'Add webhook',
     'edit' => 'Edit webhook',
     'back' => 'Back to webhooks',
+    'back_to' => [
+        'edit' => 'Back to edit webhook',
+        'show' => 'Back to webhook details',
+        'index' => 'Back to webhooks',
+    ],
 
     'table' => [
         'name' => 'Name',
@@ -29,7 +34,7 @@ return [
         'step_create' => 'Click "Add webhook" and give it a name. A secret token is generated automatically.',
         'step_copy' => 'Open the webhook with Edit and copy its token (shown under the title) and the Webhook URL. Anyone with the token can add records, so keep it private.',
         'step_send' => 'From your app or automation, send a POST request with a JSON body to that URL and put the token in the X-Webhook-Token header (example below).',
-        'step_test' => 'Optional: open the webhook with Edit, then click "Test webhook" to validate a sample payload on its own page without saving anything.',
+        'step_test' => 'Optional: use the Test webhook panel below to validate a sample payload without saving anything.',
         'step_ips' => 'Optional: restrict who can call the webhook by listing allowed IP addresses (or CIDR ranges) on its Edit page. Requests from any other IP get 403.',
         'step_response' => 'A successful request returns 201 and the new record appears under Manage Records.',
         'example' => 'Example request',
@@ -42,7 +47,6 @@ return [
     ],
 
     'test' => [
-        'back' => 'Back to edit webhook',
         'title' => 'Test webhook',
         'description' => 'Check your payload before connecting another app. This is a dry run: nothing is saved.',
         'payload' => 'Sample payload (JSON)',
@@ -52,6 +56,10 @@ return [
     ],
 
     'errors' => [
+        'ip_required' => 'Add at least one IP address, or choose Allow all.',
+        'pick_one' => 'Select at least one option.',
+        'type_not_allowed' => 'This record type is not allowed for this webhook.',
+        'account_not_allowed' => 'This account is not allowed for this webhook.',
         'invalid_token' => 'Missing or invalid webhook token.',
         'ip_not_allowed' => 'This IP address is not allowed to use this webhook.',
         'invalid_ip' => 'Invalid IP address: :ip.',
@@ -76,9 +84,25 @@ return [
         ],
     ],
 
+    'show' => [
+        'title' => 'Webhook details',
+        'status' => 'Status',
+        'active' => 'Active',
+        'inactive' => 'Inactive',
+        'all' => 'All',
+    ],
+
     'fields' => [
+        'ip_mode_all' => 'Allow all',
+        'ip_mode_only' => 'Allow only',
+        'no_accounts' => 'No accounts yet. Create an account first to restrict this webhook to specific accounts.',
+        'accounts_failed' => 'Could not load accounts. Reload the page to try again.',
+        'allowed_account_ids' => 'Allowed accounts',
+        'allowed_account_ids_hint' => 'Records can only be added to the ticked accounts (for transfers, both accounts). With every account ticked, all accounts are allowed, including ones created later.',
+        'allowed_types' => 'Allowed record types',
+        'allowed_types_hint' => 'Only the ticked record types are accepted. With every type ticked, all types are allowed.',
         'allowed_ips' => 'Allowed IP addresses',
-        'allowed_ips_hint' => 'One per line, e.g. 203.0.113.5 or 198.51.100.0/24. Leave empty to accept requests from any IP. When set, only requests from these addresses are accepted.',
+        'allowed_ips_hint' => 'Allow all accepts requests from any IP. Allow only accepts requests from the listed addresses; each one is an IPv4/IPv6 address or a CIDR range such as 198.51.100.0/24.',
         'url' => 'Webhook URL',
         'name' => 'Name',
         'token' => 'Token',
@@ -86,7 +110,12 @@ return [
     ],
 
     'actions' => [
+        'view' => 'View',
         'test' => 'Test',
+        'select_all' => 'Select all',
+        'deselect_all' => 'Deselect all',
+        'add_ip' => 'Add IP address',
+        'delete_all' => 'Delete all',
         'copy' => 'Copy',
         'copied' => 'Copied!',
         'edit' => 'Edit',

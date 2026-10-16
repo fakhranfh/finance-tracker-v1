@@ -6,6 +6,11 @@ return [
     'create' => 'Tambah webhook',
     'edit' => 'Ubah webhook',
     'back' => 'Kembali ke daftar webhook',
+    'back_to' => [
+        'edit' => 'Kembali ke ubah webhook',
+        'show' => 'Kembali ke detail webhook',
+        'index' => 'Kembali ke daftar webhook',
+    ],
 
     'table' => [
         'name' => 'Nama',
@@ -29,7 +34,7 @@ return [
         'step_create' => 'Klik "Tambah webhook" dan beri nama. Token rahasia dibuat otomatis.',
         'step_copy' => 'Buka webhook lewat Ubah lalu salin token-nya (tampil di bawah judul) dan URL Webhook-nya. Siapa pun yang memegang token bisa menambah catatan, jadi jaga kerahasiaannya.',
         'step_send' => 'Dari aplikasi atau otomasi Anda, kirim request POST dengan body JSON ke URL tersebut dan taruh token di header X-Webhook-Token (contoh di bawah).',
-        'step_test' => 'Opsional: buka webhook lewat Ubah, lalu klik "Uji webhook" untuk memeriksa contoh payload di halamannya sendiri tanpa menyimpan apa pun.',
+        'step_test' => 'Opsional: gunakan panel Uji webhook di bawah untuk memeriksa contoh payload tanpa menyimpan apa pun.',
         'step_ips' => 'Opsional: batasi siapa yang boleh memanggil webhook dengan mengisi alamat IP (atau rentang CIDR) yang diizinkan di halaman Ubah. Request dari IP lain akan mendapat 403.',
         'step_response' => 'Jika berhasil, respons 201 dikembalikan dan catatan baru muncul di Kelola Catatan.',
         'example' => 'Contoh request',
@@ -42,7 +47,6 @@ return [
     ],
 
     'test' => [
-        'back' => 'Kembali ke ubah webhook',
         'title' => 'Uji webhook',
         'description' => 'Periksa payload Anda sebelum menghubungkan aplikasi lain. Ini hanya uji coba: tidak ada data yang disimpan.',
         'payload' => 'Contoh payload (JSON)',
@@ -52,6 +56,10 @@ return [
     ],
 
     'errors' => [
+        'ip_required' => 'Tambahkan setidaknya satu alamat IP, atau pilih Izinkan semua.',
+        'pick_one' => 'Pilih setidaknya satu opsi.',
+        'type_not_allowed' => 'Tipe catatan ini tidak diizinkan untuk webhook ini.',
+        'account_not_allowed' => 'Akun ini tidak diizinkan untuk webhook ini.',
         'invalid_token' => 'Token webhook tidak ada atau tidak valid.',
         'ip_not_allowed' => 'Alamat IP ini tidak diizinkan memakai webhook ini.',
         'invalid_ip' => 'Alamat IP tidak valid: :ip.',
@@ -76,9 +84,25 @@ return [
         ],
     ],
 
+    'show' => [
+        'title' => 'Detail webhook',
+        'status' => 'Status',
+        'active' => 'Aktif',
+        'inactive' => 'Nonaktif',
+        'all' => 'Semua',
+    ],
+
     'fields' => [
+        'ip_mode_all' => 'Izinkan semua',
+        'ip_mode_only' => 'Izinkan hanya',
+        'no_accounts' => 'Belum ada akun. Buat akun terlebih dahulu untuk membatasi webhook ke akun tertentu.',
+        'accounts_failed' => 'Akun gagal dimuat. Muat ulang halaman untuk mencoba lagi.',
+        'allowed_account_ids' => 'Akun yang diizinkan',
+        'allowed_account_ids_hint' => 'Catatan hanya bisa ditambahkan ke akun yang dicentang (untuk transfer, kedua akun). Jika semua akun dicentang, semua akun diizinkan, termasuk akun yang dibuat kemudian.',
+        'allowed_types' => 'Tipe catatan yang diizinkan',
+        'allowed_types_hint' => 'Hanya tipe catatan yang dicentang yang diterima. Jika semua tipe dicentang, semua tipe diizinkan.',
         'allowed_ips' => 'Alamat IP yang diizinkan',
-        'allowed_ips_hint' => 'Satu per baris, misalnya 203.0.113.5 atau 198.51.100.0/24. Kosongkan untuk menerima request dari IP mana saja. Jika diisi, hanya request dari alamat ini yang diterima.',
+        'allowed_ips_hint' => 'Izinkan semua menerima request dari IP mana saja. Izinkan hanya menerima request dari alamat yang terdaftar; masing-masing berupa alamat IPv4/IPv6 atau rentang CIDR seperti 198.51.100.0/24.',
         'url' => 'URL Webhook',
         'name' => 'Nama',
         'token' => 'Token',
@@ -86,7 +110,12 @@ return [
     ],
 
     'actions' => [
+        'view' => 'Lihat',
         'test' => 'Uji',
+        'select_all' => 'Pilih semua',
+        'deselect_all' => 'Batalkan semua',
+        'add_ip' => 'Tambah alamat IP',
+        'delete_all' => 'Hapus semua',
         'copy' => 'Salin',
         'copied' => 'Tersalin!',
         'edit' => 'Ubah',

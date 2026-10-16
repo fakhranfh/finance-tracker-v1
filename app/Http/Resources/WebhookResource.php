@@ -28,6 +28,8 @@ class WebhookResource extends JsonResource
             'url' => route('api.webhooks.records.store'),
             'is_active' => $webhook->is_active,
             'allowed_ips' => $webhook->allowed_ips ?? [],
+            'allowed_account_ids' => $webhook->allowed_account_ids ?? [],
+            'allowed_types' => $webhook->allowed_types ?? [],
             'created_at' => $webhook->created_at?->toIso8601String(),
         ];
     }

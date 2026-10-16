@@ -11,8 +11,10 @@ use Symfony\Component\HttpFoundation\IpUtils;
 
 /**
  * @property array<int, string>|null $allowed_ips
+ * @property array<int, int>|null $allowed_account_ids
+ * @property array<int, string>|null $allowed_types
  */
-#[Fillable(['name', 'token', 'is_active', 'allowed_ips'])]
+#[Fillable(['name', 'token', 'is_active', 'allowed_ips', 'allowed_account_ids', 'allowed_types'])]
 class Webhook extends Model
 {
     /** @use HasFactory<WebhookFactory> */
@@ -28,6 +30,8 @@ class Webhook extends Model
         return [
             'is_active' => 'boolean',
             'allowed_ips' => 'array',
+            'allowed_account_ids' => 'array',
+            'allowed_types' => 'array',
         ];
     }
 
@@ -44,5 +48,25 @@ class Webhook extends Model
         }
 
         return $ip !== null && IpUtils::checkIp($ip, $allowed);
+    }
+
+    /**
+     * Whether records of this type may be added. Every type is allowed when none are listed.
+     */
+    public function allowsType(string $type): bool
+    {
+        $allowed = $this->allowed_types ?? [];
+
+        return $allowed === [] || in_array($type, $allowed, true);
+    }
+
+    /**
+     * Whether records may be added to this account. Every account is allowed when none are listed.
+     */
+    public function allowsAccount(int $accountId): bool
+    {
+        $allowed = $this->allowed_account_ids ?? [];
+
+        return $allowed === [] || in_array($accountId, $allowed, true);
     }
 }

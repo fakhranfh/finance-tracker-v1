@@ -2923,7 +2923,7 @@
                         "description": "Record created"
                     },
                     "403": {
-                        "description": "The caller IP address is not in the webhook whitelist"
+                        "description": "The caller IP address, the record type or the account is not allowed for this webhook"
                     },
                     "401": {
                         "description": "Missing or unknown webhook token"
@@ -3007,6 +3007,27 @@
                                     "name": {
                                         "type": "string",
                                         "example": "Sample name"
+                                    },
+                                    "allowed_account_ids": {
+                                        "description": "Accounts records may be added to. Empty allows every account.",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        },
+                                        "nullable": true
+                                    },
+                                    "allowed_types": {
+                                        "description": "Record types that may be added. Empty allows every type.",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "enum": [
+                                                "income",
+                                                "expense",
+                                                "transfer"
+                                            ]
+                                        },
+                                        "nullable": true
                                     },
                                     "allowed_ips": {
                                         "description": "Whitelisted IP addresses or CIDR ranges, one per line (or comma separated). Empty allows every address.",
@@ -3135,7 +3156,7 @@
                         "description": "Not found"
                     },
                     "403": {
-                        "description": "IP address is not whitelisted"
+                        "description": "IP address, record type or account is not allowed for this webhook"
                     },
                     "409": {
                         "description": "Webhook is inactive"
@@ -3197,6 +3218,27 @@
                                     "name": {
                                         "type": "string",
                                         "example": "Sample name"
+                                    },
+                                    "allowed_account_ids": {
+                                        "description": "Accounts records may be added to. Empty allows every account.",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        },
+                                        "nullable": true
+                                    },
+                                    "allowed_types": {
+                                        "description": "Record types that may be added. Empty allows every type.",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "enum": [
+                                                "income",
+                                                "expense",
+                                                "transfer"
+                                            ]
+                                        },
+                                        "nullable": true
                                     },
                                     "allowed_ips": {
                                         "description": "Whitelisted IP addresses or CIDR ranges, one per line (or comma separated). Empty allows every address.",

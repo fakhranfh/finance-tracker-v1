@@ -1,4 +1,4 @@
-import { get, post } from '../shared/http.js';
+import { get, getAll, post } from '../shared/http.js';
 import { setButtonLoading } from '../shared/loading-state.js';
 import { routes } from '../routes.js';
 
@@ -18,13 +18,17 @@ async function wireTester() {
     const button = document.getElementById('webhook-test-send');
     const result = document.getElementById('webhook-test-result');
 
-    const { ok, data } = await get(`${routes.accounts.index}?per_page=1`);
+    const accounts = (await getAll(routes.accounts.index)) ?? [];
     const webhook = await get(routes.webhooks.show(webhookId));
     const allowed = webhook.ok ? (webhook.data.data.allowed_ips?.[0]?.split('/')[0] ?? null) : null;
-    const accountName = ok ? (data.data?.[0]?.name ?? '') : '';
+    const allowedIds = webhook.ok ? (webhook.data.data.allowed_account_ids ?? []) : [];
+    const allowedTypes = webhook.ok ? (webhook.data.data.allowed_types ?? []) : [];
+    const account = accounts.find((item) => allowedIds.includes(item.id)) ?? accounts[0];
+    const accountName = account?.name ?? '';
+    const type = allowedTypes.find((item) => item !== 'transfer') ?? allowedTypes[0] ?? 'expense';
 
     payload.value = JSON.stringify({
-        type: 'expense',
+        type,
         account_name: accountName,
         amount: '12.50',
         note: 'Webhook test',

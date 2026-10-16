@@ -22,7 +22,6 @@ function randomWords(count = 2) {
 export function webhookFormFixture() {
     return {
         name: randomWords(2),
-        allowed_ips: randomItem(['', '203.0.113.5\n198.51.100.0/24']),
         is_active: Math.random() > 0.5,
     };
 }

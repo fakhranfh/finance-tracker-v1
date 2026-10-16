@@ -2,9 +2,11 @@
 
 namespace App\Http\Requests\Webhook;
 
+use App\Enums\RecordType;
 use App\Rules\IpList;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreWebhookRequest extends FormRequest
 {
@@ -27,6 +29,10 @@ class StoreWebhookRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'is_active' => ['required', 'boolean'],
             'allowed_ips' => ['nullable', 'string', 'max:2000', new IpList],
+            'allowed_account_ids' => ['nullable', 'array'],
+            'allowed_account_ids.*' => ['integer', Rule::exists('accounts', 'id')],
+            'allowed_types' => ['nullable', 'array'],
+            'allowed_types.*' => [Rule::enum(RecordType::class)],
         ];
     }
 }

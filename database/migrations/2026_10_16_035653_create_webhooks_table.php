@@ -14,6 +14,8 @@ return new class extends Migration
             $table->string('token')->unique();
             $table->boolean('is_active')->default(true);
             $table->json('allowed_ips')->nullable();
+            $table->json('allowed_account_ids')->nullable();
+            $table->json('allowed_types')->nullable();
             $table->timestamps();
         });
     }

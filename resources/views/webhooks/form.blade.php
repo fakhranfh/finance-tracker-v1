@@ -15,10 +15,10 @@
 
         <div class="flex items-center gap-3">
             @if ($id)
-                <x-atoms.button href="{{ route('webhooks.logs', $id) }}" variant="secondary">
+                <x-atoms.button href="{{ route('webhooks.logs', ['id' => $id, 'from' => 'edit']) }}" variant="secondary">
                     {{ __('webhooks.logs.title') }}
                 </x-atoms.button>
-                <x-atoms.button href="{{ route('webhooks.test', $id) }}" variant="secondary">
+                <x-atoms.button href="{{ route('webhooks.test', ['id' => $id, 'from' => 'edit']) }}" variant="secondary">
                     {{ __('webhooks.test.title') }}
                 </x-atoms.button>
             @endif
@@ -39,6 +39,7 @@
             id="webhook-form"
             @class(['space-y-5', 'hidden' => $id])
             novalidate
+            data-pick-one-message="{{ __('webhooks.errors.pick_one') }}"
             @if ($id) data-item-id="{{ $id }}" @endif
             data-success-message="{{ $id ? __('webhooks.flash.updated') : __('webhooks.flash.created') }}"
         >
@@ -49,11 +50,82 @@
                 <x-molecules.copy-field name="token" :label="__('webhooks.fields.token')" :copy-label="__('webhooks.actions.copy')" :copied-label="__('webhooks.actions.copied')" />
                 <x-molecules.copy-field name="url" :label="__('webhooks.fields.url')" :copy-label="__('webhooks.actions.copy')" :copied-label="__('webhooks.actions.copied')" />
             @endif
-            <div class="space-y-1.5">
-                <x-atoms.label for="allowed_ips">{{ __('webhooks.fields.allowed_ips') }}</x-atoms.label>
-                <x-atoms.textarea name="allowed_ips" rows="3" spellcheck="false" placeholder="203.0.113.5&#10;198.51.100.0/24" />
+            <div class="space-y-2" id="allowed_ips" data-ip-required-message="{{ __('webhooks.errors.ip_required') }}">
+                <span class="block font-body text-body-sm font-medium text-on-surface">{{ __('webhooks.fields.allowed_ips') }}</span>
+                <div class="flex flex-wrap gap-x-6 gap-y-2">
+                    <label class="flex cursor-pointer items-center gap-2 font-body text-body-md text-on-surface">
+                        <x-atoms.radio name="ip_mode" id="ip_mode_all" value="all" checked />
+                        {{ __('webhooks.fields.ip_mode_all') }}
+                    </label>
+                    <label class="flex cursor-pointer items-center gap-2 font-body text-body-md text-on-surface">
+                        <x-atoms.radio name="ip_mode" id="ip_mode_only" value="only" />
+                        {{ __('webhooks.fields.ip_mode_only') }}
+                    </label>
+                </div>
+                <div id="allowed-ips-panel" class="hidden space-y-2">
+                    <div id="allowed-ips-list" class="space-y-2"></div>
+                    <div class="flex items-center gap-4">
+                        <button type="button" class="cursor-pointer font-body text-body-sm font-medium text-primary hover:underline" data-ip-add>
+                            {{ __('webhooks.actions.add_ip') }}
+                        </button>
+                        <button type="button" class="hidden cursor-pointer font-body text-body-sm font-medium text-error hover:underline" data-ip-clear>
+                            {{ __('webhooks.actions.delete_all') }}
+                        </button>
+                    </div>
+                </div>
+                <template id="allowed-ip-row-template">
+                    <div class="flex items-center gap-2" data-ip-row>
+                        <x-atoms.input type="text" name="allowed_ip[]" id="" spellcheck="false" placeholder="203.0.113.5 / 198.51.100.0/24" aria-label="{{ __('webhooks.fields.allowed_ips') }}" data-ip-input />
+                        <button type="button" class="shrink-0 cursor-pointer font-body text-body-sm font-medium text-error hover:underline" data-ip-delete>
+                            {{ __('webhooks.actions.delete') }}
+                        </button>
+                    </div>
+                </template>
                 <p class="font-body text-body-sm text-on-surface-variant">{{ __('webhooks.fields.allowed_ips_hint') }}</p>
                 <x-atoms.form-error for="allowed_ips" />
+            </div>
+            <div class="space-y-1.5">
+                <x-atoms.label for="allowed_account_ids">{{ __('webhooks.fields.allowed_account_ids') }}</x-atoms.label>
+                <div>
+                    <button
+                        type="button"
+                        class="hidden cursor-pointer font-body text-body-sm font-medium text-primary hover:underline"
+                        data-toggle-all="allowed_account_ids"
+                        data-select-label="{{ __('webhooks.actions.select_all') }}"
+                        data-deselect-label="{{ __('webhooks.actions.deselect_all') }}"
+                    >
+                        {{ __('webhooks.actions.deselect_all') }}
+                    </button>
+                </div>
+                <div id="allowed_account_ids" class="grid grid-cols-1 gap-2 sm:grid-cols-2" data-allowed-accounts data-empty-label="{{ __('webhooks.fields.no_accounts') }}" data-error-label="{{ __('webhooks.fields.accounts_failed') }}">
+                    <x-organisms.webhook-accounts-skeleton />
+                </div>
+                <p class="font-body text-body-sm text-on-surface-variant">{{ __('webhooks.fields.allowed_account_ids_hint') }}</p>
+                <x-atoms.form-error for="allowed_account_ids" />
+            </div>
+            <div class="space-y-1.5">
+                <x-atoms.label for="allowed_types">{{ __('webhooks.fields.allowed_types') }}</x-atoms.label>
+                <div>
+                    <button
+                        type="button"
+                        class="hidden cursor-pointer font-body text-body-sm font-medium text-primary hover:underline"
+                        data-toggle-all="allowed_types"
+                        data-select-label="{{ __('webhooks.actions.select_all') }}"
+                        data-deselect-label="{{ __('webhooks.actions.deselect_all') }}"
+                    >
+                        {{ __('webhooks.actions.deselect_all') }}
+                    </button>
+                </div>
+                <div id="allowed_types" class="flex flex-wrap gap-x-6 gap-y-2">
+                    @foreach ($recordTypes as $value => $label)
+                        <label class="flex cursor-pointer items-center gap-2 font-body text-body-md text-on-surface">
+                            <x-atoms.checkbox name="allowed_types[]" id="allowed_type_{{ $value }}" value="{{ $value }}" :checked="! $id" />
+                            {{ $label }}
+                        </label>
+                    @endforeach
+                </div>
+                <p class="font-body text-body-sm text-on-surface-variant">{{ __('webhooks.fields.allowed_types_hint') }}</p>
+                <x-atoms.form-error for="allowed_types" />
             </div>
             <div class="flex items-center gap-2">
                 <x-atoms.checkbox name="is_active" id="is_active" />

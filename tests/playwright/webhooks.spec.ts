@@ -19,8 +19,6 @@ test.describe('Manage Webhooks', () => {
         await expect(page).toHaveURL('/webhooks');
         await expect(page.getByRole('heading', { name: 'Manage Webhooks' })).toBeVisible();
         await expect(page.getByRole('table')).toBeVisible();
-        await page.getByText('How to use webhooks').click();
-        await expect(page.getByText('Example request')).toBeVisible();
 
         await page.getByRole('link', { name: 'Add webhook' }).click();
         await expect(page).toHaveURL('/webhooks/create');
@@ -34,7 +32,27 @@ test.describe('Manage Webhooks', () => {
         await page.goto('/webhooks/create');
 
         await page.getByLabel('Name', { exact: true }).fill(`${mainValue}`);
-        await page.getByLabel('Allowed IP addresses').fill('203.0.113.5');
+        await expect(page.getByLabel('Allow all')).toBeChecked();
+        await page.getByLabel('Allow only').check();
+        await expect(page.locator('[data-ip-input]')).toHaveCount(1);
+        await page.getByRole('button', { name: 'Add IP address' }).click();
+        await expect(page.locator('[data-ip-input]')).toHaveCount(2);
+        await page.locator('[data-ip-input]').nth(0).fill('203.0.113.5');
+        await page.locator('[data-ip-delete]').nth(1).click();
+        await expect(page.locator('[data-ip-input]')).toHaveCount(1);
+        await page.getByRole('button', { name: 'Delete all' }).click();
+        await expect(page.locator('[data-ip-input]')).toHaveCount(0);
+        await page.getByRole('button', { name: 'Add IP address' }).click();
+        await page.locator('[data-ip-input]').nth(0).fill('203.0.113.5');
+        for (const type of ['Income', 'Expense', 'Transfer']) {
+            await expect(page.getByLabel(type, { exact: true })).toBeChecked();
+        }
+        await page.locator('[data-toggle-all="allowed_types"]').click();
+        await expect(page.getByLabel('Expense', { exact: true })).not.toBeChecked();
+        await page.locator('[data-toggle-all="allowed_types"]').click();
+        await expect(page.getByLabel('Transfer', { exact: true })).toBeChecked();
+        await page.getByLabel('Income', { exact: true }).uncheck();
+        await page.getByLabel('Transfer', { exact: true }).uncheck();
         await page.getByLabel('Is Active', { exact: true }).check();
         await page.getByRole('button', { name: 'Save' }).click();
 
@@ -43,7 +61,19 @@ test.describe('Manage Webhooks', () => {
         const row = page.getByRole('row', { name: new RegExp(mainValue) });
         await expect(row).toBeVisible();
 
-        await row.getByRole('link', { name: 'Edit' }).click();
+        await row.getByRole('link', { name: 'View' }).click();
+        await expect(page).toHaveURL(/\/webhooks\/\d+$/);
+        await expect(page.getByRole('heading', { name: mainValue })).toBeVisible();
+        await expect(page.locator('[data-field="allowed_ips"]')).toHaveText('203.0.113.5');
+        await expect(page.locator('[data-field="allowed_types"]')).toHaveText('Expense');
+        await expect(page.locator('[data-field="allowed_account_ids"]')).toHaveText('All');
+        await page.getByRole('link', { name: 'Webhook logs' }).click();
+        await page.getByRole('link', { name: 'Back to webhook details' }).click();
+        await expect(page).toHaveURL(/\/webhooks\/\d+$/);
+        await page.getByRole('link', { name: 'Test webhook' }).click();
+        await page.getByRole('link', { name: 'Back to webhook details' }).click();
+        await expect(page).toHaveURL(/\/webhooks\/\d+$/);
+        await page.getByRole('link', { name: 'Edit', exact: true }).click();
         await expect(page.getByLabel('Name', { exact: true })).toHaveValue(mainValue);
         await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
         const token = await page.getByLabel('Token', { exact: true }).inputValue();
@@ -51,12 +81,18 @@ test.describe('Manage Webhooks', () => {
         await page.locator('[data-copy-target="token"]').click();
         await expect(page.locator('[data-copy-target="token"]')).toHaveText('Copied!');
         expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(token);
+        await expect(page.getByLabel('Allow only')).toBeChecked();
+        await expect(page.locator('[data-ip-input]').nth(0)).toHaveValue('203.0.113.5');
+        await expect(page.getByLabel('Expense', { exact: true })).toBeChecked();
+        await expect(page.getByLabel('Income', { exact: true })).not.toBeChecked();
         await page.getByRole('link', { name: 'Webhook logs' }).click();
-        await expect(page).toHaveURL(/\/webhooks\/\d+\/logs$/);
+        await expect(page).toHaveURL(/\/webhooks\/\d+\/logs(\?.*)?$/);
         await expect(page.getByRole('heading', { name: 'Webhook logs' })).toBeVisible();
         await page.getByRole('link', { name: 'Back to edit webhook' }).click();
         await page.getByRole('link', { name: 'Test webhook' }).click();
-        await expect(page).toHaveURL(/\/webhooks\/\d+\/test$/);
+        await expect(page).toHaveURL(/\/webhooks\/\d+\/test(\?.*)?$/);
+        await page.getByText('How to use webhooks').click();
+        await expect(page.getByText('Example request')).toBeVisible();
         await expect(page.locator('#webhook-test-payload')).toBeVisible();
         await page.getByRole('button', { name: 'Send test' }).click();
         await expect(page.locator('#webhook-test-result')).toBeVisible();
@@ -74,8 +110,9 @@ test.describe('Manage Webhooks', () => {
         await page.reload();
         await expect(page.getByRole('row', { name: new RegExp(`${mainValue} Edited`) }).locator('[data-webhook-active]')).not.toBeChecked();
         await editedRow.getByRole('link', { name: 'Test' }).click();
-        await expect(page).toHaveURL(/\/webhooks\/\d+\/test$/);
-        await page.goBack();
+        await expect(page).toHaveURL(/\/webhooks\/\d+\/test\?from=index$/);
+        await page.getByRole('link', { name: 'Back to webhooks' }).click();
+        await expect(page).toHaveURL('/webhooks');
         await editedRow.getByRole('button', { name: 'Delete' }).click();
         await expect(page.getByText('Are you sure you want to delete this webhook?')).toBeVisible();
         await page.locator('#confirm-delete-webhook').click();

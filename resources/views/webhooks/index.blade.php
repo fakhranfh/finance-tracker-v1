@@ -43,8 +43,6 @@
 
     <div data-flash-success class="mb-6 hidden rounded-lg border border-success/20 bg-success/10 px-4 py-3 font-body text-sm text-success"></div>
 
-    <x-organisms.webhook-guide />
-
     <x-molecules.table-toolbar
         id="webhooks-table-toolbar"
         :search-placeholder="__('webhooks.table.search')"
@@ -61,6 +59,7 @@
     <div id="webhooks-table-wrapper" class="hidden max-sm:pb-20">
         <x-organisms.table
             id="webhooks-table"
+            data-label-test="{{ __('webhooks.actions.test') }}"
             :headers="$tableHeaders"
             :config="[
                 'labels' => [
@@ -74,7 +73,7 @@
                     'collapse' => __('webhooks.table.show_less'),
                     'edit' => __('webhooks.actions.edit'),
                     'delete' => __('webhooks.actions.delete'),
-                    'view' => __('webhooks.actions.test'),
+                    'view' => __('webhooks.actions.view'),
                 ],
             ]"
         />

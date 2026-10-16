@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\RecordType;
 use App\Models\Record;
 use App\Models\Webhook;
 use App\Repositories\Account\AccountRepositoryInterface;
@@ -54,13 +55,26 @@ class WebhookManagementService
     }
 
     /**
-     * Add a record through a webhook (403 when the caller IP is not whitelisted), resolving account_name to the account.
+     * Add a record through a webhook.
      *
      * @param  array<string, mixed>  $data
      */
     public function addRecord(Webhook $webhook, array $data, ?string $ip): Record
     {
+        return $this->recordManagementService->create($this->prepareRecord($webhook, $data, $ip));
+    }
+
+    /**
+     * Check a record payload against the webhook restrictions (IP, type and accounts, each 403
+     * when not allowed) and resolve account_name to account_id. Returns the data to store.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    public function prepareRecord(Webhook $webhook, array $data, ?string $ip): array
+    {
         abort_unless($webhook->allowsIp($ip), 403, __('webhooks.errors.ip_not_allowed'));
+        abort_unless($webhook->allowsType($data['type']), 403, __('webhooks.errors.type_not_allowed'));
 
         $account = $this->accountRepository->findByName($data['account_name']);
 
@@ -79,7 +93,15 @@ class WebhookManagementService
             ]);
         }
 
-        return $this->recordManagementService->create($data);
+        $toAccountId = $data['type'] === RecordType::Transfer->value ? $data['to_account_id'] ?? null : null;
+
+        abort_unless(
+            $webhook->allowsAccount($account->id) && ($toAccountId === null || $webhook->allowsAccount((int) $toAccountId)),
+            403,
+            __('webhooks.errors.account_not_allowed'),
+        );
+
+        return $data;
     }
 
     /**
@@ -127,7 +149,7 @@ class WebhookManagementService
     }
 
     /**
-     * Turn the submitted IP list into an array (null when empty).
+     * Turn the submitted IP, account and type lists into arrays (null when empty).
      *
      * @param  array<string, mixed>  $data
      * @return array<string, mixed>
@@ -136,6 +158,14 @@ class WebhookManagementService
     {
         if (array_key_exists('allowed_ips', $data)) {
             $data['allowed_ips'] = IpList::parse($data['allowed_ips']) ?: null;
+        }
+
+        if (array_key_exists('allowed_account_ids', $data)) {
+            $data['allowed_account_ids'] = array_values(array_unique(array_map('intval', $data['allowed_account_ids'] ?? []))) ?: null;
+        }
+
+        if (array_key_exists('allowed_types', $data)) {
+            $data['allowed_types'] = array_values(array_unique($data['allowed_types'] ?? [])) ?: null;
         }
 
         return $data;

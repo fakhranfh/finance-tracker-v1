@@ -5,8 +5,8 @@
 @section('content')
     <div class="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
-            <a href="{{ route('webhooks.edit', $id) }}" class="font-body text-body-sm text-on-surface-variant hover:underline">
-                &larr; {{ __('webhooks.test.back') }}
+            <a href="{{ $backUrl }}" class="font-body text-body-sm text-on-surface-variant hover:underline">
+                &larr; {{ $backLabel }}
             </a>
             <h1 class="mt-2 font-heading text-headline-md font-bold text-on-surface">
                 {{ __('webhooks.logs.title') }}

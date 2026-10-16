@@ -33,6 +33,8 @@ trait DocumentsApi
             content: new OA\JsonContent(
                 properties: [
                     new OA\Property(property: 'name', type: 'string', example: 'Sample name'),
+                    new OA\Property(property: 'allowed_account_ids', type: 'array', nullable: true, items: new OA\Items(type: 'integer'), description: 'Accounts records may be added to. Empty allows every account.'),
+                    new OA\Property(property: 'allowed_types', type: 'array', nullable: true, items: new OA\Items(type: 'string', enum: ['income', 'expense', 'transfer']), description: 'Record types that may be added. Empty allows every type.'),
                     new OA\Property(property: 'allowed_ips', type: 'string', nullable: true, example: "203.0.113.5\n198.51.100.0/24", description: 'Whitelisted IP addresses or CIDR ranges, one per line (or comma separated). Empty allows every address.'),
                     new OA\Property(property: 'is_active', type: 'boolean', example: true),
                 ]
@@ -66,7 +68,7 @@ trait DocumentsApi
         responses: [
             new OA\Response(response: 200, description: 'Payload is valid and the webhook is active'),
             new OA\Response(response: 404, description: 'Not found'),
-            new OA\Response(response: 403, description: 'IP address is not whitelisted'),
+            new OA\Response(response: 403, description: 'IP address, record type or account is not allowed for this webhook'),
             new OA\Response(response: 409, description: 'Webhook is inactive'),
             new OA\Response(response: 422, description: 'Validation error'),
         ]
@@ -95,6 +97,8 @@ trait DocumentsApi
             content: new OA\JsonContent(
                 properties: [
                     new OA\Property(property: 'name', type: 'string', example: 'Sample name'),
+                    new OA\Property(property: 'allowed_account_ids', type: 'array', nullable: true, items: new OA\Items(type: 'integer'), description: 'Accounts records may be added to. Empty allows every account.'),
+                    new OA\Property(property: 'allowed_types', type: 'array', nullable: true, items: new OA\Items(type: 'string', enum: ['income', 'expense', 'transfer']), description: 'Record types that may be added. Empty allows every type.'),
                     new OA\Property(property: 'allowed_ips', type: 'string', nullable: true, example: "203.0.113.5\n198.51.100.0/24", description: 'Whitelisted IP addresses or CIDR ranges, one per line (or comma separated). Empty allows every address.'),
                     new OA\Property(property: 'is_active', type: 'boolean', example: true),
                 ]

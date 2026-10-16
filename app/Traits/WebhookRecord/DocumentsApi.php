@@ -32,7 +32,7 @@ trait DocumentsApi
         ),
         responses: [
             new OA\Response(response: 201, description: 'Record created'),
-            new OA\Response(response: 403, description: 'The caller IP address is not in the webhook whitelist'),
+            new OA\Response(response: 403, description: 'The caller IP address, the record type or the account is not allowed for this webhook'),
             new OA\Response(response: 401, description: 'Missing or unknown webhook token'),
             new OA\Response(response: 404, description: 'Inactive webhook'),
             new OA\Response(response: 422, description: 'Validation error'),

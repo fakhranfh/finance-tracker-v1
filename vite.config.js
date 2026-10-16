@@ -34,6 +34,7 @@ export default defineConfig({
                 'resources/js/sub-goals/item-form.js',
                 'resources/js/webhooks/index.js',
                 'resources/js/webhooks/form.js',
+                'resources/js/webhooks/show.js',
                 'resources/js/webhooks/test.js',
                 'resources/js/webhooks/logs.js',
             ],

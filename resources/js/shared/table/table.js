@@ -121,7 +121,7 @@ export function fillMultiSelect(dropdown, options, { checked = false } = {}) {
  *  - flashKey, selectionKey, deleteModalId, bulkDeleteModalId
  *  - defaultSort: { key, direction } (optional initial sort)
  *  - routes: { index, destroy, bulkDestroy, generate }
- *  - row(item, { lockedId }) => { cells, editUrl, onEdit, locked, readOnly, noEdit }
+ *  - row(item, { lockedId }) => { cells, viewUrl, extraActions, editUrl, onEdit, locked, readOnly, noEdit }
  *  - deletedMessage: flash shown after a row delete; onDataChanged() fires after a row delete or generate
  *  - onLoaded(query) called after each load with the search, sort and filter query string
  */
@@ -191,12 +191,13 @@ export function createTable(config) {
     const rowRenderer = createTableRow({ tbody, selection, selectAll });
 
     const renderRow = (item) => {
-        const { cells, viewUrl, editUrl, onEdit, locked, readOnly, noEdit } = config.row(item, { lockedId });
+        const { cells, viewUrl, extraActions, editUrl, onEdit, locked, readOnly, noEdit } = config.row(item, { lockedId });
 
         return rowRenderer.render({
             id: item.id,
             cells,
             viewUrl,
+            extraActions,
             editUrl,
             onEdit,
             onDelete: () => rowDelete.request(item.id),
