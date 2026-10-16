@@ -51,7 +51,7 @@
                 <x-molecules.copy-field name="url" :label="__('webhooks.fields.url')" :copy-label="__('webhooks.actions.copy')" :copied-label="__('webhooks.actions.copied')" />
             @endif
             <div class="space-y-2" id="allowed_ips" data-ip-required-message="{{ __('webhooks.errors.ip_required') }}">
-                <span class="block font-body text-body-sm font-medium text-on-surface">{{ __('webhooks.fields.allowed_ips') }}</span>
+                <x-atoms.label>{{ __('webhooks.fields.allowed_ips') }}</x-atoms.label>
                 <div class="flex flex-wrap gap-x-6 gap-y-2">
                     <label class="flex cursor-pointer items-center gap-2 font-body text-body-md text-on-surface">
                         <x-atoms.radio name="ip_mode" id="ip_mode_all" value="all" checked />
