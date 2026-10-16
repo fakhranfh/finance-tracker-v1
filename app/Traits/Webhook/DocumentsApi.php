@@ -35,6 +35,7 @@ trait DocumentsApi
                     new OA\Property(property: 'name', type: 'string', example: 'Sample name'),
                     new OA\Property(property: 'allowed_account_ids', type: 'array', nullable: true, items: new OA\Items(type: 'integer'), description: 'Accounts records may be added to. Empty allows every account.'),
                     new OA\Property(property: 'allowed_types', type: 'array', nullable: true, items: new OA\Items(type: 'string', enum: ['income', 'expense', 'transfer']), description: 'Record types that may be added. Empty allows every type.'),
+                    new OA\Property(property: 'secret', type: 'string', nullable: true, minLength: 16, description: 'Optional signing secret. When set, calls to the public endpoint must carry a valid X-Webhook-Signature.'),
                     new OA\Property(property: 'allowed_ips', type: 'string', nullable: true, example: "203.0.113.5\n198.51.100.0/24", description: 'Whitelisted IP addresses or CIDR ranges, one per line (or comma separated). Empty allows every address.'),
                     new OA\Property(property: 'is_active', type: 'boolean', example: true),
                 ]
@@ -99,6 +100,7 @@ trait DocumentsApi
                     new OA\Property(property: 'name', type: 'string', example: 'Sample name'),
                     new OA\Property(property: 'allowed_account_ids', type: 'array', nullable: true, items: new OA\Items(type: 'integer'), description: 'Accounts records may be added to. Empty allows every account.'),
                     new OA\Property(property: 'allowed_types', type: 'array', nullable: true, items: new OA\Items(type: 'string', enum: ['income', 'expense', 'transfer']), description: 'Record types that may be added. Empty allows every type.'),
+                    new OA\Property(property: 'secret', type: 'string', nullable: true, minLength: 16, description: 'Optional signing secret. When set, calls to the public endpoint must carry a valid X-Webhook-Signature.'),
                     new OA\Property(property: 'allowed_ips', type: 'string', nullable: true, example: "203.0.113.5\n198.51.100.0/24", description: 'Whitelisted IP addresses or CIDR ranges, one per line (or comma separated). Empty allows every address.'),
                     new OA\Property(property: 'is_active', type: 'boolean', example: true),
                 ]

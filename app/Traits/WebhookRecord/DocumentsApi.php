@@ -15,7 +15,10 @@ trait DocumentsApi
         summary: 'Add a record through a webhook',
         description: 'Public endpoint authenticated by the webhook token in the X-Webhook-Token header. Accepts the same payload as POST /records. A missing or unknown token returns 401 and an inactive webhook 404.',
         tags: ['Webhooks'],
-        parameters: [new OA\Parameter(name: 'X-Webhook-Token', in: 'header', required: true, description: 'The webhook token.', schema: new OA\Schema(type: 'string'))],
+        parameters: [
+            new OA\Parameter(name: 'X-Webhook-Signature', in: 'header', required: false, description: 'Required when the webhook has a secret: sha256= followed by the hex HMAC-SHA256 of the raw request body keyed by the secret.', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'X-Webhook-Token', in: 'header', required: true, description: 'The webhook token.', schema: new OA\Schema(type: 'string')),
+        ],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
@@ -33,7 +36,7 @@ trait DocumentsApi
         responses: [
             new OA\Response(response: 201, description: 'Record created'),
             new OA\Response(response: 403, description: 'The caller IP address, the record type or the account is not allowed for this webhook'),
-            new OA\Response(response: 401, description: 'Missing or unknown webhook token'),
+            new OA\Response(response: 401, description: 'Missing or unknown webhook token, or missing/invalid signature'),
             new OA\Response(response: 404, description: 'Inactive webhook'),
             new OA\Response(response: 422, description: 'Validation error'),
             new OA\Response(response: 429, description: 'Too many requests'),

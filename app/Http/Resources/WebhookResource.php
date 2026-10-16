@@ -25,6 +25,7 @@ class WebhookResource extends JsonResource
             'id' => $webhook->id,
             'name' => $webhook->name,
             'token' => $webhook->token,
+            'secret' => $webhook->secret,
             'url' => route('api.webhooks.records.store'),
             'is_active' => $webhook->is_active,
             'allowed_ips' => $webhook->allowed_ips ?? [],

@@ -5,9 +5,31 @@ namespace App\Repositories\Webhook;
 use App\Models\Webhook;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Crypt;
 
 class WebhookRepository implements WebhookRepositoryInterface
 {
+    /** How long a secret stays cached; it is also dropped as soon as the webhook changes. */
+    private const SECRET_TTL_HOURS = 24;
+
+    public function cachedSecret(Webhook $webhook): ?string
+    {
+        // The ciphertext is cached, not the plain secret; an empty string means "no secret".
+        $cipher = Cache::remember(
+            $this->secretCacheKey($webhook->id),
+            now()->addHours(self::SECRET_TTL_HOURS),
+            fn (): string => $webhook->getRawOriginal('secret') ?? '',
+        );
+
+        return $cipher === '' ? null : Crypt::decryptString($cipher);
+    }
+
+    private function secretCacheKey(int $webhookId): string
+    {
+        return "webhook.secret.{$webhookId}";
+    }
+
     public function find(int $id): ?Webhook
     {
         return Webhook::query()->find($id);
@@ -39,6 +61,10 @@ class WebhookRepository implements WebhookRepositoryInterface
     public function deleteMany(array $ids): void
     {
         Webhook::query()->whereIn('id', $ids)->delete();
+
+        foreach ($ids as $id) {
+            Cache::forget($this->secretCacheKey($id));
+        }
     }
 
     public function deleteMatching(?string $search = null): void
@@ -47,7 +73,11 @@ class WebhookRepository implements WebhookRepositoryInterface
 
         $this->applySearch($query, $search);
 
+        $ids = (clone $query)->pluck('id');
+
         $query->delete();
+
+        $ids->each(fn (int $id) => Cache::forget($this->secretCacheKey($id)));
     }
 
     public function countMatching(?string $search = null, ?int $exceptId = null): int
@@ -79,6 +109,7 @@ class WebhookRepository implements WebhookRepositoryInterface
     public function update(Webhook $webhook, array $data): Webhook
     {
         $webhook->update($data);
+        Cache::forget($this->secretCacheKey($webhook->id));
 
         return $webhook;
     }
@@ -86,5 +117,6 @@ class WebhookRepository implements WebhookRepositoryInterface
     public function delete(Webhook $webhook): void
     {
         $webhook->delete();
+        Cache::forget($this->secretCacheKey($webhook->id));
     }
 }

@@ -18,6 +18,11 @@ interface WebhookRepositoryInterface
     public function findByToken(string $token): ?Webhook;
 
     /**
+     * The webhook secret (null when none is set), read through the cache.
+     */
+    public function cachedSecret(Webhook $webhook): ?string;
+
+    /**
      * Paginate webhooks, optionally filtered by search and sorted by column.
      */
     public function paginate(int $perPage, ?string $search = null, ?string $sort = null, string $direction = 'asc'): LengthAwarePaginator;

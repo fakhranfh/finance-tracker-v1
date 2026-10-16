@@ -10,6 +10,7 @@
             <li>{{ __('webhooks.guide.step_send') }}</li>
             <li>{{ __('webhooks.guide.step_test') }}</li>
             <li>{{ __('webhooks.guide.step_ips') }}</li>
+            <li>{{ __('webhooks.guide.step_secret') }}</li>
             <li>{{ __('webhooks.guide.step_response') }}</li>
         </ol>
 
@@ -26,6 +27,18 @@
     "note": "Coffee",
     "recorded_at": "2026-01-15T10:30:00+07:00"
   }'</code></pre>
+        </div>
+
+        <div>
+            <p class="mb-2 font-semibold text-on-surface">{{ __('webhooks.guide.secret_example') }}</p>
+            <pre class="overflow-x-auto rounded-md bg-surface-container p-3 text-on-surface"><code>BODY='{"type":"expense","account_name":"Cash","amount":"12.50","recorded_at":"2026-01-15T10:30:00+07:00"}'
+SIGNATURE="sha256=$(printf '%s' "$BODY" | openssl dgst -sha256 -hmac "SECRET" | sed 's/^.* //')"
+
+curl -X POST {{ url('/api/webhooks/records') }} \
+  -H "X-Webhook-Token: TOKEN" \
+  -H "X-Webhook-Signature: $SIGNATURE" \
+  -H "Content-Type: application/json" \
+  -d "$BODY"</code></pre>
         </div>
 
         <ul class="list-disc space-y-1 pl-5">

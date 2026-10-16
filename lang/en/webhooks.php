@@ -36,7 +36,9 @@ return [
         'step_send' => 'From your app or automation, send a POST request with a JSON body to that URL and put the token in the X-Webhook-Token header (example below).',
         'step_test' => 'Optional: use the Test webhook panel below to validate a sample payload without saving anything.',
         'step_ips' => 'Optional: restrict who can call the webhook by listing allowed IP addresses (or CIDR ranges) on its Edit page. Requests from any other IP get 403.',
+        'step_secret' => 'Optional: set a secret on the Edit page to require signed requests. Sign the raw body with HMAC-SHA256 and send it as X-Webhook-Signature.',
         'step_response' => 'A successful request returns 201 and the new record appears under Manage Records.',
+        'secret_example' => 'Example with a secret (signed request)',
         'example' => 'Example request',
         'field_type' => 'type: income, expense or transfer (required).',
         'field_account' => 'account_name: the exact name of the source account (required). For transfers also send to_account_id.',
@@ -56,6 +58,7 @@ return [
     ],
 
     'errors' => [
+        'invalid_signature' => 'Missing or invalid webhook signature.',
         'ip_required' => 'Add at least one IP address, or choose Allow all.',
         'pick_one' => 'Select at least one option.',
         'type_not_allowed' => 'This record type is not allowed for this webhook.',
@@ -85,6 +88,8 @@ return [
     ],
 
     'show' => [
+        'secret_set' => 'Set',
+        'secret_not_set' => 'Not set',
         'title' => 'Webhook details',
         'status' => 'Status',
         'active' => 'Active',
@@ -93,6 +98,8 @@ return [
     ],
 
     'fields' => [
+        'secret' => 'Secret (optional)',
+        'secret_hint' => 'Optional. When set, every call must send an X-Webhook-Signature header: "sha256=" plus the HMAC-SHA256 of the raw request body, keyed by this secret. Minimum 16 characters. Leave empty to skip signing.',
         'ip_mode_all' => 'Allow all',
         'ip_mode_only' => 'Allow only',
         'no_accounts' => 'No accounts yet. Create an account first to restrict this webhook to specific accounts.',
@@ -116,6 +123,8 @@ return [
         'deselect_all' => 'Deselect all',
         'add_ip' => 'Add IP address',
         'delete_all' => 'Delete all',
+        'generate_secret' => 'Generate',
+        'clear' => 'Clear',
         'copy' => 'Copy',
         'copied' => 'Copied!',
         'edit' => 'Edit',

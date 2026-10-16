@@ -36,7 +36,9 @@ return [
         'step_send' => 'Dari aplikasi atau otomasi Anda, kirim request POST dengan body JSON ke URL tersebut dan taruh token di header X-Webhook-Token (contoh di bawah).',
         'step_test' => 'Opsional: gunakan panel Uji webhook di bawah untuk memeriksa contoh payload tanpa menyimpan apa pun.',
         'step_ips' => 'Opsional: batasi siapa yang boleh memanggil webhook dengan mengisi alamat IP (atau rentang CIDR) yang diizinkan di halaman Ubah. Request dari IP lain akan mendapat 403.',
+        'step_secret' => 'Opsional: isi secret di halaman Ubah agar request wajib ditandatangani. Tanda tangani body mentah dengan HMAC-SHA256 dan kirim sebagai X-Webhook-Signature.',
         'step_response' => 'Jika berhasil, respons 201 dikembalikan dan catatan baru muncul di Kelola Catatan.',
+        'secret_example' => 'Contoh dengan secret (request bertanda tangan)',
         'example' => 'Contoh request',
         'field_type' => 'type: income, expense, atau transfer (wajib).',
         'field_account' => 'account_name: nama akun sumber persis seperti di aplikasi (wajib). Untuk transfer kirim juga to_account_id.',
@@ -56,6 +58,7 @@ return [
     ],
 
     'errors' => [
+        'invalid_signature' => 'Tanda tangan webhook tidak ada atau tidak valid.',
         'ip_required' => 'Tambahkan setidaknya satu alamat IP, atau pilih Izinkan semua.',
         'pick_one' => 'Pilih setidaknya satu opsi.',
         'type_not_allowed' => 'Tipe catatan ini tidak diizinkan untuk webhook ini.',
@@ -85,6 +88,8 @@ return [
     ],
 
     'show' => [
+        'secret_set' => 'Sudah diatur',
+        'secret_not_set' => 'Belum diatur',
         'title' => 'Detail webhook',
         'status' => 'Status',
         'active' => 'Aktif',
@@ -93,6 +98,8 @@ return [
     ],
 
     'fields' => [
+        'secret' => 'Secret (opsional)',
+        'secret_hint' => 'Opsional. Jika diisi, setiap panggilan harus mengirim header X-Webhook-Signature: "sha256=" diikuti HMAC-SHA256 dari body request mentah, dengan secret ini sebagai kunci. Minimal 16 karakter. Kosongkan untuk tanpa tanda tangan.',
         'ip_mode_all' => 'Izinkan semua',
         'ip_mode_only' => 'Izinkan hanya',
         'no_accounts' => 'Belum ada akun. Buat akun terlebih dahulu untuk membatasi webhook ke akun tertentu.',
@@ -116,6 +123,8 @@ return [
         'deselect_all' => 'Batalkan semua',
         'add_ip' => 'Tambah alamat IP',
         'delete_all' => 'Hapus semua',
+        'generate_secret' => 'Buat acak',
+        'clear' => 'Kosongkan',
         'copy' => 'Salin',
         'copied' => 'Tersalin!',
         'edit' => 'Ubah',

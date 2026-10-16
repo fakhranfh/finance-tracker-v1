@@ -34,6 +34,7 @@ class WebhookPageController extends Controller
     {
         $fields = [
             'status' => __('webhooks.show.status'),
+            'secret' => __('webhooks.fields.secret'),
             'allowed_ips' => __('webhooks.fields.allowed_ips'),
             'allowed_account_ids' => __('webhooks.fields.allowed_account_ids'),
             'allowed_types' => __('webhooks.fields.allowed_types'),

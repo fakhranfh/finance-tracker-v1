@@ -55,6 +55,22 @@ class WebhookManagementService
     }
 
     /**
+     * Whether the request body is signed with the webhook secret: X-Webhook-Signature must be
+     * "sha256=" plus the HMAC-SHA256 of the raw body keyed by the secret. Always true when the
+     * webhook has no secret.
+     */
+    public function verifySignature(Webhook $webhook, string $body, ?string $signature): bool
+    {
+        $secret = $this->webhookRepository->cachedSecret($webhook);
+
+        if ($secret === null) {
+            return true;
+        }
+
+        return $signature !== null && hash_equals('sha256='.hash_hmac('sha256', $body, $secret), $signature);
+    }
+
+    /**
      * Add a record through a webhook.
      *
      * @param  array<string, mixed>  $data
@@ -156,6 +172,10 @@ class WebhookManagementService
      */
     private function normalize(array $data): array
     {
+        if (array_key_exists('secret', $data)) {
+            $data['secret'] = $data['secret'] ?: null;
+        }
+
         if (array_key_exists('allowed_ips', $data)) {
             $data['allowed_ips'] = IpList::parse($data['allowed_ips']) ?: null;
         }

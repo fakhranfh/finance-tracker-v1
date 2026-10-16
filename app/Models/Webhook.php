@@ -10,11 +10,12 @@ use Illuminate\Database\Eloquent\Model;
 use Symfony\Component\HttpFoundation\IpUtils;
 
 /**
+ * @property string|null $secret
  * @property array<int, string>|null $allowed_ips
  * @property array<int, int>|null $allowed_account_ids
  * @property array<int, string>|null $allowed_types
  */
-#[Fillable(['name', 'token', 'is_active', 'allowed_ips', 'allowed_account_ids', 'allowed_types'])]
+#[Fillable(['name', 'token', 'secret', 'is_active', 'allowed_ips', 'allowed_account_ids', 'allowed_types'])]
 class Webhook extends Model
 {
     /** @use HasFactory<WebhookFactory> */
@@ -28,6 +29,7 @@ class Webhook extends Model
     protected function casts(): array
     {
         return [
+            'secret' => 'encrypted',
             'is_active' => 'boolean',
             'allowed_ips' => 'array',
             'allowed_account_ids' => 'array',

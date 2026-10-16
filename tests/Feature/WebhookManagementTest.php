@@ -4,6 +4,7 @@ use App\Models\Account;
 use App\Models\Record;
 use App\Models\User;
 use App\Models\Webhook;
+use App\Repositories\Webhook\WebhookRepositoryInterface;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 
 it('rejects a guest from listing webhooks', function () {
@@ -369,4 +370,112 @@ it('applies the type and account restrictions on the test endpoint', function ()
     $this->actingAs($actor)->postJson("/api/webhooks/{$webhook->id}/test", webhookPayload($other))->assertForbidden();
     $this->actingAs($actor)->postJson("/api/webhooks/{$webhook->id}/test", ['type' => 'income'] + webhookPayload($allowed))->assertForbidden();
     $this->actingAs($actor)->postJson("/api/webhooks/{$webhook->id}/test", webhookPayload($allowed))->assertOk();
+});
+
+function signedWebhookCall(object $test, Webhook $webhook, array $payload, ?string $signature)
+{
+    $server = [
+        'CONTENT_TYPE' => 'application/json',
+        'HTTP_ACCEPT' => 'application/json',
+        'HTTP_X_WEBHOOK_TOKEN' => $webhook->token,
+    ];
+
+    if ($signature !== null) {
+        $server['HTTP_X_WEBHOOK_SIGNATURE'] = $signature;
+    }
+
+    return $test->call('POST', '/api/webhooks/records', [], [], [], $server, json_encode($payload));
+}
+
+function webhookSignature(array $payload, string $secret): string
+{
+    return 'sha256='.hash_hmac('sha256', json_encode($payload), $secret);
+}
+
+it('stores the secret encrypted and returns it to the owner', function () {
+    $actor = User::factory()->create();
+    $secret = str_repeat('a1', 16);
+
+    $id = $this->actingAs($actor)->postJson('/api/webhooks', ['name' => 'Signed', 'is_active' => true, 'secret' => $secret])
+        ->assertStatus(201)
+        ->assertJsonPath('data.secret', $secret)
+        ->json('data.id');
+
+    expect(DB::table('webhooks')->where('id', $id)->value('secret'))->not->toBe($secret);
+});
+
+it('keeps the secret optional and validates its length', function () {
+    $actor = User::factory()->create();
+
+    $this->actingAs($actor)->postJson('/api/webhooks', ['name' => 'Open', 'is_active' => true])
+        ->assertStatus(201)->assertJsonPath('data.secret', null);
+    $this->actingAs($actor)->postJson('/api/webhooks', ['name' => 'Short', 'is_active' => true, 'secret' => 'short'])
+        ->assertStatus(422)->assertJsonValidationErrors(['secret']);
+});
+
+it('keeps the secret when only the active flag is updated and clears it when empty', function () {
+    $actor = User::factory()->create();
+    $webhook = Webhook::factory()->create(['secret' => str_repeat('b', 20)]);
+
+    $this->actingAs($actor)->putJson("/api/webhooks/{$webhook->id}", ['name' => $webhook->name, 'is_active' => false])
+        ->assertOk()->assertJsonPath('data.secret', str_repeat('b', 20));
+    $this->actingAs($actor)->putJson("/api/webhooks/{$webhook->id}", ['name' => $webhook->name, 'is_active' => true, 'secret' => ''])
+        ->assertOk()->assertJsonPath('data.secret', null);
+});
+
+it('requires a valid signature when the webhook has a secret', function () {
+    $secret = str_repeat('s3', 12);
+    $webhook = Webhook::factory()->create(['secret' => $secret]);
+    $payload = webhookPayload(Account::factory()->create());
+
+    signedWebhookCall($this, $webhook, $payload, null)->assertUnauthorized();
+    signedWebhookCall($this, $webhook, $payload, 'sha256=deadbeef')->assertUnauthorized();
+    signedWebhookCall($this, $webhook, $payload, webhookSignature($payload, 'wrong-secret-value'))->assertUnauthorized();
+    expect(Record::query()->count())->toBe(0);
+
+    signedWebhookCall($this, $webhook, $payload, webhookSignature($payload, $secret))->assertStatus(201);
+});
+
+it('does not ask for a signature when the webhook has no secret', function () {
+    $webhook = Webhook::factory()->create();
+    $payload = webhookPayload(Account::factory()->create());
+
+    signedWebhookCall($this, $webhook, $payload, null)->assertStatus(201);
+});
+
+it('caches the secret and drops it when the webhook changes', function () {
+    $actor = User::factory()->create();
+    $old = str_repeat('o', 20);
+    $new = str_repeat('n', 20);
+    $webhook = Webhook::factory()->create(['secret' => $old]);
+    $payload = webhookPayload(Account::factory()->create());
+
+    signedWebhookCall($this, $webhook, $payload, webhookSignature($payload, $old))->assertStatus(201);
+    expect(Cache::has("webhook.secret.{$webhook->id}"))->toBeTrue()
+        ->and(Cache::get("webhook.secret.{$webhook->id}"))->not->toContain($old);
+
+    $this->actingAs($actor)->putJson("/api/webhooks/{$webhook->id}", ['name' => $webhook->name, 'is_active' => true, 'secret' => $new])->assertOk();
+    expect(Cache::has("webhook.secret.{$webhook->id}"))->toBeFalse();
+
+    signedWebhookCall($this, $webhook, $payload, webhookSignature($payload, $old))->assertUnauthorized();
+    signedWebhookCall($this, $webhook, $payload, webhookSignature($payload, $new))->assertStatus(201);
+
+    $this->actingAs($actor)->deleteJson("/api/webhooks/{$webhook->id}")->assertNoContent();
+    expect(Cache::has("webhook.secret.{$webhook->id}"))->toBeFalse();
+});
+
+it('drops cached secrets on bulk delete', function () {
+    $actor = User::factory()->create();
+    $webhooks = Webhook::factory()->count(2)->create(['secret' => str_repeat('k', 20)]);
+
+    foreach ($webhooks as $webhook) {
+        app(WebhookRepositoryInterface::class)->cachedSecret($webhook);
+        expect(Cache::has("webhook.secret.{$webhook->id}"))->toBeTrue();
+    }
+
+    $this->actingAs($actor)->deleteJson('/api/webhooks', ['all' => true])->assertNoContent();
+
+    foreach ($webhooks as $webhook) {
+        expect(Cache::has("webhook.secret.{$webhook->id}"))->toBeFalse();
+    }
 });

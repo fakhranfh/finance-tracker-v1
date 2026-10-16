@@ -21,6 +21,9 @@ class WebhookRecordController extends Controller
     /** Header carrying the webhook token. */
     private const TOKEN_HEADER = 'X-Webhook-Token';
 
+    /** Header carrying the HMAC signature, required when the webhook has a secret. */
+    private const SIGNATURE_HEADER = 'X-Webhook-Signature';
+
     public function __construct(
         protected WebhookManagementService $webhookManagementService,
         protected WebhookLogService $webhookLogService,
@@ -37,6 +40,12 @@ class WebhookRecordController extends Controller
 
         try {
             abort_unless($webhook->is_active, 404, __('webhooks.logs.inactive'));
+
+            abort_unless(
+                $this->webhookManagementService->verifySignature($webhook, $request->getContent(), $request->header(self::SIGNATURE_HEADER)),
+                401,
+                __('webhooks.errors.invalid_signature'),
+            );
 
             // Resolving the form request validates the payload.
             $data = app(StoreWebhookRecordRequest::class)->validated();

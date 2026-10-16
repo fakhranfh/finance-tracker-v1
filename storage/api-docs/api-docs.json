@@ -2859,6 +2859,15 @@
                 "operationId": "dab96d151cbe3ec1279190df4d91613e",
                 "parameters": [
                     {
+                        "name": "X-Webhook-Signature",
+                        "in": "header",
+                        "description": "Required when the webhook has a secret: sha256= followed by the hex HMAC-SHA256 of the raw request body keyed by the secret.",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
                         "name": "X-Webhook-Token",
                         "in": "header",
                         "description": "The webhook token.",
@@ -2926,7 +2935,7 @@
                         "description": "The caller IP address, the record type or the account is not allowed for this webhook"
                     },
                     "401": {
-                        "description": "Missing or unknown webhook token"
+                        "description": "Missing or unknown webhook token, or missing/invalid signature"
                     },
                     "404": {
                         "description": "Inactive webhook"
@@ -3028,6 +3037,12 @@
                                             ]
                                         },
                                         "nullable": true
+                                    },
+                                    "secret": {
+                                        "description": "Optional signing secret. When set, calls to the public endpoint must carry a valid X-Webhook-Signature.",
+                                        "type": "string",
+                                        "nullable": true,
+                                        "minLength": 16
                                     },
                                     "allowed_ips": {
                                         "description": "Whitelisted IP addresses or CIDR ranges, one per line (or comma separated). Empty allows every address.",
@@ -3239,6 +3254,12 @@
                                             ]
                                         },
                                         "nullable": true
+                                    },
+                                    "secret": {
+                                        "description": "Optional signing secret. When set, calls to the public endpoint must carry a valid X-Webhook-Signature.",
+                                        "type": "string",
+                                        "nullable": true,
+                                        "minLength": 16
                                     },
                                     "allowed_ips": {
                                         "description": "Whitelisted IP addresses or CIDR ranges, one per line (or comma separated). Empty allows every address.",
