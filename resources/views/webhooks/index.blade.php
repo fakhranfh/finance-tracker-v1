@@ -43,6 +43,8 @@
 
     <div data-flash-success class="mb-6 hidden rounded-lg border border-success/20 bg-success/10 px-4 py-3 font-body text-sm text-success"></div>
 
+    <x-organisms.webhook-guide />
+
     <x-molecules.table-toolbar
         id="webhooks-table-toolbar"
         :search-placeholder="__('webhooks.table.search')"

@@ -32,26 +32,25 @@ return [
     'guide' => [
         'title' => 'Cara memakai webhook',
         'step_create' => 'Klik "Tambah webhook" dan beri nama. Token rahasia dibuat otomatis.',
-        'step_copy' => 'Buka webhook lewat Ubah lalu salin token-nya (tampil di bawah judul) dan URL Webhook-nya. Siapa pun yang memegang token bisa menambah catatan, jadi jaga kerahasiaannya.',
-        'step_send' => 'Dari aplikasi atau otomasi Anda, kirim request POST dengan body JSON ke URL tersebut dan taruh token di header X-Webhook-Token (contoh di bawah).',
+        'step_copy' => 'Buka webhook lewat Ubah lalu salin token-nya (tampil di bawah judul) dan URL Webhook-nya. Token dipakai untuk menandatangani request, jadi jaga kerahasiaannya.',
+        'step_send' => 'Dari aplikasi atau otomasi Anda, kirim request POST dengan body JSON ke URL tersebut. Body berisi field catatan dan signature; timestamp dan nonce dikirim di header X-Webhook-Timestamp dan X-Webhook-Nonce (contoh di bawah). Token sendiri tidak pernah dikirim.',
         'step_test' => 'Opsional: gunakan panel Uji webhook di bawah untuk memeriksa contoh payload tanpa menyimpan apa pun.',
         'step_ips' => 'Opsional: batasi siapa yang boleh memanggil webhook dengan mengisi alamat IP (atau rentang CIDR) yang diizinkan di halaman Ubah. Request dari IP lain akan mendapat 403.',
-        'step_secret' => 'Opsional: isi secret di halaman Ubah agar request wajib ditandatangani. Tanda tangani body mentah dengan HMAC-SHA256 dan kirim sebagai X-Webhook-Signature.',
+        'step_secret' => 'Tanda tangani nilai berikut sebagai pasangan nama=nilai yang digabung dengan &, dalam urutan ini (field catatan yang tidak ada dikosongkan): timestamp, nonce, type, account_name, category_id, amount, note, recorded_at. Pakai HMAC-SHA256 berkunci token dan kirim digest hex sebagai "signature". Timestamp berupa detik unix dan harus dalam 5 menit dari waktu server; nonce adalah string acak unik (16-128 karakter) per request dan hanya berlaku sekali, jadi request yang diulang ditolak.',
         'step_response' => 'Jika berhasil, respons 201 dikembalikan dan catatan baru muncul di Kelola Catatan.',
-        'secret_example' => 'Contoh dengan secret (request bertanda tangan)',
         'example' => 'Contoh request',
-        'field_type' => 'type: income, expense, atau transfer (wajib).',
-        'field_account' => 'account_name: nama akun sumber persis seperti di aplikasi (wajib). Untuk transfer kirim juga to_account_id.',
+        'field_type' => 'type: income atau expense (wajib).',
+        'field_account' => 'account_name: nama persis akun sumber (wajib).',
         'field_category' => 'category_id: opsional, dan harus kategori dengan tipe yang sama.',
         'field_amount' => 'amount: angka lebih dari 0, maksimal 2 desimal (wajib).',
         'field_recorded_at' => 'recorded_at: tanggal dan waktu catatan (wajib). note bersifat opsional.',
-        'errors' => '401 berarti token tidak ada atau salah, 404 berarti webhook nonaktif, 422 berarti data tidak valid, dan 429 berarti terlalu banyak request (batas 60 per menit).',
+        'errors' => '401 berarti signature, timestamp, atau nonce tidak ada, salah, kedaluwarsa, atau sudah dipakai, 404 berarti webhook nonaktif, 422 berarti data tidak valid, dan 429 berarti terlalu banyak request (batas 60 per menit).',
     ],
 
     'test' => [
         'title' => 'Uji webhook',
-        'description' => 'Periksa payload Anda sebelum menghubungkan aplikasi lain. Ini hanya uji coba: tidak ada data yang disimpan.',
-        'payload' => 'Contoh payload (JSON)',
+        'description' => 'Mengirim request bertanda tangan persis seperti panggilan asli (header dan signature yang sama, dibuat dengan token webhook ini) ke endpoint uji coba. Tidak ada data yang disimpan.',
+        'payload' => 'Body request (JSON, signature ditambahkan otomatis)',
         'send' => 'Kirim uji coba',
         'success' => 'Uji coba berhasil. Payload valid dan tidak ada catatan yang disimpan.',
         'inactive' => 'Webhook ini nonaktif, sehingga request asli akan ditolak dengan 404.',
@@ -59,11 +58,11 @@ return [
 
     'errors' => [
         'invalid_signature' => 'Tanda tangan webhook tidak ada atau tidak valid.',
+        'replayed' => 'Request ini sudah pernah dipakai.',
         'ip_required' => 'Tambahkan setidaknya satu alamat IP, atau pilih Izinkan semua.',
         'pick_one' => 'Pilih setidaknya satu opsi.',
         'type_not_allowed' => 'Tipe catatan ini tidak diizinkan untuk webhook ini.',
         'account_not_allowed' => 'Akun ini tidak diizinkan untuk webhook ini.',
-        'invalid_token' => 'Token webhook tidak ada atau tidak valid.',
         'ip_not_allowed' => 'Alamat IP ini tidak diizinkan memakai webhook ini.',
         'invalid_ip' => 'Alamat IP tidak valid: :ip.',
         'too_many_ips' => 'Maksimal :max alamat IP yang bisa di-whitelist.',
@@ -88,8 +87,6 @@ return [
     ],
 
     'show' => [
-        'secret_set' => 'Sudah diatur',
-        'secret_not_set' => 'Belum diatur',
         'title' => 'Detail webhook',
         'status' => 'Status',
         'active' => 'Aktif',
@@ -98,8 +95,6 @@ return [
     ],
 
     'fields' => [
-        'secret' => 'Secret (opsional)',
-        'secret_hint' => 'Opsional. Jika diisi, setiap panggilan harus mengirim header X-Webhook-Signature: "sha256=" diikuti HMAC-SHA256 dari body request mentah, dengan secret ini sebagai kunci. Minimal 16 karakter. Kosongkan untuk tanpa tanda tangan.',
         'ip_mode_all' => 'Izinkan semua',
         'ip_mode_only' => 'Izinkan hanya',
         'no_accounts' => 'Belum ada akun. Buat akun terlebih dahulu untuk membatasi webhook ke akun tertentu.',
@@ -123,7 +118,6 @@ return [
         'deselect_all' => 'Batalkan semua',
         'add_ip' => 'Tambah alamat IP',
         'delete_all' => 'Hapus semua',
-        'generate_secret' => 'Buat acak',
         'clear' => 'Kosongkan',
         'copy' => 'Salin',
         'copied' => 'Tersalin!',

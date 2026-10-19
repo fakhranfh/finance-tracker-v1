@@ -19,6 +19,8 @@ test.describe('Manage Webhooks', () => {
         await expect(page).toHaveURL('/webhooks');
         await expect(page.getByRole('heading', { name: 'Manage Webhooks' })).toBeVisible();
         await expect(page.getByRole('table')).toBeVisible();
+        await page.getByText('How to use webhooks').click();
+        await expect(page.getByText('Example request')).toBeVisible();
 
         await page.getByRole('link', { name: 'Add webhook' }).click();
         await expect(page).toHaveURL('/webhooks/create');
@@ -53,8 +55,6 @@ test.describe('Manage Webhooks', () => {
         await expect(page.getByLabel('Transfer', { exact: true })).toBeChecked();
         await page.getByLabel('Income', { exact: true }).uncheck();
         await page.getByLabel('Transfer', { exact: true }).uncheck();
-        await page.locator('[data-secret-generate]').click();
-        await expect(page.getByLabel('Secret (optional)')).toHaveValue(/^[0-9a-f]{64}$/);
         await page.getByLabel('Is Active', { exact: true }).check();
         await page.getByRole('button', { name: 'Save' }).click();
 
@@ -67,7 +67,6 @@ test.describe('Manage Webhooks', () => {
         await expect(page).toHaveURL(/\/webhooks\/\d+$/);
         await expect(page.getByRole('heading', { name: mainValue })).toBeVisible();
         await expect(page.locator('[data-field="allowed_ips"]')).toHaveText('203.0.113.5');
-        await expect(page.locator('[data-field="secret"]')).toHaveText('Set');
         await expect(page.locator('[data-field="allowed_types"]')).toHaveText('Expense');
         await expect(page.locator('[data-field="allowed_account_ids"]')).toHaveText('All');
         await page.getByRole('link', { name: 'Webhook logs' }).click();
@@ -99,6 +98,8 @@ test.describe('Manage Webhooks', () => {
         await expect(page.locator('#webhook-test-payload')).toBeVisible();
         await page.getByRole('button', { name: 'Send test' }).click();
         await expect(page.locator('#webhook-test-result')).toBeVisible();
+        await expect(page.locator('#webhook-test-result')).toContainText('X-Webhook-Nonce');
+        await expect(page.locator('#webhook-test-result')).toContainText('"signature"');
         await page.getByRole('link', { name: 'Back to edit webhook' }).click();
         await expect(page.getByLabel('Name', { exact: true })).toHaveValue(mainValue);
         await page.getByLabel('Name', { exact: true }).fill(`${mainValue} Edited`);

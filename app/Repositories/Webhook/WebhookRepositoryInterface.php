@@ -3,6 +3,7 @@
 namespace App\Repositories\Webhook;
 
 use App\Models\Webhook;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 interface WebhookRepositoryInterface
@@ -18,9 +19,16 @@ interface WebhookRepositoryInterface
     public function findByToken(string $token): ?Webhook;
 
     /**
-     * The webhook secret (null when none is set), read through the cache.
+     * Every webhook, active or not.
+     *
+     * @return Collection<int, Webhook>
      */
-    public function cachedSecret(Webhook $webhook): ?string;
+    public function all(): Collection;
+
+    /**
+     * Remember a request nonce for $ttlSeconds. False when it was already used (a replay).
+     */
+    public function claimNonce(int $webhookId, string $nonce, int $ttlSeconds): bool;
 
     /**
      * Paginate webhooks, optionally filtered by search and sorted by column.

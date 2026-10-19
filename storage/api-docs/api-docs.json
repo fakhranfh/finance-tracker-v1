@@ -2855,25 +2855,27 @@
                     "Webhooks"
                 ],
                 "summary": "Add a record through a webhook",
-                "description": "Public endpoint authenticated by the webhook token in the X-Webhook-Token header. Accepts the same payload as POST /records. A missing or unknown token returns 401 and an inactive webhook 404.",
+                "description": "Public endpoint. The body carries the record fields and a `signature`; the X-Webhook-Timestamp and X-Webhook-Nonce headers are signed with them. The webhook is the one whose token reproduces the signature. Only income and expense records are accepted. A missing or invalid signature, a stale timestamp, or a reused nonce returns 401 and an inactive webhook 404.",
                 "operationId": "dab96d151cbe3ec1279190df4d91613e",
                 "parameters": [
                     {
-                        "name": "X-Webhook-Signature",
+                        "name": "X-Webhook-Timestamp",
                         "in": "header",
-                        "description": "Required when the webhook has a secret: sha256= followed by the hex HMAC-SHA256 of the raw request body keyed by the secret.",
-                        "required": false,
+                        "description": "Unix time (seconds) the request was signed at. Must be within 5 minutes of the server time.",
+                        "required": true,
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     },
                     {
-                        "name": "X-Webhook-Token",
+                        "name": "X-Webhook-Nonce",
                         "in": "header",
-                        "description": "The webhook token.",
+                        "description": "A unique value (16-128 characters) per request. Each nonce is accepted once, so a replayed request is rejected with 401.",
                         "required": true,
                         "schema": {
-                            "type": "string"
+                            "type": "string",
+                            "maxLength": 128,
+                            "minLength": 16
                         }
                     }
                 ],
@@ -2882,25 +2884,26 @@
                     "content": {
                         "application/json": {
                             "schema": {
+                                "required": [
+                                    "type",
+                                    "account_name",
+                                    "amount",
+                                    "recorded_at",
+                                    "signature"
+                                ],
                                 "properties": {
                                     "type": {
                                         "type": "string",
                                         "example": "expense",
                                         "enum": [
                                             "income",
-                                            "expense",
-                                            "transfer"
+                                            "expense"
                                         ]
                                     },
                                     "account_name": {
                                         "description": "Name of the source account.",
                                         "type": "string",
                                         "example": "Cash"
-                                    },
-                                    "to_account_id": {
-                                        "description": "Required for transfers, ignored otherwise.",
-                                        "type": "integer",
-                                        "nullable": true
                                     },
                                     "category_id": {
                                         "type": "integer",
@@ -2920,6 +2923,10 @@
                                         "type": "string",
                                         "format": "date-time",
                                         "example": "2026-01-15T10:30:00+07:00"
+                                    },
+                                    "signature": {
+                                        "description": "The hex HMAC-SHA256, keyed by the webhook token, of \"timestamp=..&nonce=..&type=..&account_name=..&category_id=..&amount=..&note=..&recorded_at=..\" (timestamp and nonce are the header values; missing record fields are empty).",
+                                        "type": "string"
                                     }
                                 },
                                 "type": "object"
@@ -2935,7 +2942,7 @@
                         "description": "The caller IP address, the record type or the account is not allowed for this webhook"
                     },
                     "401": {
-                        "description": "Missing or unknown webhook token, or missing/invalid signature"
+                        "description": "Missing or invalid signature or headers, a stale timestamp, or a reused nonce"
                     },
                     "404": {
                         "description": "Inactive webhook"
@@ -3038,12 +3045,6 @@
                                         },
                                         "nullable": true
                                     },
-                                    "secret": {
-                                        "description": "Optional signing secret. When set, calls to the public endpoint must carry a valid X-Webhook-Signature.",
-                                        "type": "string",
-                                        "nullable": true,
-                                        "minLength": 16
-                                    },
                                     "allowed_ips": {
                                         "description": "Whitelisted IP addresses or CIDR ranges, one per line (or comma separated). Empty allows every address.",
                                         "type": "string",
@@ -3112,7 +3113,7 @@
                     "Webhooks"
                 ],
                 "summary": "Test a webhook",
-                "description": "Dry run: validates the payload like POST /webhooks/{token}/records and checks that the webhook is active, but saves nothing.",
+                "description": "Dry run of POST /webhooks/records for a logged-in user: takes the same signed request (X-Webhook-Timestamp and X-Webhook-Nonce headers, signature in the body) and runs the same checks, but saves nothing and does not use up the nonce.",
                 "operationId": "7d28c948933a9941b466d1134486b54b",
                 "parameters": [
                     {
@@ -3121,6 +3122,24 @@
                         "required": true,
                         "schema": {
                             "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "X-Webhook-Timestamp",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "X-Webhook-Nonce",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 128,
+                            "minLength": 16
                         }
                     }
                 ],
@@ -3135,13 +3154,16 @@
                                         "example": "expense",
                                         "enum": [
                                             "income",
-                                            "expense",
-                                            "transfer"
+                                            "expense"
                                         ]
                                     },
                                     "account_name": {
                                         "type": "string",
                                         "example": "Cash"
+                                    },
+                                    "signature": {
+                                        "description": "Same signature as on POST /webhooks/records.",
+                                        "type": "string"
                                     },
                                     "amount": {
                                         "type": "number",
@@ -3166,6 +3188,9 @@
                 "responses": {
                     "200": {
                         "description": "Payload is valid and the webhook is active"
+                    },
+                    "401": {
+                        "description": "Missing or invalid signature or headers, or a stale timestamp"
                     },
                     "404": {
                         "description": "Not found"
@@ -3197,6 +3222,24 @@
                         "schema": {
                             "type": "integer"
                         }
+                    },
+                    {
+                        "name": "X-Webhook-Timestamp",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "X-Webhook-Nonce",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 128,
+                            "minLength": 16
+                        }
                     }
                 ],
                 "responses": {
@@ -3221,6 +3264,24 @@
                         "required": true,
                         "schema": {
                             "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "X-Webhook-Timestamp",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "X-Webhook-Nonce",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 128,
+                            "minLength": 16
                         }
                     }
                 ],
@@ -3254,12 +3315,6 @@
                                             ]
                                         },
                                         "nullable": true
-                                    },
-                                    "secret": {
-                                        "description": "Optional signing secret. When set, calls to the public endpoint must carry a valid X-Webhook-Signature.",
-                                        "type": "string",
-                                        "nullable": true,
-                                        "minLength": 16
                                     },
                                     "allowed_ips": {
                                         "description": "Whitelisted IP addresses or CIDR ranges, one per line (or comma separated). Empty allows every address.",
@@ -3299,6 +3354,24 @@
                         "required": true,
                         "schema": {
                             "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "X-Webhook-Timestamp",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "X-Webhook-Nonce",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 128,
+                            "minLength": 16
                         }
                     }
                 ],

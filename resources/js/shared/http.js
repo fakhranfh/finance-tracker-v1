@@ -6,10 +6,11 @@ import { clearApiToken, getApiToken } from './api-token.js';
 import { csrfToken } from './csrf.js';
 import { routes } from '../routes.js';
 
-async function request(url, { method = 'GET', payload } = {}) {
+async function request(url, { method = 'GET', payload, headers: extraHeaders = {} } = {}) {
     const headers = {
         Accept: 'application/json',
         'X-CSRF-TOKEN': csrfToken(),
+        ...extraHeaders,
     };
 
     const token = getApiToken();
@@ -73,7 +74,7 @@ export async function getAll(url) {
     return items;
 }
 
-export const post = (url, payload) => request(url, { method: 'POST', payload });
+export const post = (url, payload, headers) => request(url, { method: 'POST', payload, headers });
 
 /**
  * POST a FormData body (e.g. a file upload). With `onProgress`, the percentage of the body sent

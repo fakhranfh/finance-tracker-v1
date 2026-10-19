@@ -25,7 +25,6 @@ async function load() {
     details.querySelector('#token').value = webhook.token;
     details.querySelector('#url').value = webhook.url;
     field('status').textContent = webhook.is_active ? labels.activeLabel : labels.inactiveLabel;
-    field('secret').textContent = webhook.secret ? labels.secretSetLabel : labels.secretNotSetLabel;
     field('created_at').textContent = formatDateTime(webhook.created_at);
     field('allowed_ips').textContent = webhook.allowed_ips.length > 0 ? webhook.allowed_ips.join(', ') : allLabel;
     field('allowed_types').textContent = webhook.allowed_types.length > 0

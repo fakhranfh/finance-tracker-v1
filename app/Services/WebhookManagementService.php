@@ -14,6 +14,22 @@ use Illuminate\Validation\ValidationException;
 
 class WebhookManagementService
 {
+    /** Header carrying the unix time the request was signed at. */
+    public const TIMESTAMP_HEADER = 'X-Webhook-Timestamp';
+
+    /** Header carrying a unique value per request, accepted once. */
+    public const NONCE_HEADER = 'X-Webhook-Nonce';
+
+    /** Values covered by the signature, in signing order. */
+    private const SIGNED_FIELDS = ['timestamp', 'nonce', 'type', 'account_name', 'category_id', 'amount', 'note', 'recorded_at'];
+
+    /** How far a request timestamp may be from the server clock. */
+    private const REPLAY_TOLERANCE_SECONDS = 300;
+
+    private const NONCE_MIN_LENGTH = 16;
+
+    private const NONCE_MAX_LENGTH = 128;
+
     public function __construct(
         protected WebhookRepositoryInterface $webhookRepository,
         protected RecordManagementService $recordManagementService,
@@ -55,19 +71,82 @@ class WebhookManagementService
     }
 
     /**
-     * Whether the request body is signed with the webhook secret: X-Webhook-Signature must be
-     * "sha256=" plus the HMAC-SHA256 of the raw body keyed by the secret. Always true when the
-     * webhook has no secret.
+     * Whether the X-Webhook-Timestamp and X-Webhook-Nonce values are well formed and fresh: the
+     * timestamp is unix seconds within REPLAY_TOLERANCE_SECONDS of now and the nonce is
+     * NONCE_MIN_LENGTH to NONCE_MAX_LENGTH characters.
      */
-    public function verifySignature(Webhook $webhook, string $body, ?string $signature): bool
+    public function isFresh(string $timestamp, string $nonce): bool
     {
-        $secret = $this->webhookRepository->cachedSecret($webhook);
+        return ctype_digit($timestamp)
+            && abs(time() - (int) $timestamp) <= self::REPLAY_TOLERANCE_SECONDS
+            && strlen($nonce) >= self::NONCE_MIN_LENGTH
+            && strlen($nonce) <= self::NONCE_MAX_LENGTH;
+    }
 
-        if ($secret === null) {
-            return true;
+    /**
+     * Find the webhook a signed request belongs to, active or not, or null.
+     *
+     * The request carries no webhook identifier: `signature` is the hex HMAC-SHA256,
+     * keyed by the webhook token, of the timestamp, the nonce and the record fields (see
+     * signedString()). The webhook is the one whose token reproduces that signature.
+     *
+     * @param  array<string, mixed>  $input  the JSON body
+     */
+    public function findBySignature(array $input, string $signature, string $timestamp, string $nonce): ?Webhook
+    {
+        foreach ($this->webhookRepository->all() as $webhook) {
+            if ($this->signatureMatches($webhook, $input, $signature, $timestamp, $nonce)) {
+                return $webhook;
+            }
         }
 
-        return $signature !== null && hash_equals('sha256='.hash_hmac('sha256', $body, $secret), $signature);
+        return null;
+    }
+
+    /**
+     * Whether $signature is the token-keyed HMAC of this timestamp, nonce and the record fields.
+     *
+     * @param  array<string, mixed>  $input  the JSON body
+     */
+    public function signatureMatches(Webhook $webhook, array $input, string $signature, string $timestamp, string $nonce): bool
+    {
+        $signed = $this->signedString(['timestamp' => $timestamp, 'nonce' => $nonce] + $input);
+
+        return hash_equals(hash_hmac('sha256', $signed, $webhook->token), $signature);
+    }
+
+    /**
+     * Mark a nonce as used by this webhook so the request cannot be replayed. False when it was
+     * already used. Nonces are remembered for twice the timestamp tolerance, after which the
+     * timestamp check rejects the request anyway.
+     */
+    public function claimNonce(Webhook $webhook, string $nonce): bool
+    {
+        return $this->webhookRepository->claimNonce($webhook->id, $nonce, self::REPLAY_TOLERANCE_SECONDS * 2);
+    }
+
+    /**
+     * The signed fields as "name=value" pairs joined with "&", in the fixed order of
+     * SIGNED_FIELDS. Missing and null values are empty, other values are cast to strings.
+     *
+     * @param  array<string, mixed>  $input
+     */
+    private function signedString(array $input): string
+    {
+        $pairs = [];
+
+        foreach (self::SIGNED_FIELDS as $field) {
+            $value = $input[$field] ?? null;
+
+            $pairs[] = $field.'='.match (true) {
+                is_bool($value) => $value ? 'true' : 'false',
+                is_scalar($value) => (string) $value,
+                $value === null => '',
+                default => (string) json_encode($value),
+            };
+        }
+
+        return implode('&', $pairs);
     }
 
     /**
@@ -172,10 +251,6 @@ class WebhookManagementService
      */
     private function normalize(array $data): array
     {
-        if (array_key_exists('secret', $data)) {
-            $data['secret'] = $data['secret'] ?: null;
-        }
-
         if (array_key_exists('allowed_ips', $data)) {
             $data['allowed_ips'] = IpList::parse($data['allowed_ips']) ?: null;
         }

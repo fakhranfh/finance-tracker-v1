@@ -14,7 +14,6 @@ wireDevTools(form, webhookFormFixture);
 wireCopyButtons(form);
 wireToggleAll();
 wireIpList();
-wireSecret();
 
 const ipPanel = form?.querySelector('#allowed-ips-panel');
 const ipList = form?.querySelector('#allowed-ips-list');
@@ -50,20 +49,6 @@ function setIpMode(mode) {
     if (mode === 'only' && ipInputs().length === 0) {
         addIpRow();
     }
-}
-
-/** Generate (64 random hex characters) or clear the optional signing secret. */
-function wireSecret() {
-    const input = form.elements.namedItem('secret');
-
-    form.querySelector('[data-secret-generate]').addEventListener('click', () => {
-        const bytes = crypto.getRandomValues(new Uint8Array(32));
-
-        input.value = [...bytes].map((byte) => byte.toString(16).padStart(2, '0')).join('');
-    });
-    form.querySelector('[data-secret-clear]').addEventListener('click', () => {
-        input.value = '';
-    });
 }
 
 function wireIpList() {
@@ -169,7 +154,6 @@ async function loadItem() {
 
         ips.forEach((ip) => addIpRow(ip));
         setIpMode(ips.length > 0 ? 'only' : 'all');
-        form.elements.namedItem('secret').value = data.data.secret ?? '';
         form.elements.namedItem('url').value = data.data.url ?? '';
         form.elements.namedItem('is_active').checked = Boolean(data.data.is_active);
         form.querySelectorAll('[name="allowed_types[]"]').forEach((box) => {
@@ -229,7 +213,6 @@ if (form) {
 
         const payload = {
             name: form.elements.namedItem('name').value,
-            secret: form.elements.namedItem('secret').value.trim(),
             allowed_ips: enteredIps().join('\n'),
             allowed_account_ids: checkedValues('[data-allowed-account]', Number),
             allowed_types: checkedValues('[name="allowed_types[]"]'),

@@ -28,7 +28,6 @@ class UpdateWebhookRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'is_active' => ['required', 'boolean'],
-            'secret' => ['nullable', 'string', 'min:16', 'max:255'],
             'allowed_ips' => ['nullable', 'string', 'max:2000', new IpList],
             'allowed_account_ids' => ['nullable', 'array'],
             'allowed_account_ids.*' => ['integer', Rule::exists('accounts', 'id')],

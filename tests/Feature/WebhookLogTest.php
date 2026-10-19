@@ -19,7 +19,7 @@ it('logs a successful webhook call with the created record', function () {
     $webhook = Webhook::factory()->create();
     $account = Account::factory()->create();
 
-    $recordId = $this->withHeader('X-Webhook-Token', $webhook->token)->postJson('/api/webhooks/records', logPayload($account), ['Origin' => 'https://example.com'])
+    $recordId = signedWebhookCall($this, $webhook, logPayload($account), [], ['Origin' => 'https://example.com'])
         ->assertStatus(201)
         ->json('data.id');
 
@@ -37,17 +37,17 @@ it('logs rejected webhook calls with their status', function () {
     $inactive = Webhook::factory()->create(['is_active' => false]);
     $restricted = Webhook::factory()->create(['allowed_ips' => ['203.0.113.5']]);
 
-    $this->withHeader('X-Webhook-Token', $active->token)->postJson('/api/webhooks/records', [])->assertStatus(422);
-    $this->withHeader('X-Webhook-Token', $inactive->token)->postJson('/api/webhooks/records', logPayload($account))->assertNotFound();
-    $this->withHeader('X-Webhook-Token', $restricted->token)->postJson('/api/webhooks/records', logPayload($account))->assertForbidden();
+    signedWebhookCall($this, $active, [])->assertStatus(422);
+    signedWebhookCall($this, $inactive, logPayload($account))->assertNotFound();
+    signedWebhookCall($this, $restricted, logPayload($account))->assertForbidden();
 
     expect(WebhookLog::query()->where('webhook_id', $active->id)->value('status_code'))->toBe(422)
         ->and(WebhookLog::query()->where('webhook_id', $inactive->id)->value('status_code'))->toBe(404)
         ->and(WebhookLog::query()->where('webhook_id', $restricted->id)->value('status_code'))->toBe(403);
 });
 
-it('does not log calls with an unknown token', function () {
-    $this->withHeader('X-Webhook-Token', 'unknown-token')->postJson('/api/webhooks/records', [])->assertUnauthorized();
+it('does not log calls with an unknown signature', function () {
+    $this->postJson('/api/webhooks/records', ['signature' => 'unknown'])->assertUnauthorized();
     $this->postJson('/api/webhooks/records', [])->assertUnauthorized();
 
     expect(WebhookLog::query()->count())->toBe(0);
@@ -61,7 +61,7 @@ it('keeps only the latest 500 logs per webhook', function () {
         WebhookLog::query()->create(['webhook_id' => $webhook->id, 'status_code' => 201]);
     }
 
-    $this->withHeader('X-Webhook-Token', $webhook->token)->postJson('/api/webhooks/records', logPayload($account))->assertStatus(201);
+    signedWebhookCall($this, $webhook, logPayload($account))->assertStatus(201);
 
     expect(WebhookLog::query()->where('webhook_id', $webhook->id)->count())->toBe(500);
 });

@@ -61,6 +61,19 @@ class WebhookController extends Controller
 
     public function test(StoreWebhookRecordRequest $request, Webhook $webhook): JsonResponse
     {
+        // The same signed request a real call sends (see WebhookRecordController).
+        $signature = $request->input('signature');
+        $timestamp = (string) $request->header(WebhookManagementService::TIMESTAMP_HEADER);
+        $nonce = (string) $request->header(WebhookManagementService::NONCE_HEADER);
+
+        abort_unless(
+            is_string($signature)
+                && $this->webhookManagementService->isFresh($timestamp, $nonce)
+                && $this->webhookManagementService->signatureMatches($webhook, $request->all(), $signature, $timestamp, $nonce),
+            401,
+            __('webhooks.errors.invalid_signature'),
+        );
+
         if (! $webhook->is_active) {
             return response()->json(['message' => __('webhooks.test.inactive')], 409);
         }

@@ -50,20 +50,6 @@
                 <x-molecules.copy-field name="token" :label="__('webhooks.fields.token')" :copy-label="__('webhooks.actions.copy')" :copied-label="__('webhooks.actions.copied')" />
                 <x-molecules.copy-field name="url" :label="__('webhooks.fields.url')" :copy-label="__('webhooks.actions.copy')" :copied-label="__('webhooks.actions.copied')" />
             @endif
-            <div class="space-y-1.5">
-                <x-atoms.label for="secret">{{ __('webhooks.fields.secret') }}</x-atoms.label>
-                <x-atoms.input type="text" name="secret" id="secret" autocomplete="off" spellcheck="false" class="font-mono" />
-                <div class="flex items-center gap-4">
-                    <button type="button" class="cursor-pointer font-body text-body-sm font-medium text-primary hover:underline" data-secret-generate>
-                        {{ __('webhooks.actions.generate_secret') }}
-                    </button>
-                    <button type="button" class="cursor-pointer font-body text-body-sm font-medium text-error hover:underline" data-secret-clear>
-                        {{ __('webhooks.actions.clear') }}
-                    </button>
-                </div>
-                <p class="font-body text-body-sm text-on-surface-variant">{{ __('webhooks.fields.secret_hint') }}</p>
-                <x-atoms.form-error for="secret" />
-            </div>
             <div class="space-y-2" id="allowed_ips" data-ip-required-message="{{ __('webhooks.errors.ip_required') }}">
                 <x-atoms.label>{{ __('webhooks.fields.allowed_ips') }}</x-atoms.label>
                 <div class="flex flex-wrap gap-x-6 gap-y-2">

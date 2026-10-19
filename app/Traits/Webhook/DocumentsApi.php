@@ -35,7 +35,6 @@ trait DocumentsApi
                     new OA\Property(property: 'name', type: 'string', example: 'Sample name'),
                     new OA\Property(property: 'allowed_account_ids', type: 'array', nullable: true, items: new OA\Items(type: 'integer'), description: 'Accounts records may be added to. Empty allows every account.'),
                     new OA\Property(property: 'allowed_types', type: 'array', nullable: true, items: new OA\Items(type: 'string', enum: ['income', 'expense', 'transfer']), description: 'Record types that may be added. Empty allows every type.'),
-                    new OA\Property(property: 'secret', type: 'string', nullable: true, minLength: 16, description: 'Optional signing secret. When set, calls to the public endpoint must carry a valid X-Webhook-Signature.'),
                     new OA\Property(property: 'allowed_ips', type: 'string', nullable: true, example: "203.0.113.5\n198.51.100.0/24", description: 'Whitelisted IP addresses or CIDR ranges, one per line (or comma separated). Empty allows every address.'),
                     new OA\Property(property: 'is_active', type: 'boolean', example: true),
                 ]
@@ -51,15 +50,20 @@ trait DocumentsApi
     #[OA\Post(
         path: '/webhooks/{id}/test',
         summary: 'Test a webhook',
-        description: 'Dry run: validates the payload like POST /webhooks/{token}/records and checks that the webhook is active, but saves nothing.',
+        description: 'Dry run of POST /webhooks/records for a logged-in user: takes the same signed request (X-Webhook-Timestamp and X-Webhook-Nonce headers, signature in the body) and runs the same checks, but saves nothing and does not use up the nonce.',
         tags: ['Webhooks'],
-        parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'X-Webhook-Timestamp', in: 'header', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'X-Webhook-Nonce', in: 'header', required: true, schema: new OA\Schema(type: 'string', minLength: 16, maxLength: 128)),
+        ],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
                 properties: [
-                    new OA\Property(property: 'type', type: 'string', enum: ['income', 'expense', 'transfer'], example: 'expense'),
+                    new OA\Property(property: 'type', type: 'string', enum: ['income', 'expense'], example: 'expense'),
                     new OA\Property(property: 'account_name', type: 'string', example: 'Cash'),
+                    new OA\Property(property: 'signature', type: 'string', description: 'Same signature as on POST /webhooks/records.'),
                     new OA\Property(property: 'amount', type: 'number', format: 'float', example: 12.5),
                     new OA\Property(property: 'recorded_at', type: 'string', format: 'date-time'),
                     new OA\Property(property: 'ip', type: 'string', example: '203.0.113.5', description: 'IP address to check against the whitelist (only needed when IPs are whitelisted).'),
@@ -68,6 +72,7 @@ trait DocumentsApi
         ),
         responses: [
             new OA\Response(response: 200, description: 'Payload is valid and the webhook is active'),
+            new OA\Response(response: 401, description: 'Missing or invalid signature or headers, or a stale timestamp'),
             new OA\Response(response: 404, description: 'Not found'),
             new OA\Response(response: 403, description: 'IP address, record type or account is not allowed for this webhook'),
             new OA\Response(response: 409, description: 'Webhook is inactive'),
@@ -80,7 +85,11 @@ trait DocumentsApi
         path: '/webhooks/{id}',
         summary: 'Show a webhook',
         tags: ['Webhooks'],
-        parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'X-Webhook-Timestamp', in: 'header', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'X-Webhook-Nonce', in: 'header', required: true, schema: new OA\Schema(type: 'string', minLength: 16, maxLength: 128)),
+        ],
         responses: [
             new OA\Response(response: 200, description: 'The webhook'),
             new OA\Response(response: 404, description: 'Not found'),
@@ -92,7 +101,11 @@ trait DocumentsApi
         path: '/webhooks/{id}',
         summary: 'Update a webhook',
         tags: ['Webhooks'],
-        parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'X-Webhook-Timestamp', in: 'header', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'X-Webhook-Nonce', in: 'header', required: true, schema: new OA\Schema(type: 'string', minLength: 16, maxLength: 128)),
+        ],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
@@ -100,7 +113,6 @@ trait DocumentsApi
                     new OA\Property(property: 'name', type: 'string', example: 'Sample name'),
                     new OA\Property(property: 'allowed_account_ids', type: 'array', nullable: true, items: new OA\Items(type: 'integer'), description: 'Accounts records may be added to. Empty allows every account.'),
                     new OA\Property(property: 'allowed_types', type: 'array', nullable: true, items: new OA\Items(type: 'string', enum: ['income', 'expense', 'transfer']), description: 'Record types that may be added. Empty allows every type.'),
-                    new OA\Property(property: 'secret', type: 'string', nullable: true, minLength: 16, description: 'Optional signing secret. When set, calls to the public endpoint must carry a valid X-Webhook-Signature.'),
                     new OA\Property(property: 'allowed_ips', type: 'string', nullable: true, example: "203.0.113.5\n198.51.100.0/24", description: 'Whitelisted IP addresses or CIDR ranges, one per line (or comma separated). Empty allows every address.'),
                     new OA\Property(property: 'is_active', type: 'boolean', example: true),
                 ]
@@ -117,7 +129,11 @@ trait DocumentsApi
         path: '/webhooks/{id}',
         summary: 'Delete a webhook',
         tags: ['Webhooks'],
-        parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'X-Webhook-Timestamp', in: 'header', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'X-Webhook-Nonce', in: 'header', required: true, schema: new OA\Schema(type: 'string', minLength: 16, maxLength: 128)),
+        ],
         responses: [new OA\Response(response: 204, description: 'Webhook deleted')]
     )]
     private function documentDestroyEndpoint(): void {}

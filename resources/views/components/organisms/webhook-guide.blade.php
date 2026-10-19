@@ -16,31 +16,26 @@
 
         <div>
             <p class="mb-2 font-semibold text-on-surface">{{ __('webhooks.guide.example') }}</p>
-            <pre class="overflow-x-auto rounded-md bg-surface-container p-3 text-on-surface"><code>curl -X POST {{ url('/api/webhooks/records') }} \
-  -H "X-Webhook-Token: TOKEN" \
+            <pre class="overflow-x-auto rounded-md bg-surface-container p-3 text-on-surface"><code>TOKEN="TOKEN"
+TIMESTAMP="$(date +%s)"
+NONCE="$(openssl rand -hex 16)"
+SIGNED="timestamp=$TIMESTAMP&nonce=$NONCE&type=expense&account_name=Cash&category_id=2&amount=12.50&note=Coffee&recorded_at=2026-01-15T10:30:00+07:00"
+SIGNATURE="$(printf '%s' "$SIGNED" | openssl dgst -sha256 -hmac "$TOKEN" | sed 's/^.* //')"
+
+curl -X POST {{ url('/api/webhooks/records') }} \
   -H "Content-Type: application/json" \
+  -H "X-Webhook-Timestamp: $TIMESTAMP" \
+  -H "X-Webhook-Nonce: $NONCE" \
   -d '{
     "type": "expense",
     "account_name": "Cash",
     "category_id": 2,
     "amount": "12.50",
     "note": "Coffee",
-    "recorded_at": "2026-01-15T10:30:00+07:00"
+    "recorded_at": "2026-01-15T10:30:00+07:00",
+    "signature": "'"$SIGNATURE"'"
   }'</code></pre>
         </div>
-
-        <div>
-            <p class="mb-2 font-semibold text-on-surface">{{ __('webhooks.guide.secret_example') }}</p>
-            <pre class="overflow-x-auto rounded-md bg-surface-container p-3 text-on-surface"><code>BODY='{"type":"expense","account_name":"Cash","amount":"12.50","recorded_at":"2026-01-15T10:30:00+07:00"}'
-SIGNATURE="sha256=$(printf '%s' "$BODY" | openssl dgst -sha256 -hmac "SECRET" | sed 's/^.* //')"
-
-curl -X POST {{ url('/api/webhooks/records') }} \
-  -H "X-Webhook-Token: TOKEN" \
-  -H "X-Webhook-Signature: $SIGNATURE" \
-  -H "Content-Type: application/json" \
-  -d "$BODY"</code></pre>
-        </div>
-
         <ul class="list-disc space-y-1 pl-5">
             <li>{{ __('webhooks.guide.field_type') }}</li>
             <li>{{ __('webhooks.guide.field_account') }}</li>
