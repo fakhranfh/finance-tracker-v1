@@ -73,7 +73,9 @@ test.describe('Manage Webhooks', () => {
         await page.getByRole('link', { name: 'Back to webhook details' }).click();
         await expect(page).toHaveURL(/\/webhooks\/\d+$/);
         await page.getByRole('link', { name: 'Test webhook' }).click();
-        await page.getByRole('link', { name: 'Back to webhook details' }).click();
+        await expect(page).toHaveURL(/\/webhooks\/api-docs\?webhook=\d+$/);
+        await expect(page.getByRole('heading', { name: 'Webhook API' })).toBeVisible();
+        await page.goBack();
         await expect(page).toHaveURL(/\/webhooks\/\d+$/);
         await page.getByRole('link', { name: 'Edit', exact: true }).click();
         await expect(page.getByLabel('Name', { exact: true })).toHaveValue(mainValue);
@@ -92,15 +94,17 @@ test.describe('Manage Webhooks', () => {
         await expect(page.getByRole('heading', { name: 'Webhook logs' })).toBeVisible();
         await page.getByRole('link', { name: 'Back to edit webhook' }).click();
         await page.getByRole('link', { name: 'Test webhook' }).click();
-        await expect(page).toHaveURL(/\/webhooks\/\d+\/test(\?.*)?$/);
-        await page.getByText('How to use webhooks').click();
-        await expect(page.getByText('Example request')).toBeVisible();
-        await expect(page.locator('#webhook-test-payload')).toBeVisible();
-        await page.getByRole('button', { name: 'Send test' }).click();
-        await expect(page.locator('#webhook-test-result')).toBeVisible();
-        await expect(page.locator('#webhook-test-result')).toContainText('X-Webhook-Nonce');
-        await expect(page.locator('#webhook-test-result')).toContainText('"signature"');
-        await page.getByRole('link', { name: 'Back to edit webhook' }).click();
+        await expect(page).toHaveURL(/\/webhooks\/api-docs\?webhook=\d+$/);
+        await expect(page.getByRole('combobox', { name: 'Webhook' })).toHaveValue(new RegExp(mainValue));
+        await expect(page.locator('[data-try-preview]')).toContainText('"signature"');
+
+        await page.getByRole('button', { name: 'Execute' }).click();
+        await expect(page.getByText('Account name is required.')).toBeVisible();
+
+        await page.getByLabel('Account name').fill(`${mainValue} account`);
+        await page.getByRole('button', { name: 'Execute' }).click();
+        await expect(page.locator('[data-try-result]')).toContainText('X-Webhook-Nonce');
+        await page.goBack();
         await expect(page.getByLabel('Name', { exact: true })).toHaveValue(mainValue);
         await page.getByLabel('Name', { exact: true }).fill(`${mainValue} Edited`);
         await page.getByRole('button', { name: 'Save' }).click();
@@ -114,8 +118,8 @@ test.describe('Manage Webhooks', () => {
         await page.reload();
         await expect(page.getByRole('row', { name: new RegExp(`${mainValue} Edited`) }).locator('[data-webhook-active]')).not.toBeChecked();
         await editedRow.getByRole('link', { name: 'Test' }).click();
-        await expect(page).toHaveURL(/\/webhooks\/\d+\/test\?from=index$/);
-        await page.getByRole('link', { name: 'Back to webhooks' }).click();
+        await expect(page).toHaveURL(/\/webhooks\/api-docs\?webhook=\d+$/);
+        await page.getByRole('link', { name: 'Manage Webhooks' }).first().click();
         await expect(page).toHaveURL('/webhooks');
         await editedRow.getByRole('button', { name: 'Delete' }).click();
         await expect(page.getByText('Are you sure you want to delete this webhook?')).toBeVisible();
