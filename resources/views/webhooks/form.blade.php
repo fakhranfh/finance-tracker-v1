@@ -18,7 +18,7 @@
                 <x-atoms.button href="{{ route('webhooks.logs', ['id' => $id, 'from' => 'edit']) }}" variant="secondary">
                     {{ __('webhooks.logs.title') }}
                 </x-atoms.button>
-                <x-atoms.button href="{{ route('webhooks.test', ['id' => $id, 'from' => 'edit']) }}" variant="secondary">
+                <x-atoms.button href="{{ route('webhooks.api-docs', ['webhook' => $id]) }}" variant="secondary">
                     {{ __('webhooks.test.title') }}
                 </x-atoms.button>
             @endif

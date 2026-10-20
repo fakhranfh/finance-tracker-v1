@@ -10,8 +10,8 @@ class AccountBalanceRepository implements AccountBalanceRepositoryInterface
     public function adjustLastBalance(int $accountId, string $signedAmount): void
     {
         DB::update(
-            'update accounts set last_balance = coalesce(last_balance, 0) + cast(? as bigint) where id = ?',
-            [$signedAmount, $accountId],
+            'update accounts set last_balance = coalesce(last_balance, 0) + ? where id = ?',
+            [(int) $signedAmount, $accountId],
         );
     }
 
@@ -121,15 +121,15 @@ class AccountBalanceRepository implements AccountBalanceRepositoryInterface
     {
         $row = DB::selectOne(<<<'SQL'
             select
-                cast(? as bigint)
+                ?
                 + coalesce(sum(case when type = 'income' and account_id = ? then amount end), 0) as income,
-                cast(? as bigint)
+                ?
                 + coalesce(sum(case when type = 'expense' and account_id = ? then amount end), 0) as expense,
-                cast(? as bigint)
+                ?
                 + coalesce(sum(case when type = 'transfer' and to_account_id = ? then amount end), 0) as transfer_in,
-                cast(? as bigint)
+                ?
                 + coalesce(sum(case when type = 'transfer' and account_id = ? then amount end), 0) as transfer_out,
-                cast(? as bigint)
+                ?
                 + coalesce(sum(case
                     when type = 'income' and account_id = ? then amount
                     when type = 'expense' and account_id = ? then -amount
@@ -140,11 +140,11 @@ class AccountBalanceRepository implements AccountBalanceRepositoryInterface
             from records
             where id > ? and id <= ? and (account_id = ? or to_account_id = ?)
             SQL, [
-            $start['income'], $accountId,
-            $start['expense'], $accountId,
-            $start['transfer_in'], $accountId,
-            $start['transfer_out'], $accountId,
-            $start['net'], $accountId, $accountId, $accountId, $accountId,
+            (int) $start['income'], $accountId,
+            (int) $start['expense'], $accountId,
+            (int) $start['transfer_in'], $accountId,
+            (int) $start['transfer_out'], $accountId,
+            (int) $start['net'], $accountId, $accountId, $accountId, $accountId,
             $start['record_count'] ?? 0,
             $afterRecordId, $uptoRecordId, $accountId, $accountId,
         ]);
@@ -163,13 +163,13 @@ class AccountBalanceRepository implements AccountBalanceRepositoryInterface
     {
         return DB::selectOne(<<<'SQL'
             select
-                cast(? as bigint)
+                ?
                 + coalesce((select sum(case when type = 'income' then amount else -amount end)
                     from records where account_id = ? and id > ? and id <= ?), 0)
                 + coalesce((select sum(amount)
                     from records where type = 'transfer' and to_account_id = ? and id > ? and id <= ?), 0) as balance
             SQL, [
-            $startBalance,
+            (int) $startBalance,
             $accountId, $afterRecordId, $uptoRecordId,
             $accountId, $afterRecordId, $uptoRecordId,
         ])->balance;

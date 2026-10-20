@@ -46,16 +46,47 @@ return new class extends Migration
 
     public function up(): void
     {
+        $grammar = DB::getQueryGrammar();
+
         foreach ($this->columns as [$table, $column]) {
-            DB::statement("UPDATE \"{$table}\" SET \"{$column}\" = ROUND(\"{$column}\") WHERE \"{$column}\" <> ROUND(\"{$column}\")");
-            DB::statement("ALTER TABLE \"{$table}\" ALTER COLUMN \"{$column}\" TYPE bigint USING \"{$column}\"::bigint");
+            $wrappedTable = $grammar->wrap($table);
+            $wrappedColumn = $grammar->wrap($column);
+
+            DB::statement("UPDATE {$wrappedTable} SET {$wrappedColumn} = ROUND({$wrappedColumn}) WHERE {$wrappedColumn} <> ROUND({$wrappedColumn})");
+            $this->retype($table, $column, 'bigint');
         }
     }
 
     public function down(): void
     {
         foreach ($this->columns as [$table, $column, $precision]) {
-            DB::statement("ALTER TABLE \"{$table}\" ALTER COLUMN \"{$column}\" TYPE numeric({$precision}, 2) USING \"{$column}\"::numeric({$precision}, 2)");
+            $this->retype($table, $column, "numeric({$precision}, 2)");
         }
+    }
+
+    /**
+     * Changes the column type and keeps its nullability and default. PostgreSQL converts with USING;
+     * MySQL/MariaDB rewrites the definition, so the current nullability and default are read first.
+     */
+    private function retype(string $table, string $column, string $type): void
+    {
+        $grammar = DB::getQueryGrammar();
+        $wrappedTable = $grammar->wrap($table);
+        $wrappedColumn = $grammar->wrap($column);
+
+        if (DB::getDriverName() === 'pgsql') {
+            DB::statement("ALTER TABLE {$wrappedTable} ALTER COLUMN {$wrappedColumn} TYPE {$type} USING {$wrappedColumn}::{$type}");
+
+            return;
+        }
+
+        $definition = DB::selectOne(
+            'SELECT IS_NULLABLE AS is_nullable, COLUMN_DEFAULT AS column_default FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?',
+            [$table, $column],
+        );
+        $null = $definition->is_nullable === 'YES' ? 'NULL' : 'NOT NULL';
+        $default = $definition->column_default === null ? '' : " DEFAULT {$definition->column_default}";
+
+        DB::statement("ALTER TABLE {$wrappedTable} MODIFY {$wrappedColumn} ".strtoupper($type)." {$null}{$default}");
     }
 };

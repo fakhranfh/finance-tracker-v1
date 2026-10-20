@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\RecordType;
 use App\Services\WebhookManagementService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -26,9 +27,26 @@ class WebhookPageController extends Controller
         return view('webhooks.form', ['id' => null, 'recordTypes' => $this->recordTypes()]);
     }
 
-    public function test(Request $request, int $id): View
+    /**
+     * Swagger-style reference for the webhook test endpoint, built from the generated OpenAPI spec
+     * (storage/api-docs/api-docs.json). ?webhook={id} preselects a webhook. See .ai/rules/api-docs.md.
+     */
+    public function apiDocs(Request $request, WebhookManagementService $webhooks): View
     {
-        return view('webhooks.test', ['id' => $id] + $this->backLink($request, $id));
+        return view('webhooks.api-docs', [
+            'operations' => $this->webhookOperations(),
+            'types' => collect([RecordType::Expense, RecordType::Income])->mapWithKeys(fn (RecordType $type) => [$type->value => $type->label()])->all(),
+            'webhooks' => $webhooks->paginate(perPage: 100, sort: 'name')->getCollection(),
+            'selectedWebhookId' => $request->integer('webhook') ?: null,
+        ]);
+    }
+
+    /**
+     * The old test page, now the API docs with this webhook preselected.
+     */
+    public function test(int $id): RedirectResponse
+    {
+        return redirect()->route('webhooks.api-docs', ['webhook' => $id]);
     }
 
     public function show(int $id): View
@@ -65,18 +83,6 @@ class WebhookPageController extends Controller
     }
 
     /**
-     * Swagger-style reference for the webhook test endpoint, built from the generated OpenAPI spec
-     * (storage/api-docs/api-docs.json). See .ai/rules/api-docs.md.
-     */
-    public function apiDocs(WebhookManagementService $webhooks): View
-    {
-        return view('webhooks.api-docs', [
-            'operations' => $this->webhookOperations(),
-            'webhooks' => $webhooks->paginate(perPage: 100, sort: 'name')->getCollection(),
-        ]);
-    }
-
-    /**
      * @return list<array{id: string, method: string, path: string, summary: string, description: string, parameters: list<array<string, mixed>>, body: list<array<string, mixed>>, responses: list<array{code: string, description: string}>}>
      */
     private function webhookOperations(): array
@@ -95,14 +101,14 @@ class WebhookPageController extends Controller
                     'id' => $operation['operationId'] ?? md5($method.$path),
                     'method' => strtoupper($method),
                     'path' => $path,
-                    'summary' => $operation['summary'] ?? '',
-                    'description' => $operation['description'] ?? '',
+                    'summary' => $this->translatedOperationText($operation['operationId'] ?? null, 'summary', $operation['summary'] ?? ''),
+                    'description' => $this->translatedOperationText($operation['operationId'] ?? null, 'description', $operation['description'] ?? ''),
                     'parameters' => array_map(fn (array $parameter) => [
                         'name' => $parameter['name'],
                         'in' => $parameter['in'],
                         'required' => (bool) ($parameter['required'] ?? false),
                         'type' => $parameter['schema']['type'] ?? 'string',
-                        'description' => $parameter['description'] ?? '',
+                        'description' => $this->translatedFieldText($parameter['name'], $parameter['description'] ?? ''),
                     ], $operation['parameters'] ?? []),
                     'body' => $this->bodyProperties($operation),
                     'responses' => collect($operation['responses'] ?? [])
@@ -117,6 +123,26 @@ class WebhookPageController extends Controller
     }
 
     /**
+     * The translated summary or description of an operation, falling back to the spec's English text.
+     */
+    private function translatedOperationText(?string $operationId, string $field, string $fallback): string
+    {
+        $key = "webhooks.api_docs.operations.{$operationId}.{$field}";
+
+        return $operationId !== null && __($key) !== $key ? __($key) : $fallback;
+    }
+
+    /**
+     * The translated description of a parameter or body field, falling back to the spec's English text.
+     */
+    private function translatedFieldText(string $name, string $fallback): string
+    {
+        $key = "webhooks.api_docs.fields.{$name}.description";
+
+        return __($key) !== $key ? __($key) : $fallback;
+    }
+
+    /**
      * @return list<array{name: string, type: string, description: string, example: mixed, required: bool}>
      */
     private function bodyProperties(array $operation): array
@@ -128,7 +154,7 @@ class WebhookPageController extends Controller
             ->map(fn (array $property, string $name) => [
                 'name' => $name,
                 'type' => $property['type'] ?? 'string',
-                'description' => $property['description'] ?? '',
+                'description' => $this->translatedFieldText($name, $property['description'] ?? ''),
                 'example' => $property['example'] ?? null,
                 'required' => in_array($name, $required, true),
             ])

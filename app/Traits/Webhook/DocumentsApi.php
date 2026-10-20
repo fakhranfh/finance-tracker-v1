@@ -55,17 +55,18 @@ trait DocumentsApi
         tags: ['Webhooks'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
-            new OA\Parameter(name: 'X-Webhook-Timestamp', in: 'header', required: true, schema: new OA\Schema(type: 'integer')),
-            new OA\Parameter(name: 'X-Webhook-Nonce', in: 'header', required: true, schema: new OA\Schema(type: 'string', minLength: 16, maxLength: 128)),
+            new OA\Parameter(name: 'X-Webhook-Timestamp', in: 'header', required: false, description: 'Unix time in seconds. Empty generates the current time.', example: 1760939400, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'X-Webhook-Nonce', in: 'header', required: false, description: 'Random value, unique per request. Empty generates one.', example: '4f1c9a7e2b8d4e6a', schema: new OA\Schema(type: 'string', minLength: 16, maxLength: 128)),
         ],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
                 properties: [
-                    new OA\Property(property: 'type', type: 'string', enum: ['income', 'expense'], example: 'expense'),
+                    new OA\Property(property: 'type', type: 'string', enum: ['income', 'expense']),
                     new OA\Property(property: 'account_name', type: 'string', example: 'Cash'),
                     new OA\Property(property: 'signature', type: 'string', description: 'Same signature as on POST /webhooks/records.'),
-                    new OA\Property(property: 'amount', type: 'integer', example: 12.5),
+                    new OA\Property(property: 'amount', type: 'integer', example: 12000, description: 'Whole number, no decimals.'),
+                    new OA\Property(property: 'note', type: 'string', nullable: true, example: 'Webhook test'),
                     new OA\Property(property: 'recorded_at', type: 'string', format: 'date-time'),
                     new OA\Property(property: 'ip', type: 'string', example: '203.0.113.5', description: 'IP address to check against the whitelist (only needed when IPs are whitelisted).'),
                 ]

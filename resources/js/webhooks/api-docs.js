@@ -1,5 +1,6 @@
-import { get, post } from '../shared/http.js';
+import { get, getAll, post } from '../shared/http.js';
 import { setButtonLoading } from '../shared/loading-state.js';
+import '../shared/money-input.js';
 import { searchableSelect } from '../shared/searchable-select.js';
 import { showFieldErrors } from '../shared/field-errors.js';
 import { hideSnackbar } from '../shared/error-snackbar.js';
@@ -58,18 +59,18 @@ function readBody(section) {
  * token like a real client and sends it to the dry-run endpoint, which saves nothing.
  */
 function wireTryItOut(section) {
-    const toggle = section.querySelector('[data-try-toggle]');
-    const panel = section.querySelector('[data-try-panel]');
     const id = section.querySelector('[data-try-id]');
     const timestamp = section.querySelector('[data-try-timestamp]');
     const nonce = section.querySelector('[data-try-nonce]');
     const recordedAt = section.querySelector('[data-try-recorded-at]');
     const execute = section.querySelector('[data-try-execute]');
-    const cancel = section.querySelector('[data-try-cancel]');
     const response = section.querySelector('[data-try-response]');
     const url = section.querySelector('[data-try-url]');
     const code = section.querySelector('[data-try-code]');
     const result = section.querySelector('[data-try-result]');
+    const preview = section.querySelector('[data-try-preview]');
+    const accountInput = section.querySelector('[data-try-account]');
+    const accountOptions = section.querySelector('[data-try-account-options]');
     const messages = {
         required: section.dataset.requiredMessage,
         integer: section.dataset.integerMessage,
@@ -82,20 +83,84 @@ function wireTryItOut(section) {
 
     searchableSelect(id);
 
-    toggle.addEventListener('click', () => {
-        const opening = panel.classList.contains('hidden');
-        panel.classList.toggle('hidden', !opening);
-        toggle.textContent = opening ? toggle.dataset.closeLabel : toggle.dataset.openLabel;
+    let accounts = [];
+    // Auto timestamp and nonce, used for any header left empty. Shared by the preview and Execute,
+    // so the signed values are the ones shown; refreshed on Execute so they are never stale.
+    let auto = { timestamp: String(Math.floor(Date.now() / 1000)), nonce: newNonce() };
+    let token = null;
+    let previewRun = 0;
 
-        if (opening && recordedAt.value === '') {
-            recordedAt.value = localNow();
+    function currentHeaders() {
+        return {
+            timestamp: timestamp.value.trim() || auto.timestamp,
+            nonce: nonce.value.trim() || auto.nonce,
+        };
+    }
+
+    function renderAccountOptions() {
+        accountOptions.replaceChildren(...accounts.map((account) => {
+            const option = document.createElement('option');
+
+            option.value = account.name;
+
+            return option;
+        }));
+    }
+
+    getAll(routes.accounts.index).then((items) => {
+        accounts = items ?? [];
+        renderAccountOptions();
+    });
+
+    if (recordedAt.value === '') {
+        recordedAt.value = localNow();
+    }
+
+    /** Shows the body the builder produces, with its signature once a webhook token is known. */
+    async function renderPreview() {
+        const run = ++previewRun;
+        let body;
+
+        try {
+            body = readBody(section);
+        } catch {
+            preview.textContent = '';
+            return;
+        }
+
+        if (token !== null) {
+            const headers = currentHeaders();
+
+            body = { ...body, signature: await sign({ ...body, timestamp: headers.timestamp, nonce: headers.nonce }, token) };
+        }
+
+        if (run === previewRun) {
+            preview.textContent = JSON.stringify(body, null, 2);
+        }
+    }
+
+    /** Fetches the token of the selected webhook; the signature depends on it. */
+    async function loadToken() {
+        token = null;
+
+        if (id.value !== '') {
+            const lookup = await get(routes.webhooks.show(id.value));
+
+            token = lookup.ok ? lookup.data.data.token : null;
+        }
+
+        renderPreview();
+    }
+
+    section.addEventListener('input', renderPreview);
+    section.addEventListener('change', (event) => {
+        if (event.target === id) {
+            loadToken();
+        } else {
+            renderPreview();
         }
     });
-
-    cancel.addEventListener('click', () => {
-        panel.classList.add('hidden');
-        toggle.textContent = toggle.dataset.openLabel;
-    });
+    loadToken();
 
     execute.addEventListener('click', async () => {
         hideSnackbar();
@@ -110,6 +175,22 @@ function wireTryItOut(section) {
 
         const webhookId = id.value;
         const payload = readBody(section);
+        const accountName = accountInput.value.trim();
+
+        if (!accounts.some((account) => account.name === accountName)) {
+            const created = await post(routes.accounts.store, { name: accountName, balance: 0 });
+
+            if (!created.ok) {
+                showFieldErrors(section, { 'try-account-name': [created.data.errors?.name?.[0] ?? created.data.message ?? accountName] });
+                return;
+            }
+
+            accounts.push({ name: accountName });
+            renderAccountOptions();
+        }
+
+        // Empty headers get fresh values for this request, so an old page does not send a stale timestamp.
+        auto = { timestamp: String(Math.floor(Date.now() / 1000)), nonce: newNonce() };
 
         setButtonLoading(execute, true);
 
@@ -123,9 +204,9 @@ function wireTryItOut(section) {
                 return;
             }
 
-            const token = lookup.data.data.token;
-            const timeValue = timestamp.value.trim() || String(Math.floor(Date.now() / 1000));
-            const nonceValue = nonce.value.trim() || newNonce();
+            token = lookup.data.data.token;
+
+            const { timestamp: timeValue, nonce: nonceValue } = currentHeaders();
             const signed = { ...payload, signature: await sign({ ...payload, timestamp: timeValue, nonce: nonceValue }, token) };
             const headers = { 'X-Webhook-Timestamp': timeValue, 'X-Webhook-Nonce': nonceValue };
             const sent = await post(routes.webhooks.test(webhookId), signed, headers);
@@ -139,12 +220,9 @@ function wireTryItOut(section) {
         } finally {
             response.classList.remove('hidden');
             setButtonLoading(execute, false);
+            renderPreview();
         }
     });
 }
 
 document.querySelectorAll('[data-try-it-out]').forEach(wireTryItOut);
-
-if (location.hash) {
-    document.querySelector(location.hash)?.setAttribute('open', '');
-}

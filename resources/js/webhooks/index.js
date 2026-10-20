@@ -67,7 +67,7 @@ createTable({
             formatDateTime(item.created_at),
         ],
         viewUrl: routes.pages.webhookShow(item.id),
-        extraActions: [{ label: testLabel, url: `${routes.pages.webhookTest(item.id)}?from=index` }],
+        extraActions: [{ label: testLabel, url: routes.pages.webhookTest(item.id) }],
         editUrl: routes.pages.webhookEdit(item.id),
         locked: false,
     }),

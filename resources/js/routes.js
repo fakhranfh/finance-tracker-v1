@@ -115,7 +115,7 @@ export const routes = {
         webhookCreate: '/webhooks/create',
         webhookShow: (id) => `/webhooks/${id}`,
         webhookEdit: (id) => `/webhooks/${id}/edit`,
-        webhookTest: (id) => `/webhooks/${id}/test`,
+        webhookTest: (id) => `/webhooks/api-docs?webhook=${id}`,
         webhookLogs: (id) => `/webhooks/${id}/logs`,
     },
 };

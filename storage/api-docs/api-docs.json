@@ -3110,20 +3110,24 @@
                     {
                         "name": "X-Webhook-Timestamp",
                         "in": "header",
-                        "required": true,
+                        "description": "Unix time in seconds. Empty generates the current time.",
+                        "required": false,
                         "schema": {
                             "type": "integer"
-                        }
+                        },
+                        "example": 1760939400
                     },
                     {
                         "name": "X-Webhook-Nonce",
                         "in": "header",
-                        "required": true,
+                        "description": "Random value, unique per request. Empty generates one.",
+                        "required": false,
                         "schema": {
                             "type": "string",
                             "maxLength": 128,
                             "minLength": 16
-                        }
+                        },
+                        "example": "4f1c9a7e2b8d4e6a"
                     }
                 ],
                 "requestBody": {
@@ -3134,7 +3138,6 @@
                                 "properties": {
                                     "type": {
                                         "type": "string",
-                                        "example": "expense",
                                         "enum": [
                                             "income",
                                             "expense"
@@ -3149,8 +3152,14 @@
                                         "type": "string"
                                     },
                                     "amount": {
+                                        "description": "Whole number, no decimals.",
                                         "type": "integer",
-                                        "example": 12.5
+                                        "example": 12000
+                                    },
+                                    "note": {
+                                        "type": "string",
+                                        "example": "Webhook test",
+                                        "nullable": true
                                     },
                                     "recorded_at": {
                                         "type": "string",
