@@ -57,6 +57,7 @@ test.describe('Manage Webhooks', () => {
         await page.getByLabel('Transfer', { exact: true }).uncheck();
         await expect(page.getByLabel('Allow creating accounts')).not.toBeChecked();
         await page.getByLabel('Allow creating accounts').check();
+        await page.getByLabel('Allow creating categories').check();
         await page.getByLabel('Is Active', { exact: true }).check();
         await page.getByRole('button', { name: 'Save' }).click();
 
@@ -72,6 +73,7 @@ test.describe('Manage Webhooks', () => {
         await expect(page.locator('[data-field="allowed_types"]')).toHaveText('Expense');
         await expect(page.locator('[data-field="allowed_account_ids"]')).toHaveText('All');
         await expect(page.locator('[data-field="can_create_accounts"]')).toHaveText('Yes');
+        await expect(page.locator('[data-field="can_create_categories"]')).toHaveText('Yes');
         await page.getByRole('link', { name: 'Webhook logs' }).click();
         await page.getByRole('link', { name: 'Back to webhook details' }).click();
         await expect(page).toHaveURL(/\/webhooks\/\d+$/);
@@ -93,6 +95,7 @@ test.describe('Manage Webhooks', () => {
         await expect(page.getByLabel('Expense', { exact: true })).toBeChecked();
         await expect(page.getByLabel('Income', { exact: true })).not.toBeChecked();
         await expect(page.getByLabel('Allow creating accounts')).toBeChecked();
+        await expect(page.getByLabel('Allow creating categories')).toBeChecked();
         await page.getByRole('link', { name: 'Webhook logs' }).click();
         await expect(page).toHaveURL(/\/webhooks\/\d+\/logs(\?.*)?$/);
         await expect(page.getByRole('heading', { name: 'Webhook logs' })).toBeVisible();
@@ -108,6 +111,11 @@ test.describe('Manage Webhooks', () => {
         await page.getByLabel('Account name').fill(`${mainValue} account`);
         await page.getByRole('button', { name: 'Execute' }).click();
         await expect(page.locator('[data-try-result]')).toContainText('X-Webhook-Nonce');
+        await expect(page.locator('[data-try-url]')).toHaveText(/\/api\/webhooks\/\d+\/test$/);
+        await page.getByLabel('Production mode').check();
+        await expect(page.locator('#testWebhook > div').first().locator('code')).toHaveText('/webhooks/records');
+        await page.getByRole('button', { name: 'Execute' }).click();
+        await expect(page.locator('[data-try-url]')).toHaveText(/\/api\/webhooks\/records$/);
         await page.goBack();
         await expect(page.getByLabel('Name', { exact: true })).toHaveValue(mainValue);
         await page.getByLabel('Name', { exact: true }).fill(`${mainValue} Edited`);

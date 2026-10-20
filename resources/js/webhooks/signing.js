@@ -1,5 +1,5 @@
 /** Values covered by the signature, in signing order. */
-export const SIGNED_FIELDS = ['timestamp', 'nonce', 'type', 'account_name', 'category_id', 'amount', 'note', 'recorded_at'];
+export const SIGNED_FIELDS = ['timestamp', 'nonce', 'type', 'account_name', 'category_name', 'amount', 'note', 'recorded_at'];
 
 export function toHex(buffer) {
     return [...new Uint8Array(buffer)].map((byte) => byte.toString(16).padStart(2, '0')).join('');

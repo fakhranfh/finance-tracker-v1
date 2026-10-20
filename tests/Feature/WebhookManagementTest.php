@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Account;
+use App\Models\Category;
 use App\Models\Record;
 use App\Models\User;
 use App\Models\Webhook;
@@ -391,6 +392,45 @@ it('does not create accounts on the test endpoint', function () {
     expect(Account::query()->where('name', 'Dry')->exists())->toBeFalse();
 });
 
+it('rejects an unknown category unless the webhook may create categories', function () {
+    $account = Account::factory()->create();
+    $payload = webhookPayload($account) + ['category_name' => 'Snacks'];
+
+    $closed = Webhook::factory()->create();
+    signedWebhookCall($this, $closed, $payload)->assertStatus(422)->assertJsonValidationErrors('category_name');
+    expect(Category::query()->where('name', 'Snacks')->exists())->toBeFalse();
+
+    $open = Webhook::factory()->create(['can_create_categories' => true]);
+    signedWebhookCall($this, $open, $payload)->assertStatus(201);
+
+    $category = Category::query()->where('name', 'Snacks')->firstOrFail();
+    expect($category->type->value)->toBe('expense')
+        ->and(Record::query()->where('category_id', $category->id)->count())->toBe(1);
+});
+
+it('uses an existing category of the record type and ignores a blank name', function () {
+    $account = Account::factory()->create();
+    $expense = Category::factory()->create(['name' => 'Food', 'type' => 'expense']);
+    Category::factory()->create(['name' => 'Food', 'type' => 'income']);
+    $webhook = Webhook::factory()->create();
+
+    signedWebhookCall($this, $webhook, webhookPayload($account) + ['category_name' => 'Food'])->assertStatus(201);
+    signedWebhookCall($this, $webhook, webhookPayload($account) + ['category_name' => ''])->assertStatus(201);
+
+    expect(Record::query()->where('category_id', $expense->id)->count())->toBe(1)
+        ->and(Record::query()->whereNull('category_id')->count())->toBe(1)
+        ->and(Category::query()->count())->toBe(2);
+});
+
+it('does not create categories on the test endpoint', function () {
+    $actor = User::factory()->create();
+    $webhook = Webhook::factory()->create(['can_create_categories' => true]);
+    $payload = webhookPayload(Account::factory()->create()) + ['category_name' => 'Dry'];
+
+    signedWebhookCall($this->actingAs($actor), $webhook, $payload, ['url' => "/api/webhooks/{$webhook->id}/test"])->assertOk();
+    expect(Category::query()->where('name', 'Dry')->exists())->toBeFalse();
+});
+
 it('applies the type and account restrictions on the test endpoint', function () {
     $actor = User::factory()->create();
     $allowed = Account::factory()->create();
@@ -422,7 +462,7 @@ it('signs the timestamp, nonce and the six record fields', function () {
     $account = Account::factory()->create();
     $payload = webhookPayload($account) + ['note' => 'Coffee'];
 
-    $changes = ['type' => 'income', 'account_name' => 'Other', 'amount' => '1', 'note' => 'Tea', 'recorded_at' => '2026-02-01T00:00:00+07:00', 'category_id' => 1, 'timestamp' => time() - 10, 'nonce' => Str::random(32)];
+    $changes = ['type' => 'income', 'account_name' => 'Other', 'amount' => '1', 'note' => 'Tea', 'recorded_at' => '2026-02-01T00:00:00+07:00', 'category_name' => 'Food', 'timestamp' => time() - 10, 'nonce' => Str::random(32)];
 
     foreach ($changes as $field => $value) {
         signedWebhookCall($this, $webhook, $payload, ['signed' => [$field => $value]])->assertUnauthorized();

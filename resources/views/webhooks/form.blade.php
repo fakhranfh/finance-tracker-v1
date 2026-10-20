@@ -112,6 +112,14 @@
                 <x-atoms.form-error for="can_create_accounts" />
             </div>
             <div class="space-y-1.5">
+                <div class="flex items-center gap-2">
+                    <x-atoms.checkbox name="can_create_categories" id="can_create_categories" />
+                    <x-atoms.label for="can_create_categories">{{ __('webhooks.fields.can_create_categories') }}</x-atoms.label>
+                </div>
+                <p class="font-body text-body-sm text-on-surface-variant">{{ __('webhooks.fields.can_create_categories_hint') }}</p>
+                <x-atoms.form-error for="can_create_categories" />
+            </div>
+            <div class="space-y-1.5">
                 <x-atoms.label for="allowed_types">{{ __('webhooks.fields.allowed_types') }}</x-atoms.label>
                 <div>
                     <button

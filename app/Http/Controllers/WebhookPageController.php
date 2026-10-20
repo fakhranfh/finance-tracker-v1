@@ -57,6 +57,7 @@ class WebhookPageController extends Controller
             'allowed_account_ids' => __('webhooks.fields.allowed_account_ids'),
             'allowed_types' => __('webhooks.fields.allowed_types'),
             'can_create_accounts' => __('webhooks.fields.can_create_accounts'),
+            'can_create_categories' => __('webhooks.fields.can_create_categories'),
             'created_at' => __('webhooks.table.created_at'),
         ];
 

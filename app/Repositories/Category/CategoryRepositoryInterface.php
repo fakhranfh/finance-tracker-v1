@@ -19,6 +19,11 @@ interface CategoryRepositoryInterface
     public function paginate(int $perPage, ?string $search = null, ?string $sort = null, string $direction = 'asc'): LengthAwarePaginator;
 
     /**
+     * Find the first category with the given name and type.
+     */
+    public function findByNameAndType(string $name, string $type): ?Category;
+
+    /**
      * Delete categories by ID.
      *
      * @param  array<int, int>  $ids

@@ -10,6 +10,7 @@
             <li>{{ __('webhooks.guide.step_send') }}</li>
             <li>{{ __('webhooks.guide.step_test') }}</li>
             <li>{{ __('webhooks.guide.step_ips') }}</li>
+            <li>{{ __('webhooks.guide.step_create_missing') }}</li>
             <li>{{ __('webhooks.guide.step_secret') }}</li>
             <li>{{ __('webhooks.guide.step_response') }}</li>
         </ol>
@@ -19,7 +20,7 @@
             <pre class="overflow-x-auto rounded-md bg-surface-container p-3 text-on-surface"><code>TOKEN="TOKEN"
 TIMESTAMP="$(date +%s)"
 NONCE="$(openssl rand -hex 16)"
-SIGNED="timestamp=$TIMESTAMP&nonce=$NONCE&type=expense&account_name=Cash&category_id=2&amount=12.50&note=Coffee&recorded_at=2026-01-15T10:30:00+07:00"
+SIGNED="timestamp=$TIMESTAMP&nonce=$NONCE&type=expense&account_name=Cash&category_name=Food&amount=12000&note=Coffee&recorded_at=2026-01-15T10:30:00+07:00"
 SIGNATURE="$(printf '%s' "$SIGNED" | openssl dgst -sha256 -hmac "$TOKEN" | sed 's/^.* //')"
 
 curl -X POST {{ url('/api/webhooks/records') }} \
@@ -29,8 +30,8 @@ curl -X POST {{ url('/api/webhooks/records') }} \
   -d '{
     "type": "expense",
     "account_name": "Cash",
-    "category_id": 2,
-    "amount": "12.50",
+    "category_name": "Food",
+    "amount": 12000,
     "note": "Coffee",
     "recorded_at": "2026-01-15T10:30:00+07:00",
     "signature": "'"$SIGNATURE"'"

@@ -61,7 +61,7 @@ function webhookSignature(array $fields, string $token): string
 {
     $pairs = array_map(
         fn (string $name) => $name.'='.($fields[$name] ?? ''),
-        ['timestamp', 'nonce', 'type', 'account_name', 'category_id', 'amount', 'note', 'recorded_at'],
+        ['timestamp', 'nonce', 'type', 'account_name', 'category_name', 'amount', 'note', 'recorded_at'],
     );
 
     return hash_hmac('sha256', implode('&', $pairs), $token);

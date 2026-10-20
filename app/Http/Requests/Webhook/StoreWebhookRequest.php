@@ -29,6 +29,7 @@ class StoreWebhookRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'is_active' => ['required', 'boolean'],
             'can_create_accounts' => ['sometimes', 'boolean'],
+            'can_create_categories' => ['sometimes', 'boolean'],
             'allowed_ips' => ['nullable', 'string', 'max:2000', new IpList],
             'allowed_account_ids' => ['nullable', 'array'],
             'allowed_account_ids.*' => ['integer', Rule::exists('accounts', 'id')],

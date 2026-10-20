@@ -14,6 +14,11 @@ class CategoryRepository implements CategoryRepositoryInterface
         return Category::query()->find($id);
     }
 
+    public function findByNameAndType(string $name, string $type): ?Category
+    {
+        return Category::query()->where('name', $name)->where('type', $type)->orderBy('id')->first();
+    }
+
     public function paginate(int $perPage, ?string $search = null, ?string $sort = null, string $direction = 'asc'): LengthAwarePaginator
     {
         $query = Category::query();

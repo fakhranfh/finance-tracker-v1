@@ -4,9 +4,11 @@ namespace App\Services;
 
 use App\Enums\RecordType;
 use App\Models\Account;
+use App\Models\Category;
 use App\Models\Record;
 use App\Models\Webhook;
 use App\Repositories\Account\AccountRepositoryInterface;
+use App\Repositories\Category\CategoryRepositoryInterface;
 use App\Repositories\Webhook\WebhookRepositoryInterface;
 use App\Rules\IpList;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -22,7 +24,7 @@ class WebhookManagementService
     public const NONCE_HEADER = 'X-Webhook-Nonce';
 
     /** Values covered by the signature, in signing order. */
-    private const SIGNED_FIELDS = ['timestamp', 'nonce', 'type', 'account_name', 'category_id', 'amount', 'note', 'recorded_at'];
+    private const SIGNED_FIELDS = ['timestamp', 'nonce', 'type', 'account_name', 'category_name', 'amount', 'note', 'recorded_at'];
 
     /** How far a request timestamp may be from the server clock. */
     private const REPLAY_TOLERANCE_SECONDS = 300;
@@ -36,6 +38,8 @@ class WebhookManagementService
         protected RecordManagementService $recordManagementService,
         protected AccountRepositoryInterface $accountRepository,
         protected AccountManagementService $accountManagementService,
+        protected CategoryRepositoryInterface $categoryRepository,
+        protected CategoryManagementService $categoryManagementService,
     ) {}
 
     /**
@@ -206,7 +210,44 @@ class WebhookManagementService
             __('webhooks.errors.account_not_allowed'),
         );
 
+        $data['category_id'] = $this->resolveCategory($webhook, $data, $dryRun)?->id;
+        unset($data['category_name']);
+
         return $data;
+    }
+
+    /**
+     * Find the category named in a record (of the record type), or create it when the webhook
+     * may. A blank name means no category. A dry run only checks that it could be created.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    private function resolveCategory(Webhook $webhook, array $data, bool $dryRun): ?Category
+    {
+        $name = trim((string) ($data['category_name'] ?? ''));
+
+        if ($name === '') {
+            return null;
+        }
+
+        $category = $this->categoryRepository->findByNameAndType($name, $data['type']);
+
+        if ($category !== null) {
+            return $category;
+        }
+
+        if (! $webhook->can_create_categories) {
+            throw ValidationException::withMessages([
+                'category_name' => __('validation.exists', ['attribute' => 'category name']),
+            ]);
+        }
+
+        return $dryRun ? null : $this->categoryManagementService->create([
+            'name' => $name,
+            'type' => $data['type'],
+            'color' => config('category.default_color'),
+            'icon' => config('category.default_icon'),
+        ]);
     }
 
     /**

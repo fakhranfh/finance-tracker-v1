@@ -113,6 +113,13 @@
                                         <x-atoms.form-error for="try-account-name" />
                                     </div>
                                     <div>
+                                        <x-atoms.label class="mb-1.5" for="try-category-name">{{ __('webhooks.api_docs.category_name') }} <span class="font-normal text-on-surface-variant">({{ __('webhooks.api_docs.optional') }})</span></x-atoms.label>
+                                        <x-atoms.input type="text" name="try-category-name" id="try-category-name" list="try-category-options" autocomplete="off" data-try-category />
+                                        <datalist id="try-category-options" data-try-category-options></datalist>
+                                        <p class="mt-1 font-body text-body-sm text-on-surface-variant">{{ __('webhooks.api_docs.category_hint') }}</p>
+                                        @include('webhooks.partials.field-doc', ['doc' => $docs['category_name'] ?? null])
+                                    </div>
+                                    <div>
                                         <x-atoms.label class="mb-1.5" for="try-amount">{{ __('webhooks.api_docs.amount') }}</x-atoms.label>
                                         <x-atoms.input type="text" inputmode="numeric" name="try-amount" id="try-amount" value="12000" data-money data-try-amount />
                                         @include('webhooks.partials.field-doc', ['doc' => $docs['amount'] ?? null])
@@ -143,9 +150,14 @@
                                 <p class="mt-2 font-body text-body-sm text-on-surface-variant">{{ __('webhooks.api_docs.signature_help') }}</p>
                             </div>
 
-                            <div class="flex flex-wrap items-center gap-2">
+                            <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
                                 <x-atoms.button type="button" data-try-execute>{{ __('webhooks.api_docs.execute') }}</x-atoms.button>
+                                <label class="flex cursor-pointer items-center gap-2 font-body text-body-md text-on-surface">
+                                    <x-atoms.checkbox name="try-production" id="try-production" data-try-production />
+                                    {{ __('webhooks.api_docs.production_mode') }}
+                                </label>
                             </div>
+                            <p class="font-body text-body-sm text-on-surface-variant">{{ __('webhooks.api_docs.production_mode_hint') }}</p>
 
                             <div data-try-response class="hidden space-y-2">
                                 <p class="font-body text-body-sm text-on-surface-variant">

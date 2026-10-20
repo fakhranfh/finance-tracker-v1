@@ -32,6 +32,7 @@ async function load() {
         : allLabel;
 
     field('can_create_accounts').textContent = webhook.can_create_accounts ? labels.yesLabel : labels.noLabel;
+    field('can_create_categories').textContent = webhook.can_create_categories ? labels.yesLabel : labels.noLabel;
 
     if (webhook.allowed_account_ids.length > 0) {
         const accounts = (await getAll(routes.accounts.index)) ?? [];

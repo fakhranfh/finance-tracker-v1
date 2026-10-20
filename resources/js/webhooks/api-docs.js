@@ -4,7 +4,7 @@ import '../shared/money-input.js';
 import { searchableSelect } from '../shared/searchable-select.js';
 import { showFieldErrors } from '../shared/field-errors.js';
 import { hideSnackbar } from '../shared/error-snackbar.js';
-import { routes } from '../routes.js';
+import { apiBaseUrl, routes } from '../routes.js';
 import { newNonce, sign } from './signing.js';
 
 /** The current local time as a value for a datetime-local input. */
@@ -41,13 +41,15 @@ function readBody(section) {
     const payload = {
         type: section.querySelector('[data-try-type]:checked').value,
         account_name: section.querySelector('[data-try-account]').value.trim(),
+        category_name: section.querySelector('[data-try-category]').value.trim(),
         amount: Number(section.querySelector('[data-try-amount]').value),
         note: section.querySelector('[data-try-note]').value,
         recorded_at: new Date(section.querySelector('[data-try-recorded-at]').value).toISOString(),
     };
     const ip = section.querySelector('[data-try-ip]').value.trim();
 
-    if (ip !== '') {
+    // Production mode hits the real endpoint, which checks the caller's own IP instead.
+    if (ip !== '' && !section.querySelector('[data-try-production]').checked) {
         payload.ip = ip;
     }
 
@@ -55,8 +57,9 @@ function readBody(section) {
 }
 
 /**
- * Swagger-style "Try it out" for the webhook test endpoint. Signs the body with the webhook
- * token like a real client and sends it to the dry-run endpoint, which saves nothing.
+ * Swagger-style "Try it out" for the webhook endpoints. Signs the body with the webhook token
+ * like a real client and sends it to the dry-run endpoint, which saves nothing, or, in
+ * production mode, to the real endpoint, which saves the record.
  */
 function wireTryItOut(section) {
     const id = section.querySelector('[data-try-id]');
@@ -69,8 +72,14 @@ function wireTryItOut(section) {
     const code = section.querySelector('[data-try-code]');
     const result = section.querySelector('[data-try-result]');
     const preview = section.querySelector('[data-try-preview]');
+    const production = section.querySelector('[data-try-production]');
+    // Header path of this operation: switches to the real endpoint while production mode is on.
+    const headerPath = section.closest('[id]').querySelector('code');
+    const testPath = headerPath.textContent;
     const accountInput = section.querySelector('[data-try-account]');
     const accountOptions = section.querySelector('[data-try-account-options]');
+    const categoryInput = section.querySelector('[data-try-category]');
+    const categoryOptions = section.querySelector('[data-try-category-options]');
     const messages = {
         required: section.dataset.requiredMessage,
         integer: section.dataset.integerMessage,
@@ -110,6 +119,26 @@ function wireTryItOut(section) {
     getAll(routes.accounts.index).then((items) => {
         accounts = items ?? [];
         renderAccountOptions();
+    });
+
+    let categories = [];
+
+    /** Suggests the categories of the chosen record type, as the webhook matches the name within it. */
+    function renderCategoryOptions() {
+        const type = section.querySelector('[data-try-type]:checked').value;
+
+        categoryOptions.replaceChildren(...categories.filter((category) => category.type === type).map((category) => {
+            const option = document.createElement('option');
+
+            option.value = category.name;
+
+            return option;
+        }));
+    }
+
+    getAll(routes.categories.index).then((items) => {
+        categories = items ?? [];
+        renderCategoryOptions();
     });
 
     if (recordedAt.value === '') {
@@ -152,8 +181,16 @@ function wireTryItOut(section) {
         renderPreview();
     }
 
+    production.addEventListener('change', () => {
+        headerPath.textContent = production.checked ? routes.webhooks.records.replace(apiBaseUrl, '') : testPath;
+    });
+
     section.addEventListener('input', renderPreview);
     section.addEventListener('change', (event) => {
+        if (event.target.matches('[data-try-type]')) {
+            renderCategoryOptions();
+        }
+
         if (event.target === id) {
             loadToken();
         } else {
@@ -175,6 +212,7 @@ function wireTryItOut(section) {
 
         const webhookId = id.value;
         const payload = readBody(section);
+        const requestPath = production.checked ? routes.webhooks.records : routes.webhooks.test(webhookId);
 
         // Empty headers get fresh values for this request, so an old page does not send a stale timestamp.
         auto = { timestamp: String(Math.floor(Date.now() / 1000)), nonce: newNonce() };
@@ -187,7 +225,7 @@ function wireTryItOut(section) {
             if (!lookup.ok) {
                 code.textContent = String(lookup.status);
                 result.textContent = JSON.stringify(lookup.data, null, 2);
-                url.textContent = routes.webhooks.test(webhookId);
+                url.textContent = requestPath;
                 return;
             }
 
@@ -196,9 +234,9 @@ function wireTryItOut(section) {
             const { timestamp: timeValue, nonce: nonceValue } = currentHeaders();
             const signed = { ...payload, signature: await sign({ ...payload, timestamp: timeValue, nonce: nonceValue }, token) };
             const headers = { 'X-Webhook-Timestamp': timeValue, 'X-Webhook-Nonce': nonceValue };
-            const sent = await post(routes.webhooks.test(webhookId), signed, headers);
+            const sent = await post(requestPath, signed, headers);
 
-            url.textContent = `${window.location.origin}${routes.webhooks.test(webhookId)}`;
+            url.textContent = `${window.location.origin}${requestPath}`;
             code.textContent = String(sent.status);
             result.textContent = `${Object.entries(headers).map(([name, value]) => `${name}: ${value}`).join('\n')}\n\n${JSON.stringify(sent.data, null, 2)}`;
         } catch {

@@ -38,6 +38,7 @@ trait DocumentsApi
                     new OA\Property(property: 'allowed_ips', type: 'string', nullable: true, example: "203.0.113.5\n198.51.100.0/24", description: 'Whitelisted IP addresses or CIDR ranges, one per line (or comma separated). Empty allows every address.'),
                     new OA\Property(property: 'is_active', type: 'boolean', example: true),
                     new OA\Property(property: 'can_create_accounts', type: 'boolean', example: false, description: 'Whether a record for an unknown account_name creates that account (with a zero balance) instead of failing. Defaults to false.'),
+                    new OA\Property(property: 'can_create_categories', type: 'boolean', example: false, description: 'Whether a record for an unknown category_name creates that category (of the record type, with the default color and icon) instead of failing. Defaults to false.'),
                 ]
             )
         ),
@@ -119,6 +120,7 @@ trait DocumentsApi
                     new OA\Property(property: 'allowed_ips', type: 'string', nullable: true, example: "203.0.113.5\n198.51.100.0/24", description: 'Whitelisted IP addresses or CIDR ranges, one per line (or comma separated). Empty allows every address.'),
                     new OA\Property(property: 'is_active', type: 'boolean', example: true),
                     new OA\Property(property: 'can_create_accounts', type: 'boolean', example: false, description: 'Whether a record for an unknown account_name creates that account (with a zero balance) instead of failing. Defaults to false.'),
+                    new OA\Property(property: 'can_create_categories', type: 'boolean', example: false, description: 'Whether a record for an unknown category_name creates that category (of the record type, with the default color and icon) instead of failing. Defaults to false.'),
                 ]
             )
         ),

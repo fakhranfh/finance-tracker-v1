@@ -2885,12 +2885,14 @@
                                         ]
                                     },
                                     "account_name": {
-                                        "description": "Name of the source account.",
+                                        "description": "Name of the source account. An unknown name is rejected unless the webhook may create accounts.",
                                         "type": "string",
                                         "example": "Cash"
                                     },
-                                    "category_id": {
-                                        "type": "integer",
+                                    "category_name": {
+                                        "description": "Name of a category of the same type. An unknown name is rejected unless the webhook may create categories.",
+                                        "type": "string",
+                                        "example": "Food",
                                         "nullable": true
                                     },
                                     "amount": {
@@ -2908,7 +2910,7 @@
                                         "example": "2026-01-15T10:30:00+07:00"
                                     },
                                     "signature": {
-                                        "description": "The hex HMAC-SHA256, keyed by the webhook token, of \"timestamp=..&nonce=..&type=..&account_name=..&category_id=..&amount=..&note=..&recorded_at=..\" (timestamp and nonce are the header values; missing record fields are empty).",
+                                        "description": "The hex HMAC-SHA256, keyed by the webhook token, of \"timestamp=..&nonce=..&type=..&account_name=..&category_name=..&amount=..&note=..&recorded_at=..\" (timestamp and nonce are the header values; missing record fields are empty).",
                                         "type": "string"
                                     }
                                 },
@@ -3037,6 +3039,16 @@
                                     "is_active": {
                                         "type": "boolean",
                                         "example": true
+                                    },
+                                    "can_create_accounts": {
+                                        "description": "Whether a record for an unknown account_name creates that account (with a zero balance) instead of failing. Defaults to false.",
+                                        "type": "boolean",
+                                        "example": false
+                                    },
+                                    "can_create_categories": {
+                                        "description": "Whether a record for an unknown category_name creates that category (of the record type, with the default color and icon) instead of failing. Defaults to false.",
+                                        "type": "boolean",
+                                        "example": false
                                     }
                                 },
                                 "type": "object"
@@ -3096,7 +3108,7 @@
                     "Webhooks"
                 ],
                 "summary": "Test a webhook",
-                "description": "Dry run of POST /webhooks/records for a logged-in user: takes the same signed request (X-Webhook-Timestamp and X-Webhook-Nonce headers, signature in the body) and runs the same checks, but saves nothing and does not use up the nonce.",
+                "description": "Dry run of POST /webhooks/records for a logged-in user: takes the same signed request (X-Webhook-Timestamp and X-Webhook-Nonce headers, signature in the body) and runs the same checks, but saves nothing (no record, no new account) and does not use up the nonce.",
                 "operationId": "testWebhook",
                 "parameters": [
                     {
@@ -3316,6 +3328,16 @@
                                     "is_active": {
                                         "type": "boolean",
                                         "example": true
+                                    },
+                                    "can_create_accounts": {
+                                        "description": "Whether a record for an unknown account_name creates that account (with a zero balance) instead of failing. Defaults to false.",
+                                        "type": "boolean",
+                                        "example": false
+                                    },
+                                    "can_create_categories": {
+                                        "description": "Whether a record for an unknown category_name creates that category (of the record type, with the default color and icon) instead of failing. Defaults to false.",
+                                        "type": "boolean",
+                                        "example": false
                                     }
                                 },
                                 "type": "object"

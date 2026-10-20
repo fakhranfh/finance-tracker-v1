@@ -11,11 +11,12 @@ use Symfony\Component\HttpFoundation\IpUtils;
 
 /**
  * @property bool $can_create_accounts
+ * @property bool $can_create_categories
  * @property array<int, string>|null $allowed_ips
  * @property array<int, int>|null $allowed_account_ids
  * @property array<int, string>|null $allowed_types
  */
-#[Fillable(['name', 'token', 'is_active', 'can_create_accounts', 'allowed_ips', 'allowed_account_ids', 'allowed_types'])]
+#[Fillable(['name', 'token', 'is_active', 'can_create_accounts', 'can_create_categories', 'allowed_ips', 'allowed_account_ids', 'allowed_types'])]
 class Webhook extends Model
 {
     /** @use HasFactory<WebhookFactory> */
@@ -31,6 +32,7 @@ class Webhook extends Model
         return [
             'is_active' => 'boolean',
             'can_create_accounts' => 'boolean',
+            'can_create_categories' => 'boolean',
             'allowed_ips' => 'array',
             'allowed_account_ids' => 'array',
             'allowed_types' => 'array',
