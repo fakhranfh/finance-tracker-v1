@@ -34,6 +34,13 @@
         <x-atoms.skeleton class="h-4 w-24" />
         <x-atoms.skeleton class="h-6 w-full" />
     </div>
+    <div class="space-y-1.5">
+        <div class="flex items-center gap-2">
+            <x-atoms.skeleton class="h-4 w-4" />
+            <x-atoms.skeleton class="h-4 w-40" />
+        </div>
+        <x-atoms.skeleton class="h-4 w-full" />
+    </div>
     <div class="flex items-center gap-2">
         <x-atoms.skeleton class="h-4 w-4" />
         <x-atoms.skeleton class="h-4 w-32" />

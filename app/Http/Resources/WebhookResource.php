@@ -27,6 +27,7 @@ class WebhookResource extends JsonResource
             'token' => $webhook->token,
             'url' => route('api.webhooks.records.store'),
             'is_active' => $webhook->is_active,
+            'can_create_accounts' => $webhook->can_create_accounts,
             'allowed_ips' => $webhook->allowed_ips ?? [],
             'allowed_account_ids' => $webhook->allowed_account_ids ?? [],
             'allowed_types' => $webhook->allowed_types ?? [],

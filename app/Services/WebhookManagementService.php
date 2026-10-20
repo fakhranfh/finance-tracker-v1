@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\RecordType;
+use App\Models\Account;
 use App\Models\Record;
 use App\Models\Webhook;
 use App\Repositories\Account\AccountRepositoryInterface;
@@ -34,6 +35,7 @@ class WebhookManagementService
         protected WebhookRepositoryInterface $webhookRepository,
         protected RecordManagementService $recordManagementService,
         protected AccountRepositoryInterface $accountRepository,
+        protected AccountManagementService $accountManagementService,
     ) {}
 
     /**
@@ -161,28 +163,35 @@ class WebhookManagementService
 
     /**
      * Check a record payload against the webhook restrictions (IP, type and accounts, each 403
-     * when not allowed) and resolve account_name to account_id. Returns the data to store.
+     * when not allowed) and resolve account_name to account_id. An unknown account is created
+     * when the webhook may create accounts; a dry run only checks that it could be. Returns the
+     * data to store.
      *
      * @param  array<string, mixed>  $data
      * @return array<string, mixed>
      */
-    public function prepareRecord(Webhook $webhook, array $data, ?string $ip): array
+    public function prepareRecord(Webhook $webhook, array $data, ?string $ip, bool $dryRun = false): array
     {
         abort_unless($webhook->allowsIp($ip), 403, __('webhooks.errors.ip_not_allowed'));
         abort_unless($webhook->allowsType($data['type']), 403, __('webhooks.errors.type_not_allowed'));
 
         $account = $this->accountRepository->findByName($data['account_name']);
+        $createAccount = $account === null && $webhook->can_create_accounts;
 
-        if ($account === null) {
+        if ($account === null && ! $createAccount) {
             throw ValidationException::withMessages([
                 'account_name' => __('validation.exists', ['attribute' => 'account name']),
             ]);
         }
 
-        unset($data['account_name']);
-        $data['account_id'] = $account->id;
+        if ($createAccount && ! $dryRun) {
+            $account = $this->createAccount($webhook, $data['account_name']);
+        }
 
-        if (($data['to_account_id'] ?? null) === $account->id) {
+        unset($data['account_name']);
+        $data['account_id'] = $account?->id;
+
+        if ($account !== null && ($data['to_account_id'] ?? null) === $account->id) {
             throw ValidationException::withMessages([
                 'to_account_id' => __('validation.different', ['attribute' => 'to account id', 'other' => 'account name']),
             ]);
@@ -191,12 +200,28 @@ class WebhookManagementService
         $toAccountId = $data['type'] === RecordType::Transfer->value ? $data['to_account_id'] ?? null : null;
 
         abort_unless(
-            $webhook->allowsAccount($account->id) && ($toAccountId === null || $webhook->allowsAccount((int) $toAccountId)),
+            ($createAccount || $webhook->allowsAccount($account->id))
+                && ($toAccountId === null || $webhook->allowsAccount((int) $toAccountId)),
             403,
             __('webhooks.errors.account_not_allowed'),
         );
 
         return $data;
+    }
+
+    /**
+     * Create the account named in a record. When the webhook limits its accounts, the new one
+     * joins that list so later records can still use it.
+     */
+    private function createAccount(Webhook $webhook, string $name): Account
+    {
+        $account = $this->accountManagementService->create(['name' => $name, 'balance' => 0]);
+
+        if (($webhook->allowed_account_ids ?? []) !== []) {
+            $this->webhookRepository->update($webhook, ['allowed_account_ids' => [...$webhook->allowed_account_ids, $account->id]]);
+        }
+
+        return $account;
     }
 
     /**

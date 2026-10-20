@@ -55,6 +55,8 @@ test.describe('Manage Webhooks', () => {
         await expect(page.getByLabel('Transfer', { exact: true })).toBeChecked();
         await page.getByLabel('Income', { exact: true }).uncheck();
         await page.getByLabel('Transfer', { exact: true }).uncheck();
+        await expect(page.getByLabel('Allow creating accounts')).not.toBeChecked();
+        await page.getByLabel('Allow creating accounts').check();
         await page.getByLabel('Is Active', { exact: true }).check();
         await page.getByRole('button', { name: 'Save' }).click();
 
@@ -69,6 +71,7 @@ test.describe('Manage Webhooks', () => {
         await expect(page.locator('[data-field="allowed_ips"]')).toHaveText('203.0.113.5');
         await expect(page.locator('[data-field="allowed_types"]')).toHaveText('Expense');
         await expect(page.locator('[data-field="allowed_account_ids"]')).toHaveText('All');
+        await expect(page.locator('[data-field="can_create_accounts"]')).toHaveText('Yes');
         await page.getByRole('link', { name: 'Webhook logs' }).click();
         await page.getByRole('link', { name: 'Back to webhook details' }).click();
         await expect(page).toHaveURL(/\/webhooks\/\d+$/);
@@ -89,6 +92,7 @@ test.describe('Manage Webhooks', () => {
         await expect(page.locator('[data-ip-input]').nth(0)).toHaveValue('203.0.113.5');
         await expect(page.getByLabel('Expense', { exact: true })).toBeChecked();
         await expect(page.getByLabel('Income', { exact: true })).not.toBeChecked();
+        await expect(page.getByLabel('Allow creating accounts')).toBeChecked();
         await page.getByRole('link', { name: 'Webhook logs' }).click();
         await expect(page).toHaveURL(/\/webhooks\/\d+\/logs(\?.*)?$/);
         await expect(page.getByRole('heading', { name: 'Webhook logs' })).toBeVisible();

@@ -25,7 +25,7 @@ trait DocumentsApi
                 required: ['type', 'account_name', 'amount', 'recorded_at', 'signature'],
                 properties: [
                     new OA\Property(property: 'type', type: 'string', enum: ['income', 'expense'], example: 'expense'),
-                    new OA\Property(property: 'account_name', type: 'string', example: 'Cash', description: 'Name of the source account.'),
+                    new OA\Property(property: 'account_name', type: 'string', example: 'Cash', description: 'Name of the source account. An unknown name is rejected unless the webhook may create accounts.'),
                     new OA\Property(property: 'category_id', type: 'integer', nullable: true),
                     new OA\Property(property: 'amount', type: 'integer', example: 10),
                     new OA\Property(property: 'note', type: 'string', nullable: true, example: 'Coffee'),

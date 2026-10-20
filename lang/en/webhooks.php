@@ -76,7 +76,7 @@ return [
         'headers_help' => 'X-Webhook-Timestamp is the request time in Unix seconds, and X-Webhook-Nonce is a random value unique to each request, so a signed request cannot be replayed. Leave both empty to generate them automatically.',
         'body_preview' => 'Generated JSON',
         'signature_help' => 'signature is an HMAC-SHA256 of timestamp, nonce and the body fields (type, account_name, category_id, amount, note, recorded_at), keyed with the webhook token. The server recomputes it from the same values; a mismatch is rejected. Because the timestamp and nonce headers are signed too, they cannot be changed after signing. The signature is shown once a webhook is selected.',
-        'account_hint' =>'Pick an existing account, or type a new name to create it.',
+        'account_hint' => 'Pick an existing account, or type a new name to create it.',
         'amount' => 'Amount',
         'note' => 'Note',
         'recorded_at' => 'Recorded at',
@@ -92,7 +92,7 @@ return [
         'operations' => [
             'testWebhook' => [
                 'summary' => 'Test a webhook',
-                'description' => 'Dry run of POST /webhooks/records for a logged-in user: takes the same signed request (X-Webhook-Timestamp and X-Webhook-Nonce headers, signature in the body) and runs the same checks, but saves nothing and does not use up the nonce.',
+                'description' => 'Dry run of POST /webhooks/records for a logged-in user: takes the same signed request (X-Webhook-Timestamp and X-Webhook-Nonce headers, signature in the body) and runs the same checks, but saves nothing (no record, no new account) and does not use up the nonce.',
             ],
         ],
     ],
@@ -133,6 +133,8 @@ return [
         'active' => 'Active',
         'inactive' => 'Inactive',
         'all' => 'All',
+        'yes' => 'Yes',
+        'no' => 'No',
     ],
 
     'fields' => [
@@ -142,6 +144,8 @@ return [
         'accounts_failed' => 'Could not load accounts. Reload the page to try again.',
         'allowed_account_ids' => 'Allowed accounts',
         'allowed_account_ids_hint' => 'Records can only be added to the ticked accounts (for transfers, both accounts). With every account ticked, all accounts are allowed, including ones created later.',
+        'can_create_accounts' => 'Allow creating accounts',
+        'can_create_accounts_hint' => 'When a record names an account that does not exist, create it with a zero balance instead of rejecting the request. If accounts are restricted above, the new account is added to the allowed list.',
         'allowed_types' => 'Allowed record types',
         'allowed_types_hint' => 'Only the ticked record types are accepted. With every type ticked, all types are allowed.',
         'allowed_ips' => 'Allowed IP addresses',

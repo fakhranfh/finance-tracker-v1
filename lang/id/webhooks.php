@@ -52,7 +52,7 @@ return [
         'description' => 'Mengirim request bertanda tangan persis seperti panggilan asli (header dan signature yang sama, dibuat dengan token webhook ini) ke endpoint uji coba. Tidak ada data yang disimpan.',
         'payload' => 'Body request (JSON, signature ditambahkan otomatis)',
         'api_docs' => 'Lihat dokumentasi API',
-        'send' =>'Kirim uji coba',
+        'send' => 'Kirim uji coba',
         'success' => 'Uji coba berhasil. Payload valid dan tidak ada catatan yang disimpan.',
         'inactive' => 'Webhook ini nonaktif, sehingga request asli akan ditolak dengan 404.',
     ],
@@ -76,7 +76,7 @@ return [
         'headers_help' => 'X-Webhook-Timestamp adalah waktu request dalam detik Unix, dan X-Webhook-Nonce adalah nilai acak yang unik untuk setiap request, sehingga request bertanda tangan tidak bisa diputar ulang (replay). Kosongkan keduanya untuk dibuat otomatis.',
         'body_preview' => 'JSON yang dihasilkan',
         'signature_help' => 'signature adalah HMAC-SHA256 dari timestamp, nonce, dan field body (type, account_name, category_id, amount, note, recorded_at), dengan kunci token webhook. Server menghitung ulang dari nilai yang sama; jika tidak cocok, request ditolak. Karena header timestamp dan nonce ikut ditandatangani, nilainya tidak bisa diubah setelah ditandatangani. Signature ditampilkan setelah webhook dipilih.',
-        'account_hint' =>'Pilih akun yang sudah ada, atau ketik nama baru untuk membuatnya.',
+        'account_hint' => 'Pilih akun yang sudah ada, atau ketik nama baru untuk membuatnya.',
         'amount' => 'Jumlah',
         'note' => 'Catatan',
         'recorded_at' => 'Tanggal dicatat',
@@ -92,7 +92,7 @@ return [
         'operations' => [
             'testWebhook' => [
                 'summary' => 'Uji webhook',
-                'description' => 'Uji coba (dry run) POST /webhooks/records untuk pengguna yang sudah login: menerima request bertanda tangan yang sama (header X-Webhook-Timestamp dan X-Webhook-Nonce, signature di body) dan menjalankan pemeriksaan yang sama, tetapi tidak menyimpan apa pun dan tidak memakai nonce.',
+                'description' => 'Uji coba (dry run) POST /webhooks/records untuk pengguna yang sudah login: menerima request bertanda tangan yang sama (header X-Webhook-Timestamp dan X-Webhook-Nonce, signature di body) dan menjalankan pemeriksaan yang sama, tetapi tidak menyimpan apa pun (catatan maupun akun baru) dan tidak memakai nonce.',
             ],
         ],
     ],
@@ -133,6 +133,8 @@ return [
         'active' => 'Aktif',
         'inactive' => 'Nonaktif',
         'all' => 'Semua',
+        'yes' => 'Ya',
+        'no' => 'Tidak',
     ],
 
     'fields' => [
@@ -142,6 +144,8 @@ return [
         'accounts_failed' => 'Akun gagal dimuat. Muat ulang halaman untuk mencoba lagi.',
         'allowed_account_ids' => 'Akun yang diizinkan',
         'allowed_account_ids_hint' => 'Catatan hanya bisa ditambahkan ke akun yang dicentang (untuk transfer, kedua akun). Jika semua akun dicentang, semua akun diizinkan, termasuk akun yang dibuat kemudian.',
+        'can_create_accounts' => 'Izinkan membuat akun',
+        'can_create_accounts_hint' => 'Jika catatan menyebut akun yang belum ada, akun dibuat dengan saldo nol, bukan menolak request. Jika akun dibatasi di atas, akun baru ditambahkan ke daftar yang diizinkan.',
         'allowed_types' => 'Tipe catatan yang diizinkan',
         'allowed_types_hint' => 'Hanya tipe catatan yang dicentang yang diterima. Jika semua tipe dicentang, semua tipe diizinkan.',
         'allowed_ips' => 'Alamat IP yang diizinkan',

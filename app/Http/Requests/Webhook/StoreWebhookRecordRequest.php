@@ -9,7 +9,8 @@ use Illuminate\Validation\Rule;
 
 /**
  * Same payload as a record created from the app, except the source account is given by
- * name (account_name) instead of ID and only income and expense are accepted.
+ * name (account_name) instead of ID and only income and expense are accepted. Whether the
+ * name exists is checked against the webhook, which may create unknown accounts.
  */
 class StoreWebhookRecordRequest extends StoreRecordRequest
 {
@@ -24,6 +25,6 @@ class StoreWebhookRecordRequest extends StoreRecordRequest
         // Transfers need a second account, which is not part of the signed payload.
         $rules['type'] = ['required', Rule::in([RecordType::Income->value, RecordType::Expense->value])];
 
-        return ['account_name' => ['required', 'string', Rule::exists('accounts', 'name')]] + $rules;
+        return ['account_name' => ['required', 'string', 'max:255']] + $rules;
     }
 }

@@ -36,6 +36,8 @@
             data-all-label="{{ __('webhooks.show.all') }}"
             data-active-label="{{ __('webhooks.show.active') }}"
             data-inactive-label="{{ __('webhooks.show.inactive') }}"
+            data-yes-label="{{ __('webhooks.show.yes') }}"
+            data-no-label="{{ __('webhooks.show.no') }}"
             @foreach ($recordTypes as $value => $label) data-type-{{ $value }}="{{ $label }}" @endforeach
         >
             <x-molecules.copy-field name="token" :label="__('webhooks.fields.token')" :copy-label="__('webhooks.actions.copy')" :copied-label="__('webhooks.actions.copied')" />

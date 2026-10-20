@@ -156,6 +156,7 @@ async function loadItem() {
         setIpMode(ips.length > 0 ? 'only' : 'all');
         form.elements.namedItem('url').value = data.data.url ?? '';
         form.elements.namedItem('is_active').checked = Boolean(data.data.is_active);
+        form.elements.namedItem('can_create_accounts').checked = Boolean(data.data.can_create_accounts);
         form.querySelectorAll('[name="allowed_types[]"]').forEach((box) => {
             box.checked = isTicked(data.data.allowed_types ?? [], box.value);
         });
@@ -216,6 +217,7 @@ if (form) {
             allowed_ips: enteredIps().join('\n'),
             allowed_account_ids: checkedValues('[data-allowed-account]', Number),
             allowed_types: checkedValues('[name="allowed_types[]"]'),
+            can_create_accounts: form.elements.namedItem('can_create_accounts').checked,
             is_active: form.elements.namedItem('is_active').checked,
         };
 

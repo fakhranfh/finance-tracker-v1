@@ -78,7 +78,7 @@ class WebhookController extends Controller
             return response()->json(['message' => __('webhooks.test.inactive')], 409);
         }
 
-        $this->webhookManagementService->prepareRecord($webhook, $request->validated(), $request->input('ip'));
+        $this->webhookManagementService->prepareRecord($webhook, $request->validated(), $request->input('ip'), dryRun: true);
 
         return response()->json([
             'message' => __('webhooks.test.success'),

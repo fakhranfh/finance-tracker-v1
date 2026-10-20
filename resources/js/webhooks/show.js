@@ -31,6 +31,8 @@ async function load() {
         ? webhook.allowed_types.map((type) => labels[`type${type[0].toUpperCase()}${type.slice(1)}`] ?? type).join(', ')
         : allLabel;
 
+    field('can_create_accounts').textContent = webhook.can_create_accounts ? labels.yesLabel : labels.noLabel;
+
     if (webhook.allowed_account_ids.length > 0) {
         const accounts = (await getAll(routes.accounts.index)) ?? [];
         const names = accounts.filter((account) => webhook.allowed_account_ids.includes(account.id)).map((account) => account.name);

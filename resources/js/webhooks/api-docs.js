@@ -175,19 +175,6 @@ function wireTryItOut(section) {
 
         const webhookId = id.value;
         const payload = readBody(section);
-        const accountName = accountInput.value.trim();
-
-        if (!accounts.some((account) => account.name === accountName)) {
-            const created = await post(routes.accounts.store, { name: accountName, balance: 0 });
-
-            if (!created.ok) {
-                showFieldErrors(section, { 'try-account-name': [created.data.errors?.name?.[0] ?? created.data.message ?? accountName] });
-                return;
-            }
-
-            accounts.push({ name: accountName });
-            renderAccountOptions();
-        }
 
         // Empty headers get fresh values for this request, so an old page does not send a stale timestamp.
         auto = { timestamp: String(Math.floor(Date.now() / 1000)), nonce: newNonce() };

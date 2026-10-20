@@ -37,6 +37,7 @@ trait DocumentsApi
                     new OA\Property(property: 'allowed_types', type: 'array', nullable: true, items: new OA\Items(type: 'string', enum: ['income', 'expense', 'transfer']), description: 'Record types that may be added. Empty allows every type.'),
                     new OA\Property(property: 'allowed_ips', type: 'string', nullable: true, example: "203.0.113.5\n198.51.100.0/24", description: 'Whitelisted IP addresses or CIDR ranges, one per line (or comma separated). Empty allows every address.'),
                     new OA\Property(property: 'is_active', type: 'boolean', example: true),
+                    new OA\Property(property: 'can_create_accounts', type: 'boolean', example: false, description: 'Whether a record for an unknown account_name creates that account (with a zero balance) instead of failing. Defaults to false.'),
                 ]
             )
         ),
@@ -51,7 +52,7 @@ trait DocumentsApi
         path: '/webhooks/{id}/test',
         operationId: 'testWebhook',
         summary: 'Test a webhook',
-        description: 'Dry run of POST /webhooks/records for a logged-in user: takes the same signed request (X-Webhook-Timestamp and X-Webhook-Nonce headers, signature in the body) and runs the same checks, but saves nothing and does not use up the nonce.',
+        description: 'Dry run of POST /webhooks/records for a logged-in user: takes the same signed request (X-Webhook-Timestamp and X-Webhook-Nonce headers, signature in the body) and runs the same checks, but saves nothing (no record, no new account) and does not use up the nonce.',
         tags: ['Webhooks'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
@@ -117,6 +118,7 @@ trait DocumentsApi
                     new OA\Property(property: 'allowed_types', type: 'array', nullable: true, items: new OA\Items(type: 'string', enum: ['income', 'expense', 'transfer']), description: 'Record types that may be added. Empty allows every type.'),
                     new OA\Property(property: 'allowed_ips', type: 'string', nullable: true, example: "203.0.113.5\n198.51.100.0/24", description: 'Whitelisted IP addresses or CIDR ranges, one per line (or comma separated). Empty allows every address.'),
                     new OA\Property(property: 'is_active', type: 'boolean', example: true),
+                    new OA\Property(property: 'can_create_accounts', type: 'boolean', example: false, description: 'Whether a record for an unknown account_name creates that account (with a zero balance) instead of failing. Defaults to false.'),
                 ]
             )
         ),

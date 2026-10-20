@@ -351,6 +351,46 @@ it('only accepts the allowed accounts', function () {
     signedWebhookCall($this, $webhook, webhookPayload($allowed))->assertStatus(201);
 });
 
+it('rejects an unknown account unless the webhook may create accounts', function () {
+    $payload = webhookPayload(Account::factory()->make(['name' => 'Brand New']));
+
+    $closed = Webhook::factory()->create();
+    signedWebhookCall($this, $closed, $payload)->assertStatus(422)->assertJsonValidationErrors('account_name');
+    expect(Account::query()->where('name', 'Brand New')->exists())->toBeFalse();
+
+    $open = Webhook::factory()->create(['can_create_accounts' => true]);
+    signedWebhookCall($this, $open, $payload)->assertStatus(201);
+
+    $account = Account::query()->where('name', 'Brand New')->firstOrFail();
+    expect(Record::query()->where('account_id', $account->id)->count())->toBe(1);
+});
+
+it('adds a created account to the allowed accounts list', function () {
+    $allowed = Account::factory()->create();
+    $webhook = Webhook::factory()->create(['can_create_accounts' => true, 'allowed_account_ids' => [$allowed->id]]);
+
+    signedWebhookCall($this, $webhook, webhookPayload(Account::factory()->make(['name' => 'Fresh'])))->assertStatus(201);
+
+    $fresh = Account::query()->where('name', 'Fresh')->firstOrFail();
+    expect($webhook->refresh()->allowed_account_ids)->toBe([$allowed->id, $fresh->id]);
+});
+
+it('accepts a new account name on the test endpoint when accounts are restricted', function () {
+    $actor = User::factory()->create();
+    $allowed = Account::factory()->create();
+    $webhook = Webhook::factory()->create(['can_create_accounts' => true, 'allowed_account_ids' => [$allowed->id]]);
+
+    signedWebhookCall($this->actingAs($actor), $webhook, webhookPayload(Account::factory()->make(['name' => 'Dry'])), ['url' => "/api/webhooks/{$webhook->id}/test"])->assertOk();
+});
+
+it('does not create accounts on the test endpoint', function () {
+    $actor = User::factory()->create();
+    $webhook = Webhook::factory()->create(['can_create_accounts' => true]);
+
+    signedWebhookCall($this->actingAs($actor), $webhook, webhookPayload(Account::factory()->make(['name' => 'Dry'])), ['url' => "/api/webhooks/{$webhook->id}/test"])->assertOk();
+    expect(Account::query()->where('name', 'Dry')->exists())->toBeFalse();
+});
+
 it('applies the type and account restrictions on the test endpoint', function () {
     $actor = User::factory()->create();
     $allowed = Account::factory()->create();

@@ -22,6 +22,7 @@ function randomWords(count = 2) {
 export function webhookFormFixture() {
     return {
         name: randomWords(2),
+        can_create_accounts: Math.random() > 0.5,
         is_active: Math.random() > 0.5,
     };
 }
