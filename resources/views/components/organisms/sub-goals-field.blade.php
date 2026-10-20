@@ -15,8 +15,8 @@
             <input type="hidden" name="sub_goals.__INDEX__.id">
             <x-molecules.form-group name="sub_goals.__INDEX__.name" type="text" :label="__('sub-goals.fields.name')" maxlength="255" required />
             <div class="grid gap-3 sm:grid-cols-2">
-                <x-molecules.form-group name="sub_goals.__INDEX__.target_amount" type="text" inputmode="decimal" :label="__('sub-goals.fields.target_amount')" data-money required />
-                <x-molecules.form-group name="sub_goals.__INDEX__.saved_amount" type="text" inputmode="decimal" :label="__('sub-goals.fields.saved_amount')" data-money />
+                <x-molecules.form-group name="sub_goals.__INDEX__.target_amount" type="text" inputmode="numeric" :label="__('sub-goals.fields.target_amount')" data-money required />
+                <x-molecules.form-group name="sub_goals.__INDEX__.saved_amount" type="text" inputmode="numeric" :label="__('sub-goals.fields.saved_amount')" data-money />
             </div>
             <x-molecules.form-group name="sub_goals.__INDEX__.desired_date" type="date" :label="__('sub-goals.fields.desired_date')" />
             <x-molecules.form-group name="sub_goals.__INDEX__.note" type="text" :label="__('sub-goals.fields.note')" maxlength="1000" />

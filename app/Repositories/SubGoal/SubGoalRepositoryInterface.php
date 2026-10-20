@@ -23,7 +23,7 @@ interface SubGoalRepositoryInterface
     /**
      * Count a goal's sub goals, how many are done and their combined target and saved amount.
      *
-     * @return array{total: int, done: int, target_total: string, saved_total: string}
+     * @return array{total: int, done: int, target_total: int, saved_total: int}
      */
     public function summary(int $goalId): array;
 

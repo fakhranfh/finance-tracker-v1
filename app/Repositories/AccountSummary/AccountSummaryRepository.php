@@ -158,7 +158,7 @@ class AccountSummaryRepository implements AccountSummaryRepositoryInterface
             ->get(['year', 'income', 'expense', 'transfer_in', 'transfer_out', 'record_count', 'net', 'balance']);
 
         foreach ($rows as $row) {
-            $years[(int) $row->year] = [...$this->flows($row), 'net' => round((float) $row->net, 2), 'balance' => round((float) $row->balance, 2)];
+            $years[(int) $row->year] = [...$this->flows($row), 'net' => (int) round((float) $row->net, 0), 'balance' => (int) round((float) $row->balance, 0)];
         }
 
         return $years;
@@ -180,7 +180,7 @@ class AccountSummaryRepository implements AccountSummaryRepositoryInterface
             foreach ($rows as $row) {
                 $year = (int) substr((string) $row->month, 0, 4);
                 $years[$year] ??= ['income' => 0.0, 'expense' => 0.0, 'transfer_in' => 0.0, 'transfer_out' => 0.0, 'record_count' => 0, 'balance' => 0.0];
-                $years[$year] = [...$this->sum($years[$year], $this->flows($row)), 'balance' => round((float) $row->balance, 2)];
+                $years[$year] = [...$this->sum($years[$year], $this->flows($row)), 'balance' => (int) round((float) $row->balance, 0)];
             }
 
             foreach ($years as &$totals) {
@@ -305,10 +305,10 @@ class AccountSummaryRepository implements AccountSummaryRepositoryInterface
                 $net += $totals['income'] - $totals['expense'] + $totals['transfer_in'] - $totals['transfer_out'];
             }
 
-            $running = round($openings[$accountId] ?? (float) DB::table('accounts')->where('id', $accountId)->value('last_balance') - $net, 2);
+            $running = (int) round($openings[$accountId] ?? (float) DB::table('accounts')->where('id', $accountId)->value('last_balance') - $net, 0);
             foreach ($months as &$totals) {
                 $totals['net'] = $this->net($totals);
-                $running = round($running + $totals['net'], 2);
+                $running = (int) round($running + $totals['net'], 0);
                 $totals['balance'] = $running;
             }
             unset($totals);
@@ -321,10 +321,10 @@ class AccountSummaryRepository implements AccountSummaryRepositoryInterface
                     $rows[] = [
                         'account_id' => $accountId,
                         'month' => $month,
-                        'income' => round($totals['income'], 2),
-                        'expense' => round($totals['expense'], 2),
-                        'transfer_in' => round($totals['transfer_in'], 2),
-                        'transfer_out' => round($totals['transfer_out'], 2),
+                        'income' => (int) round($totals['income'], 0),
+                        'expense' => (int) round($totals['expense'], 0),
+                        'transfer_in' => (int) round($totals['transfer_in'], 0),
+                        'transfer_out' => (int) round($totals['transfer_out'], 0),
                         'record_count' => $totals['record_count'],
                         'net' => $totals['net'],
                         'balance' => $totals['balance'],
@@ -466,16 +466,16 @@ class AccountSummaryRepository implements AccountSummaryRepositoryInterface
      */
     private function net(array $flows): float
     {
-        return round($flows['income'] - $flows['expense'] + $flows['transfer_in'] - $flows['transfer_out'], 2);
+        return (int) round($flows['income'] - $flows['expense'] + $flows['transfer_in'] - $flows['transfer_out'], 0);
     }
 
     private function flows(object $row): array
     {
         return [
-            'income' => round((float) $row->income, 2),
-            'expense' => round((float) $row->expense, 2),
-            'transfer_in' => round((float) $row->transfer_in, 2),
-            'transfer_out' => round((float) $row->transfer_out, 2),
+            'income' => (int) round((float) $row->income, 0),
+            'expense' => (int) round((float) $row->expense, 0),
+            'transfer_in' => (int) round((float) $row->transfer_in, 0),
+            'transfer_out' => (int) round((float) $row->transfer_out, 0),
             'record_count' => (int) $row->record_count,
         ];
     }
@@ -489,7 +489,7 @@ class AccountSummaryRepository implements AccountSummaryRepositoryInterface
 
         foreach ($parts as $part) {
             foreach ($total as $key => $value) {
-                $total[$key] = $key === 'record_count' ? $value + $part[$key] : round($value + $part[$key], 2);
+                $total[$key] = $key === 'record_count' ? $value + $part[$key] : (int) round($value + $part[$key], 0);
             }
         }
 

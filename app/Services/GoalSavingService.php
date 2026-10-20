@@ -49,7 +49,7 @@ class GoalSavingService
             $this->goalRepository->shiftSavedAmount($goal, (float) $amount);
             $saving = $this->goalSavingRepository->create($goal->id, $amount, $subGoalId);
 
-            $this->shiftSubGoal($subGoalId, (float) $amount);
+            $this->shiftSubGoal($subGoalId, (int) $amount);
 
             return $saving;
         });
@@ -61,10 +61,10 @@ class GoalSavingService
     public function updateSaving(Goal $goal, GoalSaving $saving, string|float|int $amount, ?int $subGoalId = null): GoalSaving
     {
         return $this->goalSavingRepository->transaction(function () use ($goal, $saving, $amount, $subGoalId): GoalSaving {
-            $this->goalRepository->shiftSavedAmount($goal, round((float) $amount - (float) $saving->amount, 2));
-            $this->shiftSubGoal($saving->sub_goal_id, -(float) $saving->amount);
+            $this->goalRepository->shiftSavedAmount($goal, (int) round((float) $amount - (float) $saving->amount, 0));
+            $this->shiftSubGoal($saving->sub_goal_id, -(int) $saving->amount);
             $saving = $this->goalSavingRepository->update($saving, $amount, $subGoalId);
-            $this->shiftSubGoal($subGoalId, (float) $amount);
+            $this->shiftSubGoal($subGoalId, (int) $amount);
 
             return $saving;
         });
@@ -98,9 +98,9 @@ class GoalSavingService
         });
     }
 
-    private function shiftSubGoal(?int $subGoalId, float $difference): void
+    private function shiftSubGoal(?int $subGoalId, int $difference): void
     {
-        if ($subGoalId !== null && $difference !== 0.0) {
+        if ($subGoalId !== null && $difference !== 0) {
             $this->subGoalService->shiftSavedAmount($subGoalId, $difference);
         }
     }
@@ -114,7 +114,7 @@ class GoalSavingService
     {
         $withSubGoal = $savings->whereNotNull('sub_goal_id');
 
-        $withSubGoal->groupBy('sub_goal_id')->each(fn (Collection $group, int $subGoalId) => $this->shiftSubGoal($subGoalId, -(float) $group->sum('amount')));
+        $withSubGoal->groupBy('sub_goal_id')->each(fn (Collection $group, int $subGoalId) => $this->shiftSubGoal($subGoalId, -(int) $group->sum('amount')));
 
         $doneIds = $withSubGoal->where('type', GoalSaving::TYPE_DONE)->pluck('sub_goal_id')->unique()->values()->all();
 

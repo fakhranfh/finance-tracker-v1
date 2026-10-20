@@ -81,9 +81,8 @@
                                         "example": "Sample name"
                                     },
                                     "balance": {
-                                        "type": "number",
-                                        "format": "float",
-                                        "example": 9.99
+                                        "type": "integer",
+                                        "example": 10
                                     },
                                     "color": {
                                         "description": "Hex color code, e.g. #2563EB",
@@ -205,9 +204,8 @@
                                         "example": "Sample name"
                                     },
                                     "balance": {
-                                        "type": "number",
-                                        "format": "float",
-                                        "example": 9.99
+                                        "type": "integer",
+                                        "example": 10
                                     },
                                     "color": {
                                         "description": "Hex color code, e.g. #2563EB",
@@ -778,8 +776,7 @@
                             "schema": {
                                 "properties": {
                                     "amount": {
-                                        "type": "number",
-                                        "format": "float",
+                                        "type": "integer",
                                         "example": 500000
                                     },
                                     "sub_goal_id": {
@@ -944,8 +941,7 @@
                             "schema": {
                                 "properties": {
                                     "amount": {
-                                        "type": "number",
-                                        "format": "float",
+                                        "type": "integer",
                                         "example": 500000
                                     },
                                     "sub_goal_id": {
@@ -1081,13 +1077,11 @@
                                         "example": "Laptop baru"
                                     },
                                     "target_amount": {
-                                        "type": "number",
-                                        "format": "float",
+                                        "type": "integer",
                                         "example": 15000000
                                     },
                                     "saved_amount": {
-                                        "type": "number",
-                                        "format": "float",
+                                        "type": "integer",
                                         "example": 15000000
                                     },
                                     "desired_date": {
@@ -1132,13 +1126,11 @@
                                                     "example": "Mas kawin"
                                                 },
                                                 "target_amount": {
-                                                    "type": "number",
-                                                    "format": "float",
+                                                    "type": "integer",
                                                     "example": 5000000
                                                 },
                                                 "saved_amount": {
-                                                    "type": "number",
-                                                    "format": "float",
+                                                    "type": "integer",
                                                     "example": 0,
                                                     "nullable": true
                                                 },
@@ -1261,13 +1253,11 @@
                                         "example": "Laptop baru"
                                     },
                                     "target_amount": {
-                                        "type": "number",
-                                        "format": "float",
+                                        "type": "integer",
                                         "example": 15000000
                                     },
                                     "saved_amount": {
-                                        "type": "number",
-                                        "format": "float",
+                                        "type": "integer",
                                         "example": 15000000
                                     },
                                     "desired_date": {
@@ -1312,13 +1302,11 @@
                                                     "example": "Mas kawin"
                                                 },
                                                 "target_amount": {
-                                                    "type": "number",
-                                                    "format": "float",
+                                                    "type": "integer",
                                                     "example": 5000000
                                                 },
                                                 "saved_amount": {
-                                                    "type": "number",
-                                                    "format": "float",
+                                                    "type": "integer",
                                                     "example": 0,
                                                     "nullable": true
                                                 },
@@ -2032,9 +2020,8 @@
                                         "nullable": true
                                     },
                                     "amount": {
-                                        "type": "number",
-                                        "format": "float",
-                                        "example": 9.99
+                                        "type": "integer",
+                                        "example": 10
                                     },
                                     "note": {
                                         "type": "string",
@@ -2265,9 +2252,8 @@
                                         "nullable": true
                                     },
                                     "amount": {
-                                        "type": "number",
-                                        "format": "float",
-                                        "example": 9.99
+                                        "type": "integer",
+                                        "example": 10
                                     },
                                     "note": {
                                         "type": "string",
@@ -2606,13 +2592,11 @@
                                                     "example": "Mas kawin"
                                                 },
                                                 "target_amount": {
-                                                    "type": "number",
-                                                    "format": "float",
+                                                    "type": "integer",
                                                     "example": 5000000
                                                 },
                                                 "saved_amount": {
-                                                    "type": "number",
-                                                    "format": "float",
+                                                    "type": "integer",
                                                     "example": 0,
                                                     "nullable": true
                                                 },
@@ -2910,9 +2894,8 @@
                                         "nullable": true
                                     },
                                     "amount": {
-                                        "type": "number",
-                                        "format": "float",
-                                        "example": 9.99
+                                        "type": "integer",
+                                        "example": 10
                                     },
                                     "note": {
                                         "type": "string",
@@ -3114,7 +3097,7 @@
                 ],
                 "summary": "Test a webhook",
                 "description": "Dry run of POST /webhooks/records for a logged-in user: takes the same signed request (X-Webhook-Timestamp and X-Webhook-Nonce headers, signature in the body) and runs the same checks, but saves nothing and does not use up the nonce.",
-                "operationId": "7d28c948933a9941b466d1134486b54b",
+                "operationId": "testWebhook",
                 "parameters": [
                     {
                         "name": "id",
@@ -3166,8 +3149,7 @@
                                         "type": "string"
                                     },
                                     "amount": {
-                                        "type": "number",
-                                        "format": "float",
+                                        "type": "integer",
                                         "example": 12.5
                                     },
                                     "recorded_at": {

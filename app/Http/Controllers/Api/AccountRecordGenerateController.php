@@ -22,7 +22,7 @@ class AccountRecordGenerateController extends Controller
         $validated = $request->validate([
             'count' => ['required', 'integer', 'min:1', 'max:1000'],
             'type' => ['sometimes', 'nullable', Rule::enum(RecordType::class)],
-            'amount' => ['sometimes', 'nullable', 'numeric', 'min:1', 'max:999999999999'],
+            'amount' => ['sometimes', 'nullable', 'integer', 'min:1', 'max:999999999999'],
             'date_from' => ['sometimes', 'nullable', 'date_format:Y-m-d'],
             'date_to' => ['sometimes', 'nullable', 'date_format:Y-m-d', 'after_or_equal:date_from'],
         ]);

@@ -11,7 +11,7 @@ function recordPayload(array $overrides = []): array
     return array_merge([
         'type' => 'expense',
         'account_id' => Account::factory()->create()->id,
-        'amount' => 25.5,
+        'amount' => 26,
         'note' => 'Lunch',
         'recorded_at' => '2026-10-01T10:30:00+07:00',
     ], $overrides);
@@ -83,9 +83,9 @@ it('filters records by an amount range via the api', function () {
 
     $ids = fn (array $query) => collect($this->actingAs($actor)->getJson('/api/records?'.http_build_query($query))->json('data'))->pluck('id')->sort()->values()->all();
 
-    expect($ids(['amount_min' => '20', 'amount_max' => '100']))->toBe([$middle->id]);
-    expect($ids(['amount_min' => '10']))->toHaveCount(3);
-    expect($ids(['amount_max' => '10']))->toBe([$small->id]);
+    expect($ids(['amount_min' => 20, 'amount_max' => 100]))->toBe([$middle->id]);
+    expect($ids(['amount_min' => 10]))->toHaveCount(3);
+    expect($ids(['amount_max' => 10]))->toBe([$small->id]);
 });
 
 it('filters records by any of several accounts', function () {
@@ -180,10 +180,10 @@ it('shows, updates and deletes a record', function () {
 
     $this->actingAs($actor)->getJson("/api/records/{$target->id}")->assertOk()->assertJsonPath('data.id', $target->id);
 
-    $this->putJson("/api/records/{$target->id}", recordPayload(['type' => 'income', 'amount' => 19.5]))
+    $this->putJson("/api/records/{$target->id}", recordPayload(['type' => 'income', 'amount' => 20]))
         ->assertOk()
         ->assertJsonPath('data.type', 'income')
-        ->assertJsonPath('data.amount', '19.50');
+        ->assertJsonPath('data.amount', 20);
 
     $this->deleteJson("/api/records/{$target->id}")->assertNoContent();
     $this->assertDatabaseMissing('records', ['id' => $target->id]);
@@ -212,8 +212,8 @@ it('computes account balances from income, expense and transfers', function () {
 
     $balances = collect($this->getJson('/api/accounts')->json('data'))->pluck('balance', 'name');
 
-    expect($balances['Cash'])->toBe('60.00')
-        ->and($balances['Bank'])->toBe('70.00');
+    expect($balances['Cash'])->toBe(60)
+        ->and($balances['Bank'])->toBe(70);
 });
 
 it('deletes records when their account is deleted', function () {

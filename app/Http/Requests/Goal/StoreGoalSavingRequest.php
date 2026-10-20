@@ -24,7 +24,7 @@ class StoreGoalSavingRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'amount' => ['required', 'numeric', 'gt:0', 'max:999999999999.99'],
+            'amount' => ['required', 'integer', 'gt:0', 'max:999999999999'],
             'sub_goal_id' => [Rule::requiredIf(fn () => $this->route('goal')->subGoals()->exists()), 'nullable', 'integer', Rule::exists('sub_goals', 'id')->where('goal_id', $this->route('goal')->id)],
         ];
     }

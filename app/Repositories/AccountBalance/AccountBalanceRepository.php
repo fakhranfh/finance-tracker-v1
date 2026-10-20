@@ -10,7 +10,7 @@ class AccountBalanceRepository implements AccountBalanceRepositoryInterface
     public function adjustLastBalance(int $accountId, string $signedAmount): void
     {
         DB::update(
-            'update accounts set last_balance = coalesce(last_balance, 0) + cast(? as decimal(14,2)) where id = ?',
+            'update accounts set last_balance = coalesce(last_balance, 0) + cast(? as bigint) where id = ?',
             [$signedAmount, $accountId],
         );
     }
@@ -121,15 +121,15 @@ class AccountBalanceRepository implements AccountBalanceRepositoryInterface
     {
         $row = DB::selectOne(<<<'SQL'
             select
-                cast(? as decimal(14,2))
+                cast(? as bigint)
                 + coalesce(sum(case when type = 'income' and account_id = ? then amount end), 0) as income,
-                cast(? as decimal(14,2))
+                cast(? as bigint)
                 + coalesce(sum(case when type = 'expense' and account_id = ? then amount end), 0) as expense,
-                cast(? as decimal(14,2))
+                cast(? as bigint)
                 + coalesce(sum(case when type = 'transfer' and to_account_id = ? then amount end), 0) as transfer_in,
-                cast(? as decimal(14,2))
+                cast(? as bigint)
                 + coalesce(sum(case when type = 'transfer' and account_id = ? then amount end), 0) as transfer_out,
-                cast(? as decimal(14,2))
+                cast(? as bigint)
                 + coalesce(sum(case
                     when type = 'income' and account_id = ? then amount
                     when type = 'expense' and account_id = ? then -amount
@@ -163,7 +163,7 @@ class AccountBalanceRepository implements AccountBalanceRepositoryInterface
     {
         return DB::selectOne(<<<'SQL'
             select
-                cast(? as decimal(14,2))
+                cast(? as bigint)
                 + coalesce((select sum(case when type = 'income' then amount else -amount end)
                     from records where account_id = ? and id > ? and id <= ?), 0)
                 + coalesce((select sum(amount)

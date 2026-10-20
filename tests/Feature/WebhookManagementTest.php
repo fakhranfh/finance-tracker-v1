@@ -138,7 +138,7 @@ it('adds a record through an active webhook without authentication', function ()
     $response = signedWebhookCall($this, $webhook, [
         'type' => 'expense',
         'account_name' => $account->name,
-        'amount' => '12.50',
+        'amount' => '12',
         'note' => 'Coffee',
         'recorded_at' => '2026-01-15T10:30:00+07:00',
     ]);
@@ -190,9 +190,9 @@ it('dry-runs a webhook test without saving a record', function () {
     signedWebhookCall($this->actingAs($actor), $webhook, [
         'type' => 'expense',
         'account_name' => $account->name,
-        'amount' => '12.50',
+        'amount' => '12',
         'recorded_at' => '2026-01-15T10:30:00+07:00',
-    ], ['url' => "/api/webhooks/{$webhook->id}/test"])->assertOk()->assertJsonPath('data.amount', '12.50');
+    ], ['url' => "/api/webhooks/{$webhook->id}/test"])->assertOk()->assertJsonPath('data.amount', '12');
 
     expect(Record::query()->count())->toBe(0);
 });
@@ -382,7 +382,7 @@ it('signs the timestamp, nonce and the six record fields', function () {
     $account = Account::factory()->create();
     $payload = webhookPayload($account) + ['note' => 'Coffee'];
 
-    $changes = ['type' => 'income', 'account_name' => 'Other', 'amount' => '1.00', 'note' => 'Tea', 'recorded_at' => '2026-02-01T00:00:00+07:00', 'category_id' => 1, 'timestamp' => time() - 10, 'nonce' => Str::random(32)];
+    $changes = ['type' => 'income', 'account_name' => 'Other', 'amount' => '1', 'note' => 'Tea', 'recorded_at' => '2026-02-01T00:00:00+07:00', 'category_id' => 1, 'timestamp' => time() - 10, 'nonce' => Str::random(32)];
 
     foreach ($changes as $field => $value) {
         signedWebhookCall($this, $webhook, $payload, ['signed' => [$field => $value]])->assertUnauthorized();
@@ -457,7 +457,7 @@ it('requires the same signed request on the test endpoint', function () {
 
     $this->actingAs($actor)->postJson($url, $payload)->assertUnauthorized();
     signedWebhookCall($this->actingAs($actor), $webhook, $payload, ['url' => $url, 'signature' => 'deadbeef'])->assertUnauthorized();
-    signedWebhookCall($this->actingAs($actor), $webhook, $payload, ['url' => $url, 'signed' => ['amount' => '1.00']])->assertUnauthorized();
+    signedWebhookCall($this->actingAs($actor), $webhook, $payload, ['url' => $url, 'signed' => ['amount' => '1']])->assertUnauthorized();
     signedWebhookCall($this->actingAs($actor), $webhook, $payload, ['url' => $url, 'timestamp' => time() - 600])->assertUnauthorized();
     signedWebhookCall($this->actingAs($actor), $webhook, $payload, ['url' => $url, 'nonce' => 'short'])->assertUnauthorized();
     signedWebhookCall($this->actingAs($actor), $other, $payload, ['url' => $url])->assertUnauthorized();

@@ -94,7 +94,7 @@ it('generates records of the chosen type and amount, up to 1000', function () {
 
     $records = Record::query()->where('account_id', $account->id)->get();
     expect($records)->toHaveCount(5);
-    expect($records->every(fn ($r) => $r->type->value === 'income' && (float) $r->amount === 25000.0))->toBeTrue();
+    expect($records->every(fn ($r) => $r->type->value === 'income' && (int) $r->amount === 25000))->toBeTrue();
 
     $this->actingAs($actor)->postJson("/api/accounts/{$account->id}/records/generate", ['count' => 1001])
         ->assertJsonValidationErrors('count');

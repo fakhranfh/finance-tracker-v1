@@ -34,8 +34,8 @@ it('syncs everything that piled up in one run', function () {
     app()->call([new SyncRecordEffects($account->id), 'handle']);
 
     $totals = app(AccountSummaryRepositoryInterface::class)->totalsAllFromTotals($account->id);
-    expect($totals['income'])->toBe(500.0)->and($totals['record_count'])->toBe(2);
-    expect((float) $account->fresh()->last_balance)->toBe(500.0);
+    expect($totals['income'])->toBe(500)->and($totals['record_count'])->toBe(2);
+    expect((int) $account->fresh()->last_balance)->toBe(500);
     // The deleted record's snapshot is gone; the surviving new records keep one each.
     expect(DB::table('account_balance_snapshots')->where('account_id', $account->id)->pluck('last_record_id')->all())
         ->toContain($records[1]->id, $records[2]->id)->not->toContain($records[0]->id);

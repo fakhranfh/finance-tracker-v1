@@ -36,7 +36,7 @@ it('lists only the sub goals of the goal with a summary', function () {
     $actor = User::factory()->create();
     $goal = Goal::factory()->create(['status' => GoalStatus::Active]);
     SubGoal::factory()->for($goal)->create(['target_amount' => 1000, 'saved_amount' => 400, 'is_done' => true]);
-    SubGoal::factory()->for($goal)->create(['target_amount' => 2500.5, 'saved_amount' => 100, 'is_done' => false]);
+    SubGoal::factory()->for($goal)->create(['target_amount' => 2500, 'saved_amount' => 100, 'is_done' => false]);
     SubGoal::factory()->create();
 
     $response = $this->actingAs($actor)->getJson("/api/goals/{$goal->id}/sub-goals");
@@ -45,8 +45,8 @@ it('lists only the sub goals of the goal with a summary', function () {
         ->assertJsonStructure(['data' => [['id', 'goal_id', 'name', 'target_amount', 'saved_amount', 'desired_date', 'is_done', 'note', 'created_at']]])
         ->assertJsonPath('summary.total', 2)
         ->assertJsonPath('summary.done', 1)
-        ->assertJsonPath('summary.target_total', '3500.50')
-        ->assertJsonPath('summary.saved_total', '500.00');
+        ->assertJsonPath('summary.target_total', 3500)
+        ->assertJsonPath('summary.saved_total', 500);
     expect($response->json('data'))->toHaveCount(2);
 });
 
@@ -80,12 +80,12 @@ it('updates the details of a sub goal and fills its saved amount when marked don
         ->assertOk()
         ->assertJsonPath('data.name', 'New')
         ->assertJsonPath('data.is_done', true)
-        ->assertJsonPath('data.target_amount', '100.00')
-        ->assertJsonPath('data.saved_amount', '100.00');
+        ->assertJsonPath('data.target_amount', 100)
+        ->assertJsonPath('data.saved_amount', 100);
     $this->actingAs($actor)->putJson("/api/goals/{$goal->id}/sub-goals/{$target->id}", ['is_done' => false])
         ->assertOk()
         ->assertJsonPath('data.name', 'New')
-        ->assertJsonPath('data.saved_amount', '40.00');
+        ->assertJsonPath('data.saved_amount', 40);
 });
 
 it('rejects an empty or invalid sub goal update', function () {
@@ -128,8 +128,8 @@ it('creates a goal together with sub goals that add up to it', function () {
     $response->assertStatus(201);
     $goal = Goal::query()->findOrFail($response->json('data.id'));
     expect($goal->subGoals()->count())->toBe(2)
-        ->and((float) $goal->subGoals()->sum('target_amount'))->toBe(10000000.0)
-        ->and((float) $goal->subGoals()->sum('saved_amount'))->toBe(3000000.0);
+        ->and((int) $goal->subGoals()->sum('target_amount'))->toBe(10000000)
+        ->and((int) $goal->subGoals()->sum('saved_amount'))->toBe(3000000);
 });
 
 it('creates a goal without sub goals as before', function () {
@@ -183,7 +183,7 @@ it('syncs the sub goals of a goal on update and lets the saved amount of existin
     ]]))->assertOk();
 
     expect($keep->fresh()->name)->toBe('New name')
-        ->and($keep->fresh()->saved_amount)->toBe('999.00')
+        ->and($keep->fresh()->saved_amount)->toBe(999)
         ->and(SubGoal::query()->whereKey($drop->id)->exists())->toBeFalse()
         ->and($goal->subGoals()->count())->toBe(2);
 });
@@ -253,8 +253,8 @@ it('generates sample goals whose sub goals add up to the goal', function () {
 
     Goal::query()->get()->each(function (Goal $goal): void {
         expect($goal->subGoals()->count())->toBeGreaterThanOrEqual(2)
-            ->and(round((float) $goal->subGoals()->sum('target_amount'), 2))->toBe(round((float) $goal->target_amount, 2))
-            ->and(round((float) $goal->subGoals()->sum('saved_amount'), 2))->toBe(round((float) $goal->saved_amount, 2))
+            ->and(round((int) $goal->subGoals()->sum('target_amount'), 2))->toBe(round((int) $goal->target_amount, 2))
+            ->and(round((int) $goal->subGoals()->sum('saved_amount'), 2))->toBe(round((int) $goal->saved_amount, 2))
             ->and($goal->subGoals()->where('desired_date', '>', $goal->desired_date)->count())->toBe(0);
     });
 });
@@ -269,8 +269,8 @@ it('records a saving for a sub goal, which also raises the sub goal saved amount
         ->assertJsonPath('data.sub_goal_id', $subGoal->id)
         ->assertJsonPath('data.sub_goal_name', 'Vendor katering');
 
-    expect($subGoal->fresh()->saved_amount)->toBe('100.00')
-        ->and($goal->fresh()->saved_amount)->toBe('100.00');
+    expect($subGoal->fresh()->saved_amount)->toBe(100)
+        ->and($goal->fresh()->saved_amount)->toBe(100);
 });
 
 it('requires a sub goal for a saving once the goal has sub goals, and rejects one of another goal', function () {
@@ -297,16 +297,16 @@ it('moves the sub goal saved amount when a saving is edited, deleted or bulk del
     $other = $this->actingAs($actor)->postJson("/api/goals/{$goal->id}/savings", ['amount' => 50, 'sub_goal_id' => $first->id])->json('data');
 
     $this->actingAs($actor)->putJson("/api/goals/{$goal->id}/savings/{$saving['id']}", ['amount' => 300, 'sub_goal_id' => $second->id])->assertOk();
-    expect($first->fresh()->saved_amount)->toBe('50.00')
-        ->and($second->fresh()->saved_amount)->toBe('300.00')
-        ->and($goal->fresh()->saved_amount)->toBe('350.00');
+    expect($first->fresh()->saved_amount)->toBe(50)
+        ->and($second->fresh()->saved_amount)->toBe(300)
+        ->and($goal->fresh()->saved_amount)->toBe(350);
 
     $this->actingAs($actor)->deleteJson("/api/goals/{$goal->id}/savings/{$saving['id']}")->assertOk();
-    expect($second->fresh()->saved_amount)->toBe('0.00');
+    expect($second->fresh()->saved_amount)->toBe(0);
 
     $this->actingAs($actor)->deleteJson("/api/goals/{$goal->id}/savings", ['ids' => [$other['id']]])->assertOk();
-    expect($first->fresh()->saved_amount)->toBe('0.00')
-        ->and($goal->fresh()->saved_amount)->toBe('0.00');
+    expect($first->fresh()->saved_amount)->toBe(0)
+        ->and($goal->fresh()->saved_amount)->toBe(0);
 });
 
 it('replaces the sub goals of a goal on their own', function () {
@@ -320,9 +320,9 @@ it('replaces the sub goals of a goal on their own', function () {
         ['name' => 'Fresh', 'target_amount' => 3000000, 'saved_amount' => 0, 'desired_date' => '2027-06-30'],
     ]]);
 
-    $response->assertOk()->assertJsonPath('summary.total', 2)->assertJsonPath('summary.target_total', '10000000.00');
+    $response->assertOk()->assertJsonPath('summary.total', 2)->assertJsonPath('summary.target_total', 10000000);
     expect(collect($response->json('data'))->pluck('name')->all())->toBe(['Renamed', 'Fresh'])
-        ->and($keep->fresh()->saved_amount)->toBe('3000000.00');
+        ->and($keep->fresh()->saved_amount)->toBe(3000000);
 });
 
 it('rejects replacing the sub goals with a list that does not add up or is too late', function () {
@@ -365,7 +365,7 @@ it('lists only the savings of one sub goal when filtered', function () {
 
     $response->assertOk();
     expect($response->json('data'))->toHaveCount(1)
-        ->and($response->json('data.0.amount'))->toBe('200.00');
+        ->and($response->json('data.0.amount'))->toBe(200);
     expect($this->actingAs($actor)->getJson("/api/goals/{$goal->id}/savings")->json('data'))->toHaveCount(2);
 });
 
@@ -418,9 +418,9 @@ it('bulk deletes only the savings of one sub goal when all matching are selected
     $this->actingAs($actor)->deleteJson("/api/goals/{$goal->id}/savings", ['all' => true, 'sub_goal_id' => $one->id])->assertOk();
 
     expect($goal->savings()->pluck('sub_goal_id')->all())->toBe([$two->id])
-        ->and((float) $one->fresh()->saved_amount)->toBe(0.0)
-        ->and((float) $two->fresh()->saved_amount)->toBe(25.0)
-        ->and((float) $goal->fresh()->saved_amount)->toBe(25.0);
+        ->and((int) $one->fresh()->saved_amount)->toBe(0)
+        ->and((int) $two->fresh()->saved_amount)->toBe(25)
+        ->and((int) $goal->fresh()->saved_amount)->toBe(25);
 });
 
 it('marks a sub goal done when its savings reach the target and not done when they fall below it', function () {
@@ -450,15 +450,15 @@ it('puts back the saved amount from before when the done entry of a sub goal is 
     $target = SubGoal::factory()->for($goal)->create(['target_amount' => 100, 'saved_amount' => 40, 'is_done' => false]);
 
     $this->actingAs($actor)->putJson("/api/goals/{$goal->id}/sub-goals/{$target->id}", ['is_done' => true])->assertOk();
-    expect((float) $target->fresh()->saved_amount)->toBe(100.0)
-        ->and((float) $goal->fresh()->saved_amount)->toBe(100.0);
+    expect((int) $target->fresh()->saved_amount)->toBe(100)
+        ->and((int) $goal->fresh()->saved_amount)->toBe(100);
 
     $done = $goal->savings()->where('type', 'done')->firstOrFail();
     $this->actingAs($actor)->deleteJson("/api/goals/{$goal->id}/savings/{$done->id}")->assertOk();
 
     expect($target->fresh()->is_done)->toBeFalse()
-        ->and((float) $target->fresh()->saved_amount)->toBe(40.0)
-        ->and((float) $goal->fresh()->saved_amount)->toBe(40.0)
+        ->and((int) $target->fresh()->saved_amount)->toBe(40)
+        ->and((int) $goal->fresh()->saved_amount)->toBe(40)
         ->and($goal->savings()->where('type', 'done')->count())->toBe(0);
 });
 
@@ -468,11 +468,11 @@ it('lets the saved amount of a sub goal be edited, moving the goal saved amount 
     $target = SubGoal::factory()->for($goal)->create(['target_amount' => 100, 'saved_amount' => 40, 'is_done' => false]);
     $url = "/api/goals/{$goal->id}/sub-goals/{$target->id}";
 
-    $this->actingAs($actor)->putJson($url, ['saved_amount' => 70])->assertOk()->assertJsonPath('data.saved_amount', '70.00')->assertJsonPath('data.is_done', false);
-    expect((float) $goal->fresh()->saved_amount)->toBe(70.0);
+    $this->actingAs($actor)->putJson($url, ['saved_amount' => 70])->assertOk()->assertJsonPath('data.saved_amount', 70)->assertJsonPath('data.is_done', false);
+    expect((int) $goal->fresh()->saved_amount)->toBe(70);
 
     $this->actingAs($actor)->putJson($url, ['saved_amount' => 100])->assertOk()->assertJsonPath('data.is_done', true);
-    expect((float) $goal->fresh()->saved_amount)->toBe(100.0);
+    expect((int) $goal->fresh()->saved_amount)->toBe(100);
 
     $this->actingAs($actor)->putJson($url, ['saved_amount' => -1])->assertStatus(422)->assertJsonValidationErrors(['saved_amount']);
 });
@@ -488,8 +488,8 @@ it('lets the saved amounts of existing sub goals be edited on their own, moving 
         ['id' => $two->id, 'name' => 'B', 'target_amount' => 40, 'saved_amount' => 40],
     ]])->assertOk();
 
-    expect((float) $one->fresh()->saved_amount)->toBe(10.0)
-        ->and((float) $two->fresh()->saved_amount)->toBe(40.0)
+    expect((int) $one->fresh()->saved_amount)->toBe(10)
+        ->and((int) $two->fresh()->saved_amount)->toBe(40)
         ->and($two->fresh()->is_done)->toBeTrue()
-        ->and((float) $goal->fresh()->saved_amount)->toBe(50.0);
+        ->and((int) $goal->fresh()->saved_amount)->toBe(50);
 });

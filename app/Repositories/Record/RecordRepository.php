@@ -112,10 +112,10 @@ class RecordRepository implements RecordRepositoryInterface
             ->first();
 
         return [
-            'income' => round((float) $row->income, 2),
-            'expense' => round((float) $row->expense, 2),
-            'transfer_in' => round((float) $row->transfer_in, 2),
-            'transfer_out' => round((float) $row->transfer_out, 2),
+            'income' => (int) round((float) $row->income, 0),
+            'expense' => (int) round((float) $row->expense, 0),
+            'transfer_in' => (int) round((float) $row->transfer_in, 0),
+            'transfer_out' => (int) round((float) $row->transfer_out, 0),
             'record_count' => (int) $row->record_count,
         ];
     }

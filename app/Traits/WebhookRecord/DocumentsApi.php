@@ -27,7 +27,7 @@ trait DocumentsApi
                     new OA\Property(property: 'type', type: 'string', enum: ['income', 'expense'], example: 'expense'),
                     new OA\Property(property: 'account_name', type: 'string', example: 'Cash', description: 'Name of the source account.'),
                     new OA\Property(property: 'category_id', type: 'integer', nullable: true),
-                    new OA\Property(property: 'amount', type: 'number', format: 'float', example: 9.99),
+                    new OA\Property(property: 'amount', type: 'integer', example: 10),
                     new OA\Property(property: 'note', type: 'string', nullable: true, example: 'Coffee'),
                     new OA\Property(property: 'recorded_at', type: 'string', format: 'date-time', example: '2026-01-15T10:30:00+07:00'),
                     new OA\Property(property: 'signature', type: 'string', description: 'The hex HMAC-SHA256, keyed by the webhook token, of "timestamp=..&nonce=..&type=..&account_name=..&category_id=..&amount=..&note=..&recorded_at=.." (timestamp and nonce are the header values; missing record fields are empty).'),

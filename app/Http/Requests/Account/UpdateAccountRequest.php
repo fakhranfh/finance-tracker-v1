@@ -26,7 +26,7 @@ class UpdateAccountRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'adjust_by' => ['nullable', Rule::in(['record', 'balance'])],
-            'balance' => ['required', 'numeric'],
+            'balance' => ['required', 'integer'],
             'color' => ['sometimes', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'icon' => ['sometimes', 'string', Rule::in(array_keys(config('account.icons')))],
         ];

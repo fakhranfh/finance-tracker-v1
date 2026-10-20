@@ -1,32 +1,25 @@
 /**
- * Formats `input[data-money]` as Indonesian-style numbers while typing ("1.250.000,5").
- * The visible text is formatted, but `input.value` stays the plain API number
- * ("1250000.5"), so forms, fixtures and the calculator keep reading and writing raw values.
+ * Formats `input[data-money]` as Indonesian-style whole numbers while typing ("1.250.000").
+ * The visible text is formatted, but `input.value` stays the plain API integer
+ * ("1250000"), so forms, fixtures and the calculator keep reading and writing raw values.
  */
-const MAX_DECIMALS = 2;
 const valueDescriptor = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
 
-/** Typed text (digits, "." grouping, "," decimal) to the grouped display string. */
+/** Typed text (digits, "." grouping) to the grouped display string. */
 function formatDisplay(text) {
-    const [integerPart, ...rest] = text.replace(/[^\d,]/g, '').split(',');
-    const hasDecimal = rest.length > 0;
-    const integer = integerPart.replace(/^0+(?=\d)/, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-    const decimals = rest.join('').slice(0, MAX_DECIMALS);
+    const digits = text.replace(/\D/g, '').replace(/^0+(?=\d)/, '');
 
-    return hasDecimal ? `${integer || '0'},${decimals}` : integer;
+    return digits.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 }
 
-/** Raw API number ("1250000.50") to the display string ("1.250.000,5"). */
+/** Raw API integer ("1250000") to the display string ("1.250.000"). */
 function rawToDisplay(raw) {
-    const [integer, decimals = ''] = String(raw ?? '').replace(/[^\d.]/g, '').split('.');
-    const trimmed = decimals.replace(/0+$/, '');
-
-    return formatDisplay(trimmed ? `${integer},${trimmed}` : integer);
+    return formatDisplay(String(raw ?? '').split('.')[0]);
 }
 
-/** Display string back to the raw number the API expects. */
+/** Display string back to the raw integer the API expects. */
 function displayToRaw(display) {
-    return display.replace(/\./g, '').replace(',', '.').replace(/\.$/, '');
+    return display.replace(/\./g, '');
 }
 
 /** Puts the currency symbol inside the input's left edge. */

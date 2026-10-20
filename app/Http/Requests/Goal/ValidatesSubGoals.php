@@ -25,8 +25,8 @@ trait ValidatesSubGoals
                 ? ['nullable', 'integer', Rule::exists('sub_goals', 'id')->where('goal_id', $goal->id)]
                 : ['prohibited'],
             'sub_goals.*.name' => ['required', 'string', 'max:255'],
-            'sub_goals.*.target_amount' => ['required', 'numeric', 'gt:0', 'max:999999999999.99'],
-            'sub_goals.*.saved_amount' => ['nullable', 'numeric', 'min:0', 'max:999999999999.99'],
+            'sub_goals.*.target_amount' => ['required', 'integer', 'gt:0', 'max:999999999999'],
+            'sub_goals.*.saved_amount' => ['nullable', 'integer', 'min:0', 'max:999999999999'],
             'sub_goals.*.desired_date' => ['nullable', 'date_format:Y-m-d', 'before_or_equal:desired_date'],
             'sub_goals.*.note' => ['nullable', 'string', 'max:1000'],
         ];
@@ -68,12 +68,12 @@ trait ValidatesSubGoals
             return;
         }
 
-        $targetTotal = round(collect($items)->sum(fn (array $item) => (float) $item['target_amount']), 2);
+        $targetTotal = (int) round(collect($items)->sum(fn (array $item) => (float) $item['target_amount']), 0);
         $savedTotal = $this->subGoalSavedTotal($items, $existing);
 
-        if ($targetTotal !== round((float) $this->input('target_amount'), 2)) {
+        if ($targetTotal !== (int) round((float) $this->input('target_amount'), 0)) {
             $validator->errors()->add('sub_goals', __('sub-goals.validation.target_total', ['total' => $this->rupiah($targetTotal), 'target' => $this->rupiah((float) $this->input('target_amount'))]));
-        } elseif ($savedTotal !== round((float) $this->input('saved_amount'), 2)) {
+        } elseif ($savedTotal !== (int) round((float) $this->input('saved_amount'), 0)) {
             $validator->errors()->add('sub_goals', __('sub-goals.validation.saved_total', ['total' => $this->rupiah($savedTotal), 'saved' => $this->rupiah((float) $this->input('saved_amount'))]));
         }
     }
@@ -84,13 +84,13 @@ trait ValidatesSubGoals
      * @param  array<int, array<string, mixed>>  $items
      * @param  \Illuminate\Support\Collection<int, SubGoal>  $existing  keyed by id
      */
-    protected function subGoalSavedTotal(array $items, $existing): float
+    protected function subGoalSavedTotal(array $items, $existing): int
     {
-        return round(collect($items)->sum(function (array $item) use ($existing): float {
+        return (int) round(collect($items)->sum(function (array $item) use ($existing): float {
             $current = ($item['id'] ?? null) && $existing->has((int) $item['id']) ? (float) $existing[(int) $item['id']]->saved_amount : 0.0;
 
             return (float) ($item['saved_amount'] ?? $current);
-        }), 2);
+        }), 0);
     }
 
     private function rupiah(float $amount): string

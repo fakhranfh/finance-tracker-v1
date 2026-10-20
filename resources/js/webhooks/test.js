@@ -1,21 +1,7 @@
 import { get, getAll, post } from '../shared/http.js';
 import { setButtonLoading } from '../shared/loading-state.js';
 import { routes } from '../routes.js';
-
-/** Values covered by the signature, in signing order. */
-const SIGNED_FIELDS = ['timestamp', 'nonce', 'type', 'account_name', 'category_id', 'amount', 'note', 'recorded_at'];
-
-function toHex(buffer) {
-    return [...new Uint8Array(buffer)].map((byte) => byte.toString(16).padStart(2, '0')).join('');
-}
-
-/** The hex HMAC-SHA256 of the signed fields as name=value pairs joined with &. */
-async function sign(fields, token) {
-    const text = SIGNED_FIELDS.map((name) => `${name}=${fields[name] ?? ''}`).join('&');
-    const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(token), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
-
-    return toHex(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(text)));
-}
+import { newNonce, sign } from './signing.js';
 
 /**
  * "Test webhook" page: wires the panel. It signs the body with the webhook token like a real
@@ -69,7 +55,7 @@ async function wireTester() {
 
         try {
             const timestamp = String(Math.floor(Date.now() / 1000));
-            const nonce = toHex(crypto.getRandomValues(new Uint8Array(16)));
+            const nonce = newNonce();
             const signed = { ...body, signature: await sign({ ...body, timestamp, nonce }, token) };
             const headers = { 'X-Webhook-Timestamp': timestamp, 'X-Webhook-Nonce': nonce };
             const response = await post(routes.webhooks.test(webhookId), signed, headers);

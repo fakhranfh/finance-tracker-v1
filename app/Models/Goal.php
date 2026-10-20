@@ -22,13 +22,13 @@ class Goal extends Model
     /**
      * Get the attributes that should be cast.
      *
-     * @return array{target_amount: 'decimal:2', saved_amount: 'decimal:2', status: 'App\Enums\GoalStatus'}
+     * @return array{target_amount: 'integer', saved_amount: 'integer', status: 'App\Enums\GoalStatus'}
      */
     protected function casts(): array
     {
         return [
-            'target_amount' => 'decimal:2',
-            'saved_amount' => 'decimal:2',
+            'target_amount' => 'integer',
+            'saved_amount' => 'integer',
             'status' => GoalStatus::class,
         ];
     }

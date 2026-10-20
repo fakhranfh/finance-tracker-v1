@@ -37,6 +37,7 @@ export default defineConfig({
                 'resources/js/webhooks/show.js',
                 'resources/js/webhooks/test.js',
                 'resources/js/webhooks/logs.js',
+                'resources/js/webhooks/api-docs.js',
             ],
             refresh: true,
             fonts: [

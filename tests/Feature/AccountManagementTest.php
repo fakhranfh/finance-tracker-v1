@@ -35,7 +35,7 @@ it('creates a account via the api', function () {
 
     $response = $this->actingAs($actor)->postJson('/api/accounts', [
         'name' => 'Sample name',
-        'balance' => 9.99,
+        'balance' => 10,
     ]);
 
     $response->assertStatus(201);
@@ -68,7 +68,7 @@ it('updates a account via the api', function () {
 
     $response = $this->actingAs($actor)->putJson("/api/accounts/{$target->id}", [
         'name' => 'Updated name',
-        'balance' => 19.5,
+        'balance' => 20,
     ]);
 
     $response->assertOk();
@@ -131,7 +131,7 @@ it('sets the opening balance when creating an account', function () {
 
     $this->actingAs($actor)->postJson('/api/accounts', ['name' => 'Cash', 'balance' => 500])->assertStatus(201);
 
-    expect(Account::where('name', 'Cash')->first()->last_balance)->toEqual('500.00');
+    expect(Account::where('name', 'Cash')->first()->last_balance)->toEqual(500);
 });
 
 it('adds an expense record for the difference when the balance goes down', function () {
@@ -141,7 +141,7 @@ it('adds an expense record for the difference when the balance goes down', funct
     $this->actingAs($actor)->putJson("/api/accounts/{$target->id}", [
         'name' => 'Renamed',
         'balance' => 60,
-    ])->assertOk()->assertJsonPath('data.name', 'Renamed')->assertJsonPath('data.balance', '60.00');
+    ])->assertOk()->assertJsonPath('data.name', 'Renamed')->assertJsonPath('data.balance', 60);
 
     $this->assertDatabaseHas('records', ['account_id' => $target->id, 'type' => 'expense', 'amount' => 40, 'note' => 'Balance adjustment']);
 });
@@ -152,10 +152,10 @@ it('adds an income record for the difference when the balance goes up', function
 
     $this->actingAs($actor)->putJson("/api/accounts/{$target->id}", [
         'name' => $target->name,
-        'balance' => 130.5,
+        'balance' => 131,
     ])->assertOk();
 
-    $this->assertDatabaseHas('records', ['account_id' => $target->id, 'type' => 'income', 'amount' => 30.5]);
+    $this->assertDatabaseHas('records', ['account_id' => $target->id, 'type' => 'income', 'amount' => 31]);
 });
 
 it('adds no record when the balance is unchanged', function () {
@@ -180,7 +180,7 @@ it('sets the balance directly without adding a record when adjusting by balance'
         'balance' => 250,
     ])->assertOk();
 
-    expect($target->fresh()->last_balance)->toEqual('250.00');
+    expect($target->fresh()->last_balance)->toEqual(250);
     $this->assertDatabaseCount('records', 0);
 });
 

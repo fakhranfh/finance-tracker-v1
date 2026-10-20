@@ -38,7 +38,7 @@
 
             <div class="space-y-1.5">
                 <x-atoms.label for="target_amount">{{ __('sub-goals.fields.target_amount') }}</x-atoms.label>
-                <x-atoms.input type="text" name="target_amount" id="target_amount" inputmode="decimal" data-money readonly class="cursor-not-allowed bg-surface-container-low" />
+                <x-atoms.input type="text" name="target_amount" id="target_amount" inputmode="numeric" data-money readonly class="cursor-not-allowed bg-surface-container-low" />
                 <p class="font-body text-body-sm text-on-surface-variant">
                     {{ __('sub-goals.item_form.amount_hint') }}
                     <a href="{{ route('goals.sub-goals.edit', $goalId) }}" class="text-primary hover:underline">{{ __('sub-goals.form.edit') }}</a>
@@ -47,7 +47,7 @@
 
             <div class="space-y-1.5">
                 <x-atoms.label for="saved_amount">{{ __('sub-goals.fields.saved_amount') }}</x-atoms.label>
-                <x-atoms.input type="text" name="saved_amount" id="saved_amount" inputmode="decimal" data-money />
+                <x-atoms.input type="text" name="saved_amount" id="saved_amount" inputmode="numeric" data-money />
             </div>
 
             <x-molecules.form-group name="desired_date" type="date" :label="__('sub-goals.fields.desired_date')" />

@@ -30,7 +30,7 @@ class UpdateSubGoalRequest extends FormRequest
             'name' => ['sometimes', 'required', 'string', 'max:255'],
             'desired_date' => ['sometimes', 'nullable', 'date_format:Y-m-d', 'before_or_equal:'.$this->route('goal')->desired_date],
             'note' => ['sometimes', 'nullable', 'string', 'max:1000'],
-            'saved_amount' => ['sometimes', 'required', 'numeric', 'min:0', 'max:999999999999.99'],
+            'saved_amount' => ['sometimes', 'required', 'integer', 'min:0', 'max:999999999999'],
             'is_done' => ['required_without_all:name,desired_date,note,saved_amount', 'boolean'],
         ];
     }

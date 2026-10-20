@@ -18,17 +18,17 @@ it('stores the account balance at the end of each month and year', function () {
 
     $months = DB::table('account_monthly_totals')->where('account_id', $account->id)->orderBy('month')->pluck('balance', 'month');
     expect($months->all())->toEqual([
-        '2025-03-01' => 1500.0,
-        '2025-12-01' => 1380.0,
-        '2026-02-01' => 1300.0,
+        '2025-03-01' => 1500,
+        '2025-12-01' => 1380,
+        '2026-02-01' => 1300,
     ]);
 
     $years = app(AccountYearlyTotalsService::class)->totals($account->id);
-    expect($years[0])->toMatchArray(['net' => 380.0, 'balance' => 1380.0])
-        ->and($years[1])->toMatchArray(['net' => -80.0, 'balance' => 1300.0]);
+    expect($years[0])->toMatchArray(['net' => 380, 'balance' => 1380])
+        ->and($years[1])->toMatchArray(['net' => -80, 'balance' => 1300]);
 
     expect(DB::table('account_monthly_totals')->where('account_id', $account->id)->orderBy('month')->pluck('net')->map(fn ($v) => (float) $v)->all())
-        ->toEqual([500.0, -120.0, -80.0]);
+        ->toEqual([500, -120, -80]);
 });
 
 it('rebuilds balances from the opening balance', function () {
@@ -37,5 +37,5 @@ it('rebuilds balances from the opening balance', function () {
 
     app(AccountMonthlyTotalsService::class)->refresh([$account->id]);
 
-    expect(DB::table('account_monthly_totals')->where('account_id', $account->id)->value('balance'))->toEqual(1200.0);
+    expect(DB::table('account_monthly_totals')->where('account_id', $account->id)->value('balance'))->toEqual(1200);
 });

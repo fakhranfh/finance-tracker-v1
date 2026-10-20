@@ -177,11 +177,11 @@ class AccountSummaryService
 
         foreach ($perAccount as $flows) {
             foreach ($sum as $key => $value) {
-                $sum[$key] = round($value + $flows[$key], 2);
+                $sum[$key] = (int) round($value + $flows[$key], 0);
             }
         }
 
-        $net = round($sum['income'] - $sum['expense'] + $sum['transfer_in'] - $sum['transfer_out'], 2);
+        $net = (int) round($sum['income'] - $sum['expense'] + $sum['transfer_in'] - $sum['transfer_out'], 0);
 
         return [...$sum, 'net' => $net];
     }

@@ -33,8 +33,8 @@ trait DocumentsApi
             content: new OA\JsonContent(
                 properties: [
                     new OA\Property(property: 'name', type: 'string', example: 'Laptop baru'),
-                    new OA\Property(property: 'target_amount', type: 'number', format: 'float', example: 15000000),
-                    new OA\Property(property: 'saved_amount', type: 'number', format: 'float', example: 15000000),
+                    new OA\Property(property: 'target_amount', type: 'integer', example: 15000000),
+                    new OA\Property(property: 'saved_amount', type: 'integer', example: 15000000),
                     new OA\Property(property: 'desired_date', type: 'string', format: 'date', example: '2026-12-31'),
                     new OA\Property(property: 'color', type: 'string', example: '#2563EB'),
                     new OA\Property(property: 'icon', type: 'string', example: 'flag'),
@@ -47,8 +47,8 @@ trait DocumentsApi
                         items: new OA\Items(properties: [
                             new OA\Property(property: 'id', type: 'integer', nullable: true, description: 'Update only: an existing sub goal of this goal; its saved amount is not changed here'),
                             new OA\Property(property: 'name', type: 'string', example: 'Mas kawin'),
-                            new OA\Property(property: 'target_amount', type: 'number', format: 'float', example: 5000000),
-                            new OA\Property(property: 'saved_amount', type: 'number', format: 'float', nullable: true, example: 0),
+                            new OA\Property(property: 'target_amount', type: 'integer', example: 5000000),
+                            new OA\Property(property: 'saved_amount', type: 'integer', nullable: true, example: 0),
                             new OA\Property(property: 'desired_date', type: 'string', format: 'date', nullable: true, description: 'Not later than the goal desired_date'),
                             new OA\Property(property: 'note', type: 'string', nullable: true),
                         ])
@@ -85,8 +85,8 @@ trait DocumentsApi
             content: new OA\JsonContent(
                 properties: [
                     new OA\Property(property: 'name', type: 'string', example: 'Laptop baru'),
-                    new OA\Property(property: 'target_amount', type: 'number', format: 'float', example: 15000000),
-                    new OA\Property(property: 'saved_amount', type: 'number', format: 'float', example: 15000000),
+                    new OA\Property(property: 'target_amount', type: 'integer', example: 15000000),
+                    new OA\Property(property: 'saved_amount', type: 'integer', example: 15000000),
                     new OA\Property(property: 'desired_date', type: 'string', format: 'date', example: '2026-12-31'),
                     new OA\Property(property: 'color', type: 'string', example: '#2563EB'),
                     new OA\Property(property: 'icon', type: 'string', example: 'flag'),
@@ -99,8 +99,8 @@ trait DocumentsApi
                         items: new OA\Items(properties: [
                             new OA\Property(property: 'id', type: 'integer', nullable: true, description: 'Update only: an existing sub goal of this goal; its saved amount is not changed here'),
                             new OA\Property(property: 'name', type: 'string', example: 'Mas kawin'),
-                            new OA\Property(property: 'target_amount', type: 'number', format: 'float', example: 5000000),
-                            new OA\Property(property: 'saved_amount', type: 'number', format: 'float', nullable: true, example: 0),
+                            new OA\Property(property: 'target_amount', type: 'integer', example: 5000000),
+                            new OA\Property(property: 'saved_amount', type: 'integer', nullable: true, example: 0),
                             new OA\Property(property: 'desired_date', type: 'string', format: 'date', nullable: true, description: 'Not later than the goal desired_date'),
                             new OA\Property(property: 'note', type: 'string', nullable: true),
                         ])

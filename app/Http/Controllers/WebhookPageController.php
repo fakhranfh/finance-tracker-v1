@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\RecordType;
+use App\Services\WebhookManagementService;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -61,6 +62,78 @@ class WebhookPageController extends Controller
     public function edit(int $id): View
     {
         return view('webhooks.form', ['id' => $id, 'recordTypes' => $this->recordTypes()]);
+    }
+
+    /**
+     * Swagger-style reference for the webhook test endpoint, built from the generated OpenAPI spec
+     * (storage/api-docs/api-docs.json). See .ai/rules/api-docs.md.
+     */
+    public function apiDocs(WebhookManagementService $webhooks): View
+    {
+        return view('webhooks.api-docs', [
+            'operations' => $this->webhookOperations(),
+            'webhooks' => $webhooks->paginate(perPage: 100, sort: 'name')->getCollection(),
+        ]);
+    }
+
+    /**
+     * @return list<array{id: string, method: string, path: string, summary: string, description: string, parameters: list<array<string, mixed>>, body: list<array<string, mixed>>, responses: list<array{code: string, description: string}>}>
+     */
+    private function webhookOperations(): array
+    {
+        $file = storage_path('api-docs/api-docs.json');
+        $spec = is_file($file) ? json_decode((string) file_get_contents($file), true) : null;
+        $operations = [];
+
+        foreach ($spec['paths'] ?? [] as $path => $methods) {
+            if ($path !== '/webhooks/{id}/test') {
+                continue;
+            }
+
+            foreach ($methods as $method => $operation) {
+                $operations[] = [
+                    'id' => $operation['operationId'] ?? md5($method.$path),
+                    'method' => strtoupper($method),
+                    'path' => $path,
+                    'summary' => $operation['summary'] ?? '',
+                    'description' => $operation['description'] ?? '',
+                    'parameters' => array_map(fn (array $parameter) => [
+                        'name' => $parameter['name'],
+                        'in' => $parameter['in'],
+                        'required' => (bool) ($parameter['required'] ?? false),
+                        'type' => $parameter['schema']['type'] ?? 'string',
+                        'description' => $parameter['description'] ?? '',
+                    ], $operation['parameters'] ?? []),
+                    'body' => $this->bodyProperties($operation),
+                    'responses' => collect($operation['responses'] ?? [])
+                        ->map(fn (array $response, string $code) => ['code' => $code, 'description' => $response['description'] ?? ''])
+                        ->values()
+                        ->all(),
+                ];
+            }
+        }
+
+        return $operations;
+    }
+
+    /**
+     * @return list<array{name: string, type: string, description: string, example: mixed, required: bool}>
+     */
+    private function bodyProperties(array $operation): array
+    {
+        $schema = $operation['requestBody']['content']['application/json']['schema'] ?? [];
+        $required = $schema['required'] ?? [];
+
+        return collect($schema['properties'] ?? [])
+            ->map(fn (array $property, string $name) => [
+                'name' => $name,
+                'type' => $property['type'] ?? 'string',
+                'description' => $property['description'] ?? '',
+                'example' => $property['example'] ?? null,
+                'required' => in_array($name, $required, true),
+            ])
+            ->values()
+            ->all();
     }
 
     /**

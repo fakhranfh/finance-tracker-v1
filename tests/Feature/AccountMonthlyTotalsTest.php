@@ -20,7 +20,7 @@ function bruteForceFlows(Account $account, CarbonImmutable $start, CarbonImmutab
         ->whereBetween('recorded_at', [$start->utc(), $end->utc()])
         ->get();
 
-    $flows = ['income' => 0.0, 'expense' => 0.0, 'transfer_in' => 0.0, 'transfer_out' => 0.0, 'record_count' => $records->count()];
+    $flows = ['income' => 0, 'expense' => 0, 'transfer_in' => 0, 'transfer_out' => 0, 'record_count' => $records->count()];
 
     foreach ($records as $record) {
         $amount = (float) $record->amount;
@@ -115,7 +115,7 @@ it('keeps yearly totals in step after bulk record deletes', function () {
     expect($repo->totalsInRange($account->id, $start, $end))->toEqual(bruteForceFlows($account, $start, $end));
 
     app(RecordManagementService::class)->deleteMatching();
-    expect($repo->totalsInRange($account->id, $start, $end))->toMatchArray(['income' => 0.0, 'record_count' => 0]);
+    expect($repo->totalsInRange($account->id, $start, $end))->toMatchArray(['income' => 0, 'record_count' => 0]);
 });
 
 it('keeps the counterpart yearly totals in step when an account is deleted', function () {
@@ -129,13 +129,13 @@ it('keeps the counterpart yearly totals in step when an account is deleted', fun
     $end = CarbonImmutable::parse('2025-12-31', 'UTC')->endOfDay();
     $repo = app(AccountSummaryRepositoryInterface::class);
 
-    expect($repo->totalsInRange($to->id, $start, $end))->toMatchArray(['transfer_in' => 180.0]);
+    expect($repo->totalsInRange($to->id, $start, $end))->toMatchArray(['transfer_in' => 180]);
 
     app(AccountManagementService::class)->delete($from);
 
     expect($repo->totalsInRange($to->id, $start, $end))
         ->toEqual(bruteForceFlows($to, $start, $end))
-        ->toMatchArray(['transfer_in' => 0.0, 'record_count' => 0]);
+        ->toMatchArray(['transfer_in' => 0, 'record_count' => 0]);
 });
 
 it('refreshes the balance in the yearly totals when the balance is set directly', function () {
@@ -144,7 +144,7 @@ it('refreshes the balance in the yearly totals when the balance is set directly'
 
     app(AccountManagementService::class)->update($account, ['name' => 'Tunai', 'balance' => 500, 'adjust_by' => 'balance']);
 
-    expect(app(AccountSummaryRepositoryInterface::class)->totalsByYear($account->id)[2025]['balance'])->toBe(500.0);
+    expect(app(AccountSummaryRepositoryInterface::class)->totalsByYear($account->id)[2025]['balance'])->toBe(500);
 });
 
 it('sums the monthly totals for the all-time range', function () {
@@ -153,7 +153,7 @@ it('sums the monthly totals for the all-time range', function () {
     Record::factory()->create(['account_id' => $account->id, 'type' => RecordType::Expense, 'amount' => 40, 'recorded_at' => '2026-02-10 12:00:00']);
 
     expect(app(AccountSummaryRepositoryInterface::class)->totalsAll($account->id))
-        ->toMatchArray(['income' => 300.0, 'expense' => 40.0, 'record_count' => 2]);
+        ->toMatchArray(['income' => 300, 'expense' => 40, 'record_count' => 2]);
 });
 
 it('keeps monthly totals in step with edits and deletes', function () {
@@ -162,10 +162,10 @@ it('keeps monthly totals in step with edits and deletes', function () {
     $repo = app(AccountSummaryRepositoryInterface::class);
 
     $record->update(['amount' => 250, 'recorded_at' => '2026-04-05 10:00:00']);
-    expect($repo->totalsAll($account->id))->toMatchArray(['income' => 250.0, 'record_count' => 1]);
+    expect($repo->totalsAll($account->id))->toMatchArray(['income' => 250, 'record_count' => 1]);
 
     $record->delete();
-    expect($repo->totalsAll($account->id))->toMatchArray(['income' => 0.0, 'record_count' => 0]);
+    expect($repo->totalsAll($account->id))->toMatchArray(['income' => 0, 'record_count' => 0]);
 });
 
 it('refreshes the other side of a transfer when an account is deleted', function () {
@@ -173,11 +173,11 @@ it('refreshes the other side of a transfer when an account is deleted', function
     $to = Account::factory()->create(['last_balance' => 0]);
     Record::factory()->create(['account_id' => $from->id, 'to_account_id' => $to->id, 'type' => RecordType::Transfer, 'amount' => 90, 'recorded_at' => '2026-03-05 10:00:00']);
 
-    expect(app(AccountSummaryRepositoryInterface::class)->totalsAll($to->id))->toMatchArray(['transfer_in' => 90.0]);
+    expect(app(AccountSummaryRepositoryInterface::class)->totalsAll($to->id))->toMatchArray(['transfer_in' => 90]);
 
     app(AccountManagementService::class)->delete($from);
 
-    expect(app(AccountSummaryRepositoryInterface::class)->totalsAll($to->id))->toMatchArray(['transfer_in' => 0.0, 'record_count' => 0]);
+    expect(app(AccountSummaryRepositoryInterface::class)->totalsAll($to->id))->toMatchArray(['transfer_in' => 0, 'record_count' => 0]);
 });
 
 it("buckets the monthly totals in the first user's timezone", function () {
@@ -190,11 +190,11 @@ it("buckets the monthly totals in the first user's timezone", function () {
     }
 
     $months = DB::table('account_monthly_totals')->where('account_id', $account->id)->orderBy('month')->pluck('income', 'month');
-    expect($months->map(fn ($v) => (float) $v)->all())->toBe(['2026-02-01' => 1.0, '2026-03-01' => 6.0, '2026-04-01' => 8.0]);
+    expect($months->map(fn ($v) => (int) $v)->all())->toBe(['2026-02-01' => 1, '2026-03-01' => 6, '2026-04-01' => 8]);
 
     $start = CarbonImmutable::parse('2026-03-01', 'Asia/Jakarta')->startOfDay();
     $end = $start->endOfMonth();
     $flows = app(AccountSummaryRepositoryInterface::class)->totalsInRange($account->id, $start, $end);
 
-    expect($flows['income'])->toBe(6.0)->and($flows['record_count'])->toBe(2);
+    expect($flows['income'])->toBe(6)->and($flows['record_count'])->toBe(2);
 });

@@ -41,7 +41,7 @@ trait DocumentsApi
             required: true,
             content: new OA\JsonContent(
                 properties: [
-                    new OA\Property(property: 'amount', type: 'number', format: 'float', example: 500000),
+                    new OA\Property(property: 'amount', type: 'integer', example: 500000),
                     new OA\Property(property: 'sub_goal_id', type: 'integer', nullable: true, description: 'One of the sub goals of this goal the amount is saved for', example: null),
                 ]
             )
@@ -89,7 +89,7 @@ trait DocumentsApi
             required: true,
             content: new OA\JsonContent(
                 properties: [
-                    new OA\Property(property: 'amount', type: 'number', format: 'float', example: 500000),
+                    new OA\Property(property: 'amount', type: 'integer', example: 500000),
                     new OA\Property(property: 'sub_goal_id', type: 'integer', nullable: true, description: 'One of the sub goals of this goal the amount is saved for', example: null),
                 ]
             )

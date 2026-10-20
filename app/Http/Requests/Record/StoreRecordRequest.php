@@ -35,7 +35,7 @@ class StoreRecordRequest extends FormRequest
                 'nullable', 'integer',
                 Rule::exists('categories', 'id')->where('type', $this->input('type')),
             ],
-            'amount' => ['required', 'numeric', 'decimal:0,2', 'gt:0', 'max:9999999999.99'],
+            'amount' => ['required', 'integer', 'gt:0', 'max:999999999999'],
             'note' => ['nullable', 'string'],
             'recorded_at' => ['required', 'date'],
         ];

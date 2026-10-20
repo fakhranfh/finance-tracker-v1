@@ -324,7 +324,7 @@ class RecordImportService
                     'account_id' => $resolveAccount($accountValue),
                     'to_account_id' => $type === RecordType::Transfer ? $resolveAccount($toAccountValue) : null,
                     'category_id' => $resolveCategory($this->text($cell('category')), $type),
-                    'amount' => number_format(abs($amount), 2, '.', ''),
+                    'amount' => (string) (int) round(abs($amount)),
                     'note' => $this->text($cell('note')),
                     'recorded_at' => $recordedAt,
                 ]);

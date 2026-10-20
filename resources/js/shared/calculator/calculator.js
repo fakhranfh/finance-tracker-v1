@@ -54,7 +54,7 @@ export function evaluate(source) {
 
     const total = terms.reduce((sum, term, index) => (adds[index - 1] === '-' ? sum - term : sum + term));
 
-    return Math.round(total * 100) / 100;
+    return Math.round(total);
 }
 
 function render() {

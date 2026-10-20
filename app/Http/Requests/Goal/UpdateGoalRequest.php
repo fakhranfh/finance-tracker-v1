@@ -29,8 +29,8 @@ class UpdateGoalRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
-            'target_amount' => ['required', 'numeric', 'gt:0', 'max:999999999999.99'],
-            'saved_amount' => ['required', 'numeric', 'min:0', 'max:999999999999.99'],
+            'target_amount' => ['required', 'integer', 'gt:0', 'max:999999999999'],
+            'saved_amount' => ['required', 'integer', 'min:0', 'max:999999999999'],
             'desired_date' => ['required', 'date_format:Y-m-d'],
             'color' => ['required', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'icon' => ['required', 'string', Rule::in(array_keys(config('goal.icons')))],

@@ -81,6 +81,7 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
 
     Route::get('/webhooks', [WebhookPageController::class, 'index'])->name('webhooks.index');
     Route::get('/webhooks/create', [WebhookPageController::class, 'create'])->name('webhooks.create');
+    Route::get('/webhooks/api-docs', [WebhookPageController::class, 'apiDocs'])->name('webhooks.api-docs');
     Route::get('/webhooks/{id}', [WebhookPageController::class, 'show'])->whereNumber('id')->name('webhooks.show');
     Route::get('/webhooks/{id}/edit', [WebhookPageController::class, 'edit'])->name('webhooks.edit');
     Route::get('/webhooks/{id}/test', [WebhookPageController::class, 'test'])->whereNumber('id')->name('webhooks.test');

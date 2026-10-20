@@ -209,7 +209,7 @@
 
     <x-organisms.modal id="edit-saving-modal" :title="__('goals.history.edit_title')">
         <form id="edit-saving-form" novalidate class="space-y-5" data-invalid-message="{{ __('goals.actions.add_saved_invalid') }}">
-            <x-molecules.form-group name="saving_amount" type="text" inputmode="decimal" :label="__('goals.history.amount')" data-money required />
+            <x-molecules.form-group name="saving_amount" type="text" inputmode="numeric" :label="__('goals.history.amount')" data-money required />
 
             <div class="hidden space-y-1.5" data-sub-goal-field>
                 <x-atoms.label for="saving_amount_sub_goal">{{ __('goals.history.sub_goal') }}</x-atoms.label>
@@ -232,7 +232,7 @@
 
     <x-organisms.modal id="add-saved-modal" :title="__('goals.actions.add_saved_title')">
         <form id="add-saved-form" novalidate class="space-y-5" data-invalid-message="{{ __('goals.actions.add_saved_invalid') }}">
-            <x-molecules.form-group name="amount" type="text" inputmode="decimal" :label="__('goals.actions.add_saved_amount')" data-money required />
+            <x-molecules.form-group name="amount" type="text" inputmode="numeric" :label="__('goals.actions.add_saved_amount')" data-money required />
 
             <div class="hidden space-y-1.5" data-sub-goal-field>
                 <x-atoms.label for="amount_sub_goal">{{ __('goals.history.sub_goal') }}</x-atoms.label>

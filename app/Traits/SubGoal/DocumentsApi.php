@@ -44,8 +44,8 @@ trait DocumentsApi
                         items: new OA\Items(properties: [
                             new OA\Property(property: 'id', type: 'integer', nullable: true),
                             new OA\Property(property: 'name', type: 'string', example: 'Mas kawin'),
-                            new OA\Property(property: 'target_amount', type: 'number', format: 'float', example: 5000000),
-                            new OA\Property(property: 'saved_amount', type: 'number', format: 'float', nullable: true, example: 0),
+                            new OA\Property(property: 'target_amount', type: 'integer', example: 5000000),
+                            new OA\Property(property: 'saved_amount', type: 'integer', nullable: true, example: 0),
                             new OA\Property(property: 'desired_date', type: 'string', format: 'date', nullable: true),
                             new OA\Property(property: 'note', type: 'string', nullable: true),
                         ])

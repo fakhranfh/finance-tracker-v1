@@ -40,8 +40,8 @@ class Account extends Model
     protected function casts(): array
     {
         return [
-            'last_balance' => 'decimal:2',
-            'balance' => 'decimal:2',
+            'last_balance' => 'integer',
+            'balance' => 'integer',
         ];
     }
 

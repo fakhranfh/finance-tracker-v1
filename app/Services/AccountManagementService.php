@@ -82,7 +82,7 @@ class AccountManagementService
 
         $account = $this->accountRepository->update($account, Arr::only($data, ['name', 'color', 'icon']));
 
-        $difference = round((float) $data['balance'] - (float) $this->accountRepository->find($account->id)->balance, 2);
+        $difference = (int) round((float) $data['balance'] - (float) $this->accountRepository->find($account->id)->balance, 0);
 
         if ($difference != 0) {
             $this->recordManagementService->create([

@@ -36,8 +36,8 @@ it('creates a goal via the api', function () {
 
     $response = $this->actingAs($actor)->postJson('/api/goals', [
         'name' => 'Sample name',
-        'target_amount' => 9.99,
-        'saved_amount' => 9.99,
+        'target_amount' => 10,
+        'saved_amount' => 10,
         'desired_date' => '2026-01-15',
         'color' => '#2563EB',
         'icon' => 'flag',
@@ -127,8 +127,8 @@ it('updates a goal via the api', function () {
 
     $response = $this->actingAs($actor)->putJson("/api/goals/{$target->id}", [
         'name' => 'Updated name',
-        'target_amount' => 19.5,
-        'saved_amount' => 19.5,
+        'target_amount' => 20,
+        'saved_amount' => 20,
         'desired_date' => '2026-02-20',
         'color' => '#10B981',
         'icon' => 'home',
@@ -215,13 +215,13 @@ it('adds to the saved amount and records it in the history', function () {
     $actor = User::factory()->create();
     $target = Goal::factory()->create(['saved_amount' => 1000, 'status' => GoalStatus::Active]);
 
-    $response = $this->actingAs($actor)->postJson("/api/goals/{$target->id}/savings", ['amount' => 250.5]);
+    $response = $this->actingAs($actor)->postJson("/api/goals/{$target->id}/savings", ['amount' => 250]);
 
     $response->assertStatus(201);
-    $response->assertJsonPath('data.amount', '250.50');
-    $response->assertJsonPath('goal.saved_amount', '1250.50');
-    $this->assertDatabaseHas('goal_savings', ['goal_id' => $target->id, 'amount' => 250.5]);
-    expect($target->fresh()->saved_amount)->toBe('1250.50');
+    $response->assertJsonPath('data.amount', 250);
+    $response->assertJsonPath('goal.saved_amount', 1250);
+    $this->assertDatabaseHas('goal_savings', ['goal_id' => $target->id, 'amount' => 250]);
+    expect($target->fresh()->saved_amount)->toBe(1250);
 });
 
 it('rejects an invalid saving amount', function () {
@@ -233,7 +233,7 @@ it('rejects an invalid saving amount', function () {
     $this->actingAs($actor)->postJson("/api/goals/{$target->id}/savings", [])
         ->assertStatus(422)->assertJsonValidationErrors(['amount']);
 
-    expect($target->fresh()->saved_amount)->toBe('1000.00');
+    expect($target->fresh()->saved_amount)->toBe(1000);
     $this->assertDatabaseCount('goal_savings', 0);
 });
 
@@ -243,7 +243,7 @@ it('rejects adding to a goal that is already reached', function () {
 
     $this->actingAs($actor)->postJson("/api/goals/{$target->id}/savings", ['amount' => 100])->assertForbidden();
 
-    expect($target->fresh()->saved_amount)->toBe('1000.00');
+    expect($target->fresh()->saved_amount)->toBe(1000);
     $this->assertDatabaseCount('goal_savings', 0);
 });
 
@@ -268,7 +268,7 @@ it('lists the saving history of a goal, newest first', function () {
     $response->assertOk();
     $response->assertJsonStructure(['data' => [['id', 'goal_id', 'amount', 'created_at']]]);
     expect($response->json('data'))->toHaveCount(2);
-    expect($response->json('data.0.amount'))->toBe('200.00');
+    expect($response->json('data.0.amount'))->toBe(200);
 });
 
 it('deletes the saving history together with the goal', function () {
@@ -318,9 +318,9 @@ it('edits a saving and adjusts the saved amount by the difference', function () 
     $response = $this->actingAs($actor)->putJson("/api/goals/{$target->id}/savings/{$saving['id']}", ['amount' => 500]);
 
     $response->assertOk();
-    $response->assertJsonPath('data.amount', '500.00');
-    $response->assertJsonPath('goal.saved_amount', '1500.00');
-    expect($target->fresh()->saved_amount)->toBe('1500.00');
+    $response->assertJsonPath('data.amount', 500);
+    $response->assertJsonPath('goal.saved_amount', 1500);
+    expect($target->fresh()->saved_amount)->toBe(1500);
 });
 
 it('deletes a saving and subtracts it from the saved amount', function () {
@@ -331,7 +331,7 @@ it('deletes a saving and subtracts it from the saved amount', function () {
     $response = $this->actingAs($actor)->deleteJson("/api/goals/{$target->id}/savings/{$saving['id']}");
 
     $response->assertOk();
-    $response->assertJsonPath('goal.saved_amount', '1000.00');
+    $response->assertJsonPath('goal.saved_amount', 1000);
     $this->assertDatabaseMissing('goal_savings', ['id' => $saving['id']]);
 });
 
@@ -363,7 +363,7 @@ it('sorts the saving history by amount', function () {
 
     $amounts = $this->actingAs($actor)->getJson("/api/goals/{$target->id}/savings?sort=amount&direction=asc")->json('data.*.amount');
 
-    expect($amounts)->toBe(['100.00', '200.00', '300.00']);
+    expect($amounts)->toBe([100, 200, 300]);
 });
 
 it('bulk deletes savings by id and subtracts them from the saved amount', function () {
@@ -376,7 +376,7 @@ it('bulk deletes savings by id and subtracts them from the saved amount', functi
     $response = $this->actingAs($actor)->deleteJson("/api/goals/{$target->id}/savings", ['ids' => $ids->take(2)->all()]);
 
     $response->assertOk();
-    $response->assertJsonPath('goal.saved_amount', '1300.00');
+    $response->assertJsonPath('goal.saved_amount', 1300);
     expect($target->savings()->count())->toBe(1);
 });
 
@@ -389,7 +389,7 @@ it('bulk deletes every saving of a goal when all is set, leaving other goals unt
     $this->actingAs($actor)->postJson("/api/goals/{$other->id}/savings", ['amount' => 50]);
 
     $this->actingAs($actor)->deleteJson("/api/goals/{$target->id}/savings", ['all' => true])
-        ->assertOk()->assertJsonPath('goal.saved_amount', '0.00');
+        ->assertOk()->assertJsonPath('goal.saved_amount', 0);
 
     expect($target->savings()->count())->toBe(0);
     expect($other->savings()->count())->toBe(1);
@@ -422,10 +422,10 @@ it('filters the saving history by date range in the user timezone', function () 
     // 2026-03-10 20:00 UTC is already 11 March in Jakarta (UTC+7).
     $amountsFor = fn (string $query) => $this->actingAs($actor)->getJson("/api/goals/{$target->id}/savings?sort=amount&direction=asc&{$query}")->json('data.*.amount');
 
-    expect($amountsFor('date_from=2026-03-11&date_to=2026-03-31'))->toBe(['100.00']);
-    expect($amountsFor('date_from=2026-03-10&date_to=2026-03-10'))->toBe(['200.00']);
-    expect($amountsFor('date_from=2026-04-01'))->toBe(['300.00']);
-    expect($amountsFor('date_to=2026-03-10'))->toBe(['200.00']);
+    expect($amountsFor('date_from=2026-03-11&date_to=2026-03-31'))->toBe([100]);
+    expect($amountsFor('date_from=2026-03-10&date_to=2026-03-10'))->toBe([200]);
+    expect($amountsFor('date_from=2026-04-01'))->toBe([300]);
+    expect($amountsFor('date_to=2026-03-10'))->toBe([200]);
     expect($amountsFor(''))->toHaveCount(3);
 });
 

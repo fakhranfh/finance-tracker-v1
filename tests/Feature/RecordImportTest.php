@@ -209,10 +209,10 @@ it('takes the values that mean each type from the user, skipping rows that match
     expect($response->json('data.imported'))->toBe(4)
         ->and($response->json('data.skipped'))->toBe(1)
         ->and($response->json('data.errors.0.row'))->toBe(4)
-        ->and(Record::where('amount', '100')->value('type')->value)->toBe('income')
-        ->and(Record::where('amount', '200')->value('type')->value)->toBe('expense')
-        ->and(Record::where('amount', '400')->value('type')->value)->toBe('income')
-        ->and(Record::where('amount', '500')->value('type')->value)->toBe('expense');
+        ->and(Record::where('amount', 100)->value('type')->value)->toBe('income')
+        ->and(Record::where('amount', 200)->value('type')->value)->toBe('expense')
+        ->and(Record::where('amount', 400)->value('type')->value)->toBe('income')
+        ->and(Record::where('amount', 500)->value('type')->value)->toBe('expense');
 });
 
 it('requires the date and amount columns to be mapped', function () {
@@ -252,7 +252,7 @@ it('imports records mapping existing, new and unmapped accounts and categories',
     expect($lunch->account_id)->toBe($cash->id)
         ->and($lunch->category_id)->toBe($food->id)
         ->and($lunch->type->value)->toBe('expense')
-        ->and($lunch->amount)->toBe('25000.00')
+        ->and($lunch->amount)->toBe(25000)
         ->and($lunch->recorded_at->utc()->format('Y-m-d H:i'))->toBe('2026-10-01 01:00');
 
     $salary = Record::where('note', 'Salary')->firstOrFail();
@@ -268,8 +268,8 @@ it('imports records mapping existing, new and unmapped accounts and categories',
     expect($snack->account_id)->toBe($unmapped->id);
 
     expect(Record::count())->toBe(4)
-        ->and((float) $bca->refresh()->last_balance)->toBe(1050000.0)
-        ->and((float) $cash->refresh()->last_balance)->toBe(-75000.0);
+        ->and((int) $bca->refresh()->last_balance)->toBe(1050000)
+        ->and((int) $cash->refresh()->last_balance)->toBe(-75000);
 });
 
 it('removes the import and its file once imported, leaving other imports alone', function () {
@@ -334,7 +334,7 @@ it('puts every record in the unmapped account when no account column is mapped, 
         ->and(Record::count())->toBe(4)
         ->and(Record::where('type', 'expense')->count())->toBe(2)
         ->and(Record::where('type', 'income')->count())->toBe(2)
-        ->and(Record::where('type', 'expense')->first()->amount)->toBe('1500.00');
+        ->and(Record::where('type', 'expense')->first()->amount)->toBe(1500);
 });
 
 it('creates the categories that do not exist, one per record type', function () {
@@ -403,8 +403,8 @@ it('imports rows whose amount is zero', function () {
 
     expect($response->json('data.imported'))->toBe(2)
         ->and($response->json('data.skipped'))->toBe(1)
-        ->and(Record::where('type', 'expense')->value('amount'))->toBe('0.00')
-        ->and(Record::where('type', 'income')->value('amount'))->toBe('0.00');
+        ->and(Record::where('type', 'expense')->value('amount'))->toBe(0)
+        ->and(Record::where('type', 'income')->value('amount'))->toBe(0);
 });
 
 it('works through a big file in batches, reporting progress and surviving a repeated batch', function () {
@@ -449,8 +449,8 @@ it('reads amounts written the Indonesian way', function () {
 
     runImport(uploadImport($csv), mapping: ['recorded_at' => 0, 'amount' => 1])->assertOk();
 
-    expect(Record::where('type', 'income')->value('amount'))->toBe('1250000.50')
-        ->and(Record::where('type', 'expense')->value('amount'))->toBe('2500.00');
+    expect(Record::where('type', 'income')->value('amount'))->toBe(1250001)
+        ->and(Record::where('type', 'expense')->value('amount'))->toBe(2500);
 });
 
 it('imports an xlsx file with real date cells', function () {

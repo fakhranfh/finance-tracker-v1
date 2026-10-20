@@ -4,6 +4,9 @@
     <div>
         <h2 class="font-heading text-body-lg font-semibold text-on-surface">{{ __('webhooks.test.title') }}</h2>
         <p class="mt-1 font-body text-body-sm text-on-surface-variant">{{ __('webhooks.test.description') }}</p>
+        <a href="{{ route('webhooks.api-docs') }}#testWebhook" class="mt-2 inline-block font-body text-body-sm text-primary hover:underline">
+            {{ __('webhooks.test.api_docs') }}
+        </a>
     </div>
 
     <x-atoms.label for="webhook-test-payload">{{ __('webhooks.test.payload') }}</x-atoms.label>

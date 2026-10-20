@@ -33,7 +33,7 @@ trait DocumentsApi
             content: new OA\JsonContent(
                 properties: [
                     new OA\Property(property: 'name', type: 'string', example: 'Sample name'),
-                    new OA\Property(property: 'balance', type: 'number', format: 'float', example: 9.99),
+                    new OA\Property(property: 'balance', type: 'integer', example: 10),
                     new OA\Property(property: 'color', type: 'string', example: '#2563EB', description: 'Hex color code, e.g. #2563EB'),
                     new OA\Property(property: 'icon', type: 'string', example: 'wallet', enum: ['cash', 'wallet', 'bank', 'sprout']),
                 ]
@@ -68,7 +68,7 @@ trait DocumentsApi
             content: new OA\JsonContent(
                 properties: [
                     new OA\Property(property: 'name', type: 'string', example: 'Sample name'),
-                    new OA\Property(property: 'balance', type: 'number', format: 'float', example: 9.99),
+                    new OA\Property(property: 'balance', type: 'integer', example: 10),
                     new OA\Property(property: 'color', type: 'string', example: '#2563EB', description: 'Hex color code, e.g. #2563EB'),
                     new OA\Property(property: 'icon', type: 'string', example: 'wallet', enum: ['cash', 'wallet', 'bank', 'sprout']),
                 ]

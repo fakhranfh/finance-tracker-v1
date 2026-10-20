@@ -106,7 +106,7 @@ class SyncRecordEffects implements ShouldQueue
 
         $openings = [];
         if (! $pending['backfill']) {
-            $openings[$id] = round((float) $balances->lastBalance($id) - $summaries->allTime($id, false)['net'], 2);
+            $openings[$id] = (int) round((float) $balances->lastBalance($id) - $summaries->allTime($id, false)['net'], 0);
         }
 
         $monthlyTotals->refresh($ids, $openings);
@@ -118,8 +118,8 @@ class SyncRecordEffects implements ShouldQueue
 
         $totals = $summaries->allTime($id, false);
         // A backfill changes no record, so last_balance already includes all of them.
-        $opening = $openings[$id] ??= round((float) $balances->lastBalance($id) - $totals['net'], 2);
-        $balance = number_format($opening + $totals['net'], 2, '.', '');
+        $opening = $openings[$id] ??= (int) round((float) $balances->lastBalance($id) - $totals['net'], 0);
+        $balance = number_format($opening + $totals['net'], 0, '.', '');
 
         $balances->setLastBalance($id, $balance);
 
@@ -134,7 +134,7 @@ class SyncRecordEffects implements ShouldQueue
                 $base['last_record_id'] ?? 0,
                 $createdRecordId,
             );
-            $balances->storeSnapshot($id, $createdRecordId, number_format($opening + (float) $flows['net'], 2, '.', ''), $flows);
+            $balances->storeSnapshot($id, $createdRecordId, number_format($opening + (float) $flows['net'], 0, '.', ''), $flows);
         }
 
         // Without new records, or when a change dropped snapshots, take one at the newest record.

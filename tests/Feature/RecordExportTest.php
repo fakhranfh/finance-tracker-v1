@@ -60,5 +60,5 @@ it('lists the active filters above the xlsx table', function () {
     $zip->close();
     unlink($path);
 
-    expect($strings)->toContain('Rp 1.000,00');
+    expect($strings)->toContain('Rp 1.000');
 });

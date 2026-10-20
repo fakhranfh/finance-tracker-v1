@@ -57,7 +57,7 @@ trait DocumentsApi
                     new OA\Property(property: 'type', type: 'string', enum: ['income', 'expense', 'transfer'], example: 'expense'),
                     new OA\Property(property: 'account_id', type: 'integer', example: 1, description: 'Source account for transfers.'),
                     new OA\Property(property: 'to_account_id', type: 'integer', nullable: true, description: 'Destination account; required for transfers, ignored otherwise.'),
-                    new OA\Property(property: 'amount', type: 'number', format: 'float', example: 9.99),
+                    new OA\Property(property: 'amount', type: 'integer', example: 10),
                     new OA\Property(property: 'note', type: 'string', example: 'Sample note'),
                     new OA\Property(property: 'recorded_at', type: 'string', format: 'date-time', example: '2026-01-15T10:30:00+07:00'),
                 ]
@@ -94,7 +94,7 @@ trait DocumentsApi
                     new OA\Property(property: 'type', type: 'string', enum: ['income', 'expense', 'transfer'], example: 'expense'),
                     new OA\Property(property: 'account_id', type: 'integer', example: 1, description: 'Source account for transfers.'),
                     new OA\Property(property: 'to_account_id', type: 'integer', nullable: true, description: 'Destination account; required for transfers, ignored otherwise.'),
-                    new OA\Property(property: 'amount', type: 'number', format: 'float', example: 9.99),
+                    new OA\Property(property: 'amount', type: 'integer', example: 10),
                     new OA\Property(property: 'note', type: 'string', example: 'Sample note'),
                     new OA\Property(property: 'recorded_at', type: 'string', format: 'date-time', example: '2026-01-15T10:30:00+07:00'),
                 ]

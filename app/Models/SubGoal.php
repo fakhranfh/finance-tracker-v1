@@ -26,9 +26,9 @@ class SubGoal extends Model
     protected function casts(): array
     {
         return [
-            'target_amount' => 'decimal:2',
-            'saved_amount' => 'decimal:2',
-            'saved_amount_before_done' => 'decimal:2',
+            'target_amount' => 'integer',
+            'saved_amount' => 'integer',
+            'saved_amount_before_done' => 'integer',
             'is_done' => 'boolean',
         ];
     }

@@ -78,7 +78,7 @@ class RecordManagementService
      */
     private function filterLines(?string $search, array $filters): array
     {
-        $money = fn (string $v): string => 'Rp '.number_format((float) $v, 2, ',', '.');
+        $money = fn (string $v): string => 'Rp '.number_format((float) $v, 0, ',', '.');
         $lines = [];
 
         if ($search) {
@@ -147,7 +147,7 @@ class RecordManagementService
         }
 
         $flows = $this->recordRepository->flows($search, $filters);
-        $net = round($flows['income'] - $flows['expense'] + $flows['transfer_in'] - $flows['transfer_out'], 2);
+        $net = round($flows['income'] - $flows['expense'] + $flows['transfer_in'] - $flows['transfer_out'], 0);
 
         return [...$flows, 'net' => $net];
     }

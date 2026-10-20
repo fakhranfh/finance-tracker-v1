@@ -55,7 +55,7 @@
                 </fieldset>
             @endif
 
-            <x-molecules.form-group name="balance" type="text" inputmode="decimal" :label="__('accounts.fields.balance')" data-money required />
+            <x-molecules.form-group name="balance" type="text" inputmode="numeric" :label="__('accounts.fields.balance')" data-money required />
 
             <fieldset class="space-y-2">
                 <legend class="font-body text-body-sm font-medium text-on-surface">{{ __('accounts.appearance.color') }}</legend>

@@ -24,12 +24,12 @@ class GoalSaving extends Model
     /**
      * Get the attributes that should be cast.
      *
-     * @return array{amount: 'decimal:2'}
+     * @return array{amount: 'integer'}
      */
     protected function casts(): array
     {
         return [
-            'amount' => 'decimal:2',
+            'amount' => 'integer',
         ];
     }
 

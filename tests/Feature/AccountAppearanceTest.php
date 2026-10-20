@@ -32,7 +32,7 @@ it('updates an account color and icon without changing its balance', function ()
     $response->assertOk();
     $response->assertJsonPath('data.color', '#2E7D32');
     $response->assertJsonPath('data.icon', 'sprout');
-    $response->assertJsonPath('data.balance', '1000.00');
+    $response->assertJsonPath('data.balance', 1000);
     $this->assertDatabaseCount('records', 0);
 });
 

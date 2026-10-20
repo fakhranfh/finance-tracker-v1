@@ -42,8 +42,8 @@ class SubGoalRepository implements SubGoalRepositoryInterface
         return [
             'total' => (clone $query)->count(),
             'done' => (clone $query)->where('is_done', true)->count(),
-            'target_total' => number_format((float) (clone $query)->sum('target_amount'), 2, '.', ''),
-            'saved_total' => number_format((float) $query->sum('saved_amount'), 2, '.', ''),
+            'target_total' => (int) (clone $query)->sum('target_amount'),
+            'saved_total' => (int) $query->sum('saved_amount'),
         ];
     }
 

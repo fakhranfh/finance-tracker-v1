@@ -195,12 +195,12 @@ it('stores cumulative income, expense and transfers in and out with each snapsho
     RefreshAccountBalanceSnapshot::dispatchSync($account->id);
 
     $snapshot = snapshotOf($account);
-    expect((float) $snapshot->income)->toEqual(200.0)
-        ->and((float) $snapshot->expense)->toEqual(30.0)
-        ->and((float) $snapshot->transfer_in)->toEqual(20.0)
-        ->and((float) $snapshot->transfer_out)->toEqual(50.0)
-        ->and((float) $snapshot->net)->toEqual(140.0)
-        ->and((float) $snapshot->balance)->toEqual(1140.0);
+    expect((float) $snapshot->income)->toEqual(200)
+        ->and((float) $snapshot->expense)->toEqual(30)
+        ->and((float) $snapshot->transfer_in)->toEqual(20)
+        ->and((float) $snapshot->transfer_out)->toEqual(50)
+        ->and((float) $snapshot->net)->toEqual(140)
+        ->and((float) $snapshot->balance)->toEqual(1140);
 });
 
 it('fills the snapshot and totals from the records when the all-time summary finds nothing stored', function () {
@@ -212,7 +212,7 @@ it('fills the snapshot and totals from the records when the all-time summary fin
 
     $totals = app(AccountSummaryService::class)->allTime($account->id);
 
-    expect($totals['income'])->toEqual(200.0)
+    expect($totals['income'])->toEqual(200)
         ->and($totals['record_count'])->toBe(2)
         ->and(snapshotOf($account)->balance)->toEqual(1200)
         ->and(DB::table('account_monthly_totals')->where('account_id', $account->id)->count())->toBe(1)

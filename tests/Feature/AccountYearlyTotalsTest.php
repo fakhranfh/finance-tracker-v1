@@ -18,8 +18,8 @@ it('totals the account per calendar year, oldest first', function () {
     $totals = app(AccountYearlyTotalsService::class)->totals($account->id);
 
     expect($totals)->toHaveCount(2)
-        ->and($totals[0])->toMatchArray(['year' => 2025, 'income' => 500.0, 'expense' => 120.0, 'net' => 380.0, 'record_count' => 2])
-        ->and($totals[1])->toMatchArray(['year' => 2026, 'transfer_in' => 30.0, 'transfer_out' => 80.0, 'net' => -50.0, 'record_count' => 2]);
+        ->and($totals[0])->toMatchArray(['year' => 2025, 'income' => 500, 'expense' => 120, 'net' => 380, 'record_count' => 2])
+        ->and($totals[1])->toMatchArray(['year' => 2026, 'transfer_in' => 30, 'transfer_out' => 80, 'net' => -50, 'record_count' => 2]);
 });
 
 it('keeps the stored yearly totals current when records change or are deleted', function () {
@@ -28,10 +28,10 @@ it('keeps the stored yearly totals current when records change or are deleted', 
     $record = Record::factory()->create(['type' => RecordType::Expense, 'account_id' => $account->id, 'amount' => 100, 'recorded_at' => CarbonImmutable::parse('2025-05-01 12:00', 'UTC')]);
     $service = app(AccountYearlyTotalsService::class);
 
-    expect($service->totals($account->id)[0])->toMatchArray(['year' => 2025, 'expense' => 100.0]);
+    expect($service->totals($account->id)[0])->toMatchArray(['year' => 2025, 'expense' => 100]);
 
     $record->update(['amount' => 250]);
-    expect($service->totals($account->id)[0])->toMatchArray(['year' => 2025, 'expense' => 250.0]);
+    expect($service->totals($account->id)[0])->toMatchArray(['year' => 2025, 'expense' => 250]);
 
     $record->delete();
     expect($service->totals($account->id))->toBe([]);

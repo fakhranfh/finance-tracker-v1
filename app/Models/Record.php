@@ -25,13 +25,13 @@ class Record extends Model
     /**
      * Get the attributes that should be cast.
      *
-     * @return array{type: 'App\Enums\RecordType', amount: 'decimal:2', recorded_at: 'datetime'}
+     * @return array{type: 'App\Enums\RecordType', amount: 'integer', recorded_at: 'datetime'}
      */
     protected function casts(): array
     {
         return [
             'type' => RecordType::class,
-            'amount' => 'decimal:2',
+            'amount' => 'integer',
             'recorded_at' => 'datetime',
         ];
     }

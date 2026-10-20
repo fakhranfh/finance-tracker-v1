@@ -40,7 +40,7 @@ class SubGoalManagementService
     /**
      * How many sub goals the goal has, how many are done and their combined target and saved amount.
      *
-     * @return array{total: int, done: int, target_total: string, saved_total: string}
+     * @return array{total: int, done: int, target_total: int, saved_total: int}
      */
     public function summary(Goal $goal): array
     {
@@ -71,12 +71,12 @@ class SubGoalManagementService
             }
 
             $subGoal = $this->setDone($subGoal, $data);
-            $difference = round((float) $subGoal->saved_amount - $saved, 2);
+            $difference = (int) round((float) $subGoal->saved_amount - $saved, 0);
 
-            if ($difference !== 0.0) {
+            if ($difference !== 0) {
                 $this->goalRepository->shiftSavedAmount($subGoal->goal, $difference);
             } elseif ($editedSaved !== null && ! $becomesDone && ! $becomesNotDone) {
-                $subGoal = $this->editSavedAmount($subGoal, round($editedSaved - $saved, 2));
+                $subGoal = $this->editSavedAmount($subGoal, (int) round($editedSaved - $saved, 0));
             }
 
             return $subGoal;
@@ -86,9 +86,9 @@ class SubGoalManagementService
     /**
      * Move a sub goal's saved amount by hand; the goal's saved amount follows and the done status with it.
      */
-    private function editSavedAmount(SubGoal $subGoal, float $difference): SubGoal
+    private function editSavedAmount(SubGoal $subGoal, int $difference): SubGoal
     {
-        if ($difference !== 0.0) {
+        if ($difference !== 0) {
             $this->shiftSavedAmount($subGoal->id, $difference);
             $this->goalRepository->shiftSavedAmount($subGoal->goal, $difference);
             $subGoal->refresh();
@@ -146,9 +146,9 @@ class SubGoalManagementService
 
             $this->sync($goal, $items);
 
-            $difference = round((float) $this->subGoalRepository->getForGoal($goal->id)->sum('saved_amount') - $before, 2);
+            $difference = (int) round((float) $this->subGoalRepository->getForGoal($goal->id)->sum('saved_amount') - $before, 0);
 
-            if ($difference !== 0.0) {
+            if ($difference !== 0) {
                 $this->goalRepository->shiftSavedAmount($goal, $difference);
             }
         });
@@ -175,12 +175,12 @@ class SubGoalManagementService
             $id = (int) ($item['id'] ?? 0);
 
             if ($existing->has($id)) {
-                $difference = isset($item['saved_amount']) ? round((float) $item['saved_amount'] - (float) $existing[$id]->saved_amount, 2) : 0.0;
+                $difference = isset($item['saved_amount']) ? (int) round((float) $item['saved_amount'] - (float) $existing[$id]->saved_amount, 0) : 0.0;
 
                 $this->subGoalRepository->update($existing[$id], $fields);
                 $kept[] = $id;
 
-                if ($difference !== 0.0) {
+                if ($difference !== 0) {
                     $this->shiftSavedAmount($id, $difference);
                 }
             } else {

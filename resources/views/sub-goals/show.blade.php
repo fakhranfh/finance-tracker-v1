@@ -135,7 +135,7 @@
 
     <x-organisms.modal id="add-saved-modal" :title="__('goals.actions.add_saved_title')">
         <form id="add-saved-form" novalidate class="space-y-5" data-invalid-message="{{ __('goals.actions.add_saved_invalid') }}">
-            <x-molecules.form-group name="amount" type="text" inputmode="decimal" :label="__('goals.actions.add_saved_amount')" data-money required />
+            <x-molecules.form-group name="amount" type="text" inputmode="numeric" :label="__('goals.actions.add_saved_amount')" data-money required />
 
             <div class="flex justify-end gap-3">
                 <x-atoms.button type="button" variant="secondary" data-modal-close>

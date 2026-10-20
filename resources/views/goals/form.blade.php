@@ -53,9 +53,9 @@
             <x-organisms.sub-goals-field />
 
             <div data-target-amount-group>
-                <x-molecules.form-group name="target_amount" type="text" inputmode="decimal" :label="__('goals.fields.target_amount')" data-money data-calculator required />
+                <x-molecules.form-group name="target_amount" type="text" inputmode="numeric" :label="__('goals.fields.target_amount')" data-money data-calculator required />
             </div>
-            <x-molecules.form-group name="saved_amount" type="text" inputmode="decimal" :label="__('goals.fields.saved_amount')" value="0" data-money data-calculator required />
+            <x-molecules.form-group name="saved_amount" type="text" inputmode="numeric" :label="__('goals.fields.saved_amount')" value="0" data-money data-calculator required />
             <x-molecules.form-group name="desired_date" type="date" :label="__('goals.fields.desired_date')" required />
 
             <fieldset class="space-y-2">
