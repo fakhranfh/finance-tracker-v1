@@ -56,6 +56,11 @@
             "Composer\\Config::disableProcessTimeout",
             "npx concurrently -c \"#93c5fd,#c4b5fd,#fdba74\" \"php artisan serve\" \"php artisan queue:listen --queue=high,default --tries=1\" \"npm run dev\" --names='server,queue,vite'"
         ],
+        "dev:tunnel": [
+            "Composer\\Config::disableProcessTimeout",
+            "npm run build",
+            "npx concurrently -c \"#93c5fd,#c4b5fd,#86efac\" \"php artisan serve\" \"php artisan queue:listen --queue=high,default --tries=1\" \"cloudflared tunnel run --url http://localhost:8000 finance-tracker-test\" --names='server,queue,tunnel'"
+        ],
         "test": [
             "@php artisan config:clear --ansi @no_additional_args",
             "@php artisan test"
