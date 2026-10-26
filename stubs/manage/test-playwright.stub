@@ -14,7 +14,7 @@ test.describe('Manage __Title__', () => {
         const { email, password } = seedUser();
 
         await login(page, email, password);
-        await page.getByRole('link', { name: 'Manage __Title__' }).click();
+        await page.locator('aside').getByRole('link', { name: 'Manage __Title__' }).click();
 
         await expect(page).toHaveURL('/__slug__');
         await expect(page.getByRole('heading', { name: 'Manage __Title__' })).toBeVisible();

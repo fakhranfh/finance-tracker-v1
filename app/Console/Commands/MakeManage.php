@@ -649,7 +649,7 @@ class MakeManage extends Command
         $slug = $tokens['__slug__'];
 
         foreach (['en' => $tokens['__Title__'], 'id' => 'Kelola '.$tokens['__IdTitle__']] as $locale => $text) {
-            $this->insertBefore("lang/{$locale}/dashboard.php", "    ],\n    'topbar'", "        '{$slug}' => '".($locale === 'en' ? 'Manage '.$text : $text)."',\n", "'{$slug}' =>");
+            $this->insertBefore("lang/{$locale}/dashboard.php", "    ],\n    'welcome'", "        '{$slug}' => '".($locale === 'en' ? 'Manage '.$text : $text)."',\n", "'{$slug}' =>");
         }
     }
 }

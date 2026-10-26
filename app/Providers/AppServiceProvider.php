@@ -10,10 +10,14 @@ use App\Repositories\AccountSummary\AccountSummaryRepository;
 use App\Repositories\AccountSummary\AccountSummaryRepositoryInterface;
 use App\Repositories\Category\CategoryRepository;
 use App\Repositories\Category\CategoryRepositoryInterface;
+use App\Repositories\Debt\DebtRepository;
+use App\Repositories\Debt\DebtRepositoryInterface;
 use App\Repositories\Goal\GoalRepository;
 use App\Repositories\Goal\GoalRepositoryInterface;
 use App\Repositories\GoalSaving\GoalSavingRepository;
 use App\Repositories\GoalSaving\GoalSavingRepositoryInterface;
+use App\Repositories\Receivable\ReceivableRepository;
+use App\Repositories\Receivable\ReceivableRepositoryInterface;
 use App\Repositories\Record\RecordRepository;
 use App\Repositories\Record\RecordRepositoryInterface;
 use App\Repositories\RecordImport\RecordImportRepository;
@@ -40,6 +44,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        $this->app->bind(ReceivableRepositoryInterface::class, ReceivableRepository::class);
+        $this->app->bind(DebtRepositoryInterface::class, DebtRepository::class);
         $this->app->bind(WebhookRepositoryInterface::class, WebhookRepository::class);
         $this->app->bind(WebhookLogRepositoryInterface::class, WebhookLogRepository::class);
         $this->app->bind(SubGoalRepositoryInterface::class, SubGoalRepository::class);

@@ -17,9 +17,9 @@ class Sidebar extends Component
         $this->icons = config('sidebar.icons');
     }
 
-    public function isActive(string $route): bool
+    public function isActive(string|array $route): bool
     {
-        return request()->routeIs($route);
+        return request()->routeIs(...(array) $route);
     }
 
     public function render(): View

@@ -9,6 +9,7 @@ return [
         'categories' => 'Kelola Kategori',
         'goals' => 'Kelola Target',
         'webhooks' => 'Kelola Webhook',
+        'debts' => 'Utang & Piutang',
     ],
     'welcome' => [
         'greeting' => 'Selamat datang, :name!',
@@ -21,6 +22,7 @@ return [
             'categories' => 'Kelompokkan catatan Anda ke dalam kategori seperti makanan, transportasi, atau gaji agar terlihat ke mana uang Anda pergi.',
             'goals' => 'Buat target tabungan dengan jumlah target atau daftar sub target, pantau progres, dan lihat riwayat menabung.',
             'webhooks' => 'Buat URL webhook agar aplikasi atau otomasi lain dapat menambahkan catatan ke finance tracker Anda.',
+            'debts' => 'Catat uang yang Anda pinjam dan yang dipinjam orang lain dari Anda, lengkap dengan jatuh tempo dan progres pembayaran.',
         ],
     ],
     'topbar' => [

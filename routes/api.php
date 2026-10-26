@@ -12,9 +12,11 @@ use App\Http\Controllers\Api\Auth\RegisterController;
 use App\Http\Controllers\Api\Auth\ResetPasswordController;
 use App\Http\Controllers\Api\Auth\VerificationNotificationController;
 use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\Api\DebtController;
 use App\Http\Controllers\Api\GoalController;
 use App\Http\Controllers\Api\GoalSavingController;
 use App\Http\Controllers\Api\ProfileController;
+use App\Http\Controllers\Api\ReceivableController;
 use App\Http\Controllers\Api\RecordController;
 use App\Http\Controllers\Api\RecordImportController;
 use App\Http\Controllers\Api\SubGoalController;
@@ -131,6 +133,22 @@ Route::middleware('web')->name('api.')->group(function (): void {
             ->parameters(['webhooks' => 'webhook'])
             ->except('create', 'edit')
             ->names('webhooks');
+        Route::delete('/debts', [DebtController::class, 'bulkDestroy'])->name('debts.bulk-destroy');
+        Route::post('/debts/generate', [DebtController::class, 'generate'])
+            ->middleware(EnsureLocalEnvironment::class)
+            ->name('debts.generate');
+        Route::resource('debts', DebtController::class)
+            ->parameters(['debts' => 'debt'])
+            ->except('create', 'edit')
+            ->names('debts');
+        Route::delete('/receivables', [ReceivableController::class, 'bulkDestroy'])->name('receivables.bulk-destroy');
+        Route::post('/receivables/generate', [ReceivableController::class, 'generate'])
+            ->middleware(EnsureLocalEnvironment::class)
+            ->name('receivables.generate');
+        Route::resource('receivables', ReceivableController::class)
+            ->parameters(['receivables' => 'receivable'])
+            ->except('create', 'edit')
+            ->names('receivables');
         Route::post('/logout', LogoutController::class)->name('logout');
     });
 

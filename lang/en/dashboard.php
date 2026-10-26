@@ -9,6 +9,7 @@ return [
         'categories' => 'Manage Categories',
         'goals' => 'Manage Goals',
         'webhooks' => 'Manage Webhooks',
+        'debts' => 'Debts & Receivables',
     ],
     'welcome' => [
         'greeting' => 'Welcome, :name!',
@@ -21,6 +22,7 @@ return [
             'categories' => 'Group your records into categories like food, transport or salary so you can see where your money goes.',
             'goals' => 'Set savings goals with a target amount or a list of sub goals, track your progress and see your saving history.',
             'webhooks' => 'Create webhook URLs that let other apps or automations add records to your finance tracker.',
+            'debts' => 'Track money you owe and money owed to you, with due dates and payment progress.',
         ],
     ],
     'topbar' => [
