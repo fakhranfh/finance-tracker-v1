@@ -84,6 +84,7 @@ export const routes = {
         bulkDestroy: endpoint('/webhooks'),
         generate: endpoint('/webhooks/generate'),
         test: (id) => endpoint(`/webhooks/${id}/test`),
+        rotateToken: (id) => endpoint(`/webhooks/${id}/rotate-token`),
         records: endpoint('/webhooks/records'),
         logs: (id) => endpoint(`/webhooks/${id}/logs`),
     },

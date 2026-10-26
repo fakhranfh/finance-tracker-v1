@@ -545,3 +545,21 @@ it('requires the same signed request on the test endpoint', function () {
     signedWebhookCall($this->actingAs($actor), $webhook, $payload, ['url' => $url])->assertOk();
     expect(Record::query()->count())->toBe(0);
 });
+
+it('rotates a webhook token via the api', function () {
+    $actor = User::factory()->create();
+    $target = Webhook::factory()->create();
+    $oldToken = $target->token;
+
+    $response = $this->actingAs($actor)->postJson("/api/webhooks/{$target->id}/rotate-token");
+
+    $response->assertOk();
+    expect($response->json('data.token'))->toHaveLength(40)->not->toBe($oldToken);
+    expect($target->fresh()->token)->toBe($response->json('data.token'));
+});
+
+it('rejects a guest from rotating a webhook token', function () {
+    $target = Webhook::factory()->create();
+
+    $this->postJson("/api/webhooks/{$target->id}/rotate-token")->assertStatus(401);
+});

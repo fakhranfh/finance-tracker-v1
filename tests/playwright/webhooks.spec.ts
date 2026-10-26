@@ -140,6 +140,27 @@ test.describe('Manage Webhooks', () => {
         await expect(page.getByRole('row', { name: new RegExp(mainValue) })).toHaveCount(0);
     });
 
+    test('rotates a webhook token from the details page', async ({ page }) => {
+        const { email, password } = seedUser();
+
+        await login(page, email, password);
+        await page.goto('/webhooks/create');
+        await page.getByLabel('Name', { exact: true }).fill(`Rotate ${Date.now()}`);
+        await page.getByRole('button', { name: 'Save' }).click();
+        await expect(page).toHaveURL('/webhooks');
+
+        await page.getByRole('link', { name: 'View' }).first().click();
+        const token = page.locator('#token');
+        await expect(token).not.toHaveValue('');
+        const before = await token.inputValue();
+
+        await page.getByRole('button', { name: 'Rotate token' }).click();
+        await page.locator('#rotate-webhook-token-modal').getByRole('button', { name: 'Rotate token' }).click();
+
+        await expect(page.locator('#token')).not.toHaveValue(before);
+        await expect(page.locator('#token')).not.toHaveValue('');
+    });
+
     test('redirects a guest to login', async ({ page }) => {
         await page.goto('/webhooks');
 

@@ -183,12 +183,13 @@ return [
         'generate' => 'Generate',
         'generate_count' => 'Jumlah webhook yang akan dibuat',
         'autofill' => 'Isi otomatis',
+        'rotate_token' => 'Putar token',
+        'confirm_rotate_token' => 'Putar token? Token saat ini langsung tidak berlaku, jadi perbarui semua pengirim yang memakainya.',
     ],
 
     'flash' => [
         'created' => 'Webhook berhasil ditambahkan.',
         'updated' => 'Webhook berhasil diperbarui.',
         'deleted' => 'Webhook berhasil dihapus.',
-        'generated' => 'Webhook palsu berhasil dibuat.',
-    ],
+        'generated' => 'Webhook palsu berhasil dibuat.',    ],
 ];

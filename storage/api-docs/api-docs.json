@@ -4199,6 +4199,34 @@
                 }
             }
         },
+        "/webhooks/{id}/rotate-token": {
+            "post": {
+                "tags": [
+                    "Webhooks"
+                ],
+                "summary": "Rotate a webhook token",
+                "description": "Replaces the token with a new random one and returns the webhook. The old token stops working immediately, so senders must switch to the new one.",
+                "operationId": "d2b532f139b7b97b6f433145250c3c82",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The webhook with its new token"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                }
+            }
+        },
         "/webhooks/{id}": {
             "get": {
                 "tags": [

@@ -276,6 +276,14 @@ class WebhookManagementService
     }
 
     /**
+     * Replace the webhook token with a new random one. The old token stops working at once.
+     */
+    public function rotateToken(Webhook $webhook): Webhook
+    {
+        return $this->webhookRepository->update($webhook, ['token' => Str::random(40)]);
+    }
+
+    /**
      * Delete a webhook.
      */
     public function delete(Webhook $webhook): void

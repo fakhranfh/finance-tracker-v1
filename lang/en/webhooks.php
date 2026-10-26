@@ -183,12 +183,13 @@ return [
         'generate' => 'Generate',
         'generate_count' => 'Number of webhooks to generate',
         'autofill' => 'Autofill',
+        'rotate_token' => 'Rotate token',
+        'confirm_rotate_token' => 'Rotate the token? The current token stops working immediately, so update every sender that uses it.',
     ],
 
     'flash' => [
         'created' => 'Webhook created successfully.',
         'updated' => 'Webhook updated successfully.',
         'deleted' => 'Webhook deleted successfully.',
-        'generated' => 'Fake webhooks generated successfully.',
-    ],
+        'generated' => 'Fake webhooks generated successfully.',    ],
 ];

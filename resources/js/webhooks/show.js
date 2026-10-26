@@ -1,4 +1,6 @@
-import { getAll, get } from '../shared/http.js';
+import { getAll, get, post } from '../shared/http.js';
+import { closeModal, openModal } from '../shared/modal.js';
+import { setButtonLoading } from '../shared/loading-state.js';
 import { formatDateTime } from '../shared/datetime.js';
 import { hideSkeleton } from '../shared/loading-state.js';
 import { wireCopyButtons } from '../shared/copy-to-clipboard.js';
@@ -46,7 +48,30 @@ async function load() {
     hideSkeleton('webhook-details', 'webhook-show-skeleton');
 }
 
+/** Rotating replaces the token: reload so the page shows the new one. */
+function wireRotateToken() {
+    const confirmButton = document.getElementById('confirm-rotate-webhook-token');
+
+    document.getElementById('rotate-webhook-token').addEventListener('click', () => openModal('rotate-webhook-token-modal'));
+
+    confirmButton.addEventListener('click', async () => {
+        setButtonLoading(confirmButton, true);
+
+        try {
+            const { ok } = await post(routes.webhooks.rotateToken(details.dataset.webhookId));
+
+            if (ok) {
+                window.location.reload();
+            }
+        } finally {
+            setButtonLoading(confirmButton, false);
+            closeModal('rotate-webhook-token-modal');
+        }
+    });
+}
+
 if (details) {
     wireCopyButtons(details);
+    wireRotateToken();
     load();
 }

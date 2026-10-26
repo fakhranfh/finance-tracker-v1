@@ -130,6 +130,7 @@ Route::middleware('web')->name('api.')->group(function (): void {
         Route::get('/webhooks/{webhook}/logs', [WebhookLogController::class, 'index'])->name('webhooks.logs.index');
         Route::delete('/webhooks/{webhook}/logs', [WebhookLogController::class, 'destroy'])->name('webhooks.logs.destroy');
         Route::post('/webhooks/{webhook}/test', [WebhookController::class, 'test'])->name('webhooks.test');
+        Route::post('/webhooks/{webhook}/rotate-token', [WebhookController::class, 'rotateToken'])->name('webhooks.rotate-token');
         Route::resource('webhooks', WebhookController::class)
             ->parameters(['webhooks' => 'webhook'])
             ->except('create', 'edit')

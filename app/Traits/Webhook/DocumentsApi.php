@@ -85,6 +85,19 @@ trait DocumentsApi
     )]
     private function documentTestEndpoint(): void {}
 
+    #[OA\Post(
+        path: '/webhooks/{id}/rotate-token',
+        summary: 'Rotate a webhook token',
+        description: 'Replaces the token with a new random one and returns the webhook. The old token stops working immediately, so senders must switch to the new one.',
+        tags: ['Webhooks'],
+        parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],
+        responses: [
+            new OA\Response(response: 200, description: 'The webhook with its new token'),
+            new OA\Response(response: 404, description: 'Not found'),
+        ]
+    )]
+    private function documentRotateTokenEndpoint(): void {}
+
     #[OA\Get(
         path: '/webhooks/{id}',
         summary: 'Show a webhook',

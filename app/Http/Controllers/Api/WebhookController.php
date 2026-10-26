@@ -103,6 +103,11 @@ class WebhookController extends Controller
         return new WebhookResource($this->webhookManagementService->update($webhook, $request->validated()));
     }
 
+    public function rotateToken(Webhook $webhook): WebhookResource
+    {
+        return new WebhookResource($this->webhookManagementService->rotateToken($webhook));
+    }
+
     public function destroy(Webhook $webhook): Response
     {
         $this->webhookManagementService->delete($webhook);
