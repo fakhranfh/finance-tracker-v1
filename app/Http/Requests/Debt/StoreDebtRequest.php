@@ -9,6 +9,8 @@ use Illuminate\Validation\Rule;
 
 class StoreDebtRequest extends FormRequest
 {
+    use ValidatesSubDebts;
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -32,6 +34,7 @@ class StoreDebtRequest extends FormRequest
             'due_date' => ['nullable', 'date'],
             'notes' => ['nullable', 'string'],
             'is_paid' => ['required', 'boolean'],
+            ...$this->subDebtRules(null),
         ];
     }
 }

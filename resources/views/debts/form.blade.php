@@ -37,9 +37,25 @@
             <input type="hidden" name="type" value="{{ $type }}">
 
             <x-molecules.form-group name="name" type="text" :label="__('debts.fields.name')" required autofocus />
+            <x-molecules.form-group name="due_date" type="date" :label="__('debts.fields.due_date')" />
+            <fieldset class="space-y-2">
+                <legend class="font-body text-body-sm font-medium text-on-surface">{{ __('sub-debts.mode.title') }}</legend>
+                <div class="flex flex-wrap gap-x-6 gap-y-2">
+                    <label class="flex cursor-pointer items-center gap-2 font-body text-body-md text-on-surface">
+                        <input type="radio" name="debt_mode" value="amount" checked>
+                        {{ __('sub-debts.mode.amount') }}
+                    </label>
+                    <label class="flex cursor-pointer items-center gap-2 font-body text-body-md text-on-surface">
+                        <input type="radio" name="debt_mode" value="sub_debts">
+                        {{ __('sub-debts.mode.sub_debts') }}
+                    </label>
+                </div>
+                <p class="font-body text-body-sm text-on-surface-variant">{{ __('sub-debts.mode.hint') }}</p>
+            </fieldset>
+            <x-organisms.sub-debts-field />
+
             <x-molecules.form-group name="amount" type="text" inputmode="numeric" :label="__('debts.fields.amount')" data-money required />
             <x-molecules.form-group name="paid_amount" type="text" inputmode="numeric" :label="__('debts.fields.paid_amount')" value="0" data-money required />
-            <x-molecules.form-group name="due_date" type="date" :label="__('debts.fields.due_date')" />
             <x-molecules.form-group name="notes" type="text" :label="__('debts.fields.notes')" />
             <div class="flex items-center gap-2">
                 <x-atoms.checkbox name="is_paid" id="is_paid" />

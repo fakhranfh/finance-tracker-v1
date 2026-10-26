@@ -3,11 +3,14 @@
 namespace App\Repositories\Debt;
 
 use App\Models\Debt;
+use App\Repositories\Concerns\RunsTransactions;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class DebtRepository implements DebtRepositoryInterface
 {
+    use RunsTransactions;
+
     public function find(int $id): ?Debt
     {
         return Debt::query()->find($id);

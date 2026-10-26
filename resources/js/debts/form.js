@@ -1,16 +1,26 @@
 import { hideSnackbar } from '../shared/error-snackbar.js';
 import { clearFieldErrors, showFieldErrors, showGenericError, validateForm } from '../shared/field-errors.js';
 import { setButtonLoading, hideSkeleton } from '../shared/loading-state.js';
-import { get, post, put } from '../shared/http.js';
+import { get, getAll, post, put } from '../shared/http.js';
 import '../shared/money-input.js';
 import { routes } from '../routes.js';
 import { wireDevTools } from './dev-tools.js';
 import { debtFormFixture } from './dev-fixtures/form.js';
+import { subDebtFixtures } from './dev-fixtures/sub-debts.js';
+import { createSubDebtsField } from './sub-debts-field.js';
 
 const form = document.getElementById('debt-form');
 const itemId = form?.dataset.itemId;
 
 wireDevTools(form, () => debtFormFixture(form?.elements.namedItem('type')?.value));
+const subDebtsField = form ? createSubDebtsField({ form }) : null;
+
+// A new debt sometimes also gets sample sub debts that split the autofilled amount.
+document.querySelector('[data-dev-autofill]')?.addEventListener('click', () => {
+    if (!itemId) {
+        subDebtsField.fill(Math.random() < 0.5 ? subDebtFixtures({ amount: form.elements.namedItem('amount').value }) : []);
+    }
+});
 
 async function loadItem() {
     const { ok, data } = await get(routes.debts.show(itemId));
@@ -22,6 +32,14 @@ async function loadItem() {
         form.elements.namedItem('due_date').value = data.data.due_date ?? '';
         form.elements.namedItem('notes').value = data.data.notes ?? '';
         form.elements.namedItem('is_paid').checked = Boolean(data.data.is_paid);
+    }
+
+    const subDebts = ok ? await getAll(routes.debts.subDebts(itemId)) : null;
+
+    if (subDebts) {
+        subDebtsField.load(subDebts);
+    } else {
+        subDebtsField.markUnloaded();
     }
 
     hideSkeleton('debt-form', 'debt-form-skeleton');
@@ -55,6 +73,7 @@ if (form) {
             due_date: form.elements.namedItem('due_date').value,
             notes: form.elements.namedItem('notes').value,
             is_paid: form.elements.namedItem('is_paid').checked,
+            sub_debts: subDebtsField.payload(),
         };
 
         try {

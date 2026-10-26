@@ -5,11 +5,13 @@ namespace App\Services;
 use App\Models\Debt;
 use App\Repositories\Debt\DebtRepositoryInterface;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Arr;
 
 class DebtManagementService
 {
     public function __construct(
         protected DebtRepositoryInterface $debtRepository,
+        protected SubDebtManagementService $subDebtService,
     ) {}
 
     /**
@@ -31,23 +33,46 @@ class DebtManagementService
     }
 
     /**
-     * Create a new debt.
+     * Create a new debt, together with its sub debts when `sub_debts` is given.
      *
      * @param  array<string, mixed>  $data
      */
     public function create(array $data): Debt
     {
-        return $this->debtRepository->create($data);
+        $subDebts = Arr::pull($data, 'sub_debts');
+
+        return $this->debtRepository->transaction(function () use ($data, $subDebts): Debt {
+            $debt = $this->debtRepository->create($data);
+
+            if ($subDebts) {
+                $this->subDebtService->replace($debt, $subDebts);
+                $debt->refresh();
+            }
+
+            return $debt;
+        });
     }
 
     /**
-     * Update an existing debt.
+     * Update an existing debt; when `sub_debts` is given the debt's sub debts are replaced by it
+     * (an empty list removes them all).
      *
      * @param  array<string, mixed>  $data
      */
     public function update(Debt $debt, array $data): Debt
     {
-        return $this->debtRepository->update($debt, $data);
+        $subDebts = Arr::pull($data, 'sub_debts');
+
+        return $this->debtRepository->transaction(function () use ($debt, $data, $subDebts): Debt {
+            $debt = $this->debtRepository->update($debt, $data);
+
+            if ($subDebts !== null) {
+                $this->subDebtService->replace($debt, $subDebts);
+                $debt->refresh();
+            }
+
+            return $debt;
+        });
     }
 
     /**

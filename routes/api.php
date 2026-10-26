@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\GoalSavingController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\RecordController;
 use App\Http\Controllers\Api\RecordImportController;
+use App\Http\Controllers\Api\SubDebtController;
 use App\Http\Controllers\Api\SubGoalController;
 use App\Http\Controllers\Api\WebhookController;
 use App\Http\Controllers\Api\WebhookLogController;
@@ -136,6 +137,22 @@ Route::middleware('web')->name('api.')->group(function (): void {
         Route::post('/debts/generate', [DebtController::class, 'generate'])
             ->middleware(EnsureLocalEnvironment::class)
             ->name('debts.generate');
+        Route::get('/debts/{debt}/sub-debts', [SubDebtController::class, 'index'])->name('debts.sub-debts.index');
+        Route::post('/debts/{debt}/sub-debts', [SubDebtController::class, 'store'])->name('debts.sub-debts.store');
+        Route::delete('/debts/{debt}/sub-debts', [SubDebtController::class, 'bulkDestroy'])->name('debts.sub-debts.bulk-destroy');
+        Route::post('/debts/{debt}/sub-debts/generate', [SubDebtController::class, 'generate'])
+            ->middleware(EnsureLocalEnvironment::class)
+            ->name('debts.sub-debts.generate');
+        Route::delete('/debts/{debt}/sub-debts/{subDebt}', [SubDebtController::class, 'destroy'])
+            ->scopeBindings()
+            ->name('debts.sub-debts.destroy');
+        Route::put('/debts/{debt}/sub-debts', [SubDebtController::class, 'sync'])->name('debts.sub-debts.sync');
+        Route::get('/debts/{debt}/sub-debts/{subDebt}', [SubDebtController::class, 'show'])
+            ->scopeBindings()
+            ->name('debts.sub-debts.show');
+        Route::put('/debts/{debt}/sub-debts/{subDebt}', [SubDebtController::class, 'update'])
+            ->scopeBindings()
+            ->name('debts.sub-debts.update');
         Route::resource('debts', DebtController::class)
             ->parameters(['debts' => 'debt'])
             ->except('create', 'edit')

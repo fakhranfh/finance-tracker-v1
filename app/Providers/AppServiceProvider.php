@@ -20,6 +20,8 @@ use App\Repositories\Record\RecordRepository;
 use App\Repositories\Record\RecordRepositoryInterface;
 use App\Repositories\RecordImport\RecordImportRepository;
 use App\Repositories\RecordImport\RecordImportRepositoryInterface;
+use App\Repositories\SubDebt\SubDebtRepository;
+use App\Repositories\SubDebt\SubDebtRepositoryInterface;
 use App\Repositories\SubGoal\SubGoalRepository;
 use App\Repositories\SubGoal\SubGoalRepositoryInterface;
 use App\Repositories\User\UserRepository;
@@ -43,6 +45,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(DebtRepositoryInterface::class, DebtRepository::class);
+        $this->app->bind(SubDebtRepositoryInterface::class, SubDebtRepository::class);
         $this->app->bind(WebhookRepositoryInterface::class, WebhookRepository::class);
         $this->app->bind(WebhookLogRepositoryInterface::class, WebhookLogRepository::class);
         $this->app->bind(SubGoalRepositoryInterface::class, SubGoalRepository::class);

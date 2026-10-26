@@ -58,4 +58,14 @@ interface DebtRepositoryInterface
      * Delete a debt.
      */
     public function delete(Debt $debt): void;
+
+    /**
+     * Run the callback inside a database transaction and return its result.
+     *
+     * @template T
+     *
+     * @param  \Closure(): T  $callback
+     * @return T
+     */
+    public function transaction(\Closure $callback): mixed;
 }

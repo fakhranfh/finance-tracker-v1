@@ -8,6 +8,7 @@ use Database\Factories\DebtFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable(['type', 'name', 'amount', 'paid_amount', 'due_date', 'notes', 'is_paid'])]
 class Debt extends Model
@@ -28,5 +29,13 @@ class Debt extends Model
             'paid_amount' => 'integer',
             'is_paid' => 'boolean',
         ];
+    }
+
+    /**
+     * @return HasMany<SubDebt, $this>
+     */
+    public function subDebts(): HasMany
+    {
+        return $this->hasMany(SubDebt::class);
     }
 }

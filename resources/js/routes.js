@@ -95,6 +95,9 @@ export const routes = {
         destroy: (id) => endpoint(`/debts/${id}`),
         bulkDestroy: endpoint('/debts'),
         generate: endpoint('/debts/generate'),
+        subDebts: (id) => endpoint(`/debts/${id}/sub-debts`),
+        subDebt: (id, subDebtId) => endpoint(`/debts/${id}/sub-debts/${subDebtId}`),
+        generateSubDebts: (id) => endpoint(`/debts/${id}/sub-debts/generate`),
     },
     pages: {
         home: '/',
@@ -132,5 +135,8 @@ export const routes = {
         debtEdit: (id, type = 'debt') => `/${type === 'receivable' ? 'receivables' : 'debts'}/${id}/edit`,
         receivables: '/receivables',
         receivableCreate: '/receivables/create',
+        debtSubDebtCreate: (id, type = 'debt') => `/${type === 'receivable' ? 'receivables' : 'debts'}/${id}/sub-debts/create`,
+        debtSubDebtEdit: (id, subDebtId, type = 'debt') => `/${type === 'receivable' ? 'receivables' : 'debts'}/${id}/sub-debts/${subDebtId}/edit`,
+        debtSubDebts: (id, type = 'debt') => `/${type === 'receivable' ? 'receivables' : 'debts'}/${id}/sub-debts`,
     },
 };

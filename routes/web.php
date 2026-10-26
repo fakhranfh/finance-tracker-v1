@@ -8,6 +8,7 @@ use App\Http\Controllers\GoalPageController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\ProfilePageController;
 use App\Http\Controllers\RecordPageController;
+use App\Http\Controllers\SubDebtPageController;
 use App\Http\Controllers\SubGoalPageController;
 use App\Http\Controllers\WebhookPageController;
 use App\Http\Middleware\EnsureNoUsersExist;
@@ -92,5 +93,9 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
         Route::get("/{$path}", [DebtPageController::class, 'index'])->defaults('type', $type)->name("{$path}.index");
         Route::get("/{$path}/create", [DebtPageController::class, 'create'])->defaults('type', $type)->name("{$path}.create");
         Route::get("/{$path}/{id}/edit", [DebtPageController::class, 'edit'])->defaults('type', $type)->name("{$path}.edit");
+        Route::get("/{$path}/{debtId}/sub-debts/edit", [SubDebtPageController::class, 'edit'])->whereNumber('debtId')->defaults('type', $type)->name("{$path}.sub-debts.edit");
+        Route::get("/{$path}/{debtId}/sub-debts/create", [SubDebtPageController::class, 'create'])->whereNumber('debtId')->defaults('type', $type)->name("{$path}.sub-debts.create");
+        Route::get("/{$path}/{debtId}/sub-debts/{id}/edit", [SubDebtPageController::class, 'editItem'])->whereNumber(['debtId', 'id'])->defaults('type', $type)->name("{$path}.sub-debts.edit-item");
+        Route::get("/{$path}/{debtId}/sub-debts", [SubDebtPageController::class, 'index'])->whereNumber('debtId')->defaults('type', $type)->name("{$path}.sub-debts.index");
     }
 });

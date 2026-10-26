@@ -76,6 +76,7 @@
                     'clearSelection' => __('debts.table.clear_selection'),
                     'expand' => __('debts.table.show_more'),
                     'collapse' => __('debts.table.show_less'),
+                    'view' => __('debts.pages.'.$type.'.sub_debts'),
                     'edit' => __('debts.actions.edit'),
                     'delete' => __('debts.actions.delete'),
                 ],

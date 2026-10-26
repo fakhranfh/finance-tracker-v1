@@ -590,6 +590,286 @@
                 }
             }
         },
+        "/debts": {
+            "get": {
+                "tags": [
+                    "Debts"
+                ],
+                "summary": "List debts",
+                "operationId": "856f56ba32aaa931915335a18a8aa9a1",
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "direction",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "asc",
+                                "desc"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "debt",
+                                "receivable"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 10
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated list of debts"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Debts"
+                ],
+                "summary": "Create a debt",
+                "operationId": "41d4a9890431b1fd0ebffddec3490b84",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "type": {
+                                        "type": "string",
+                                        "example": "debt",
+                                        "enum": [
+                                            "debt",
+                                            "receivable"
+                                        ]
+                                    },
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Sample name"
+                                    },
+                                    "amount": {
+                                        "type": "integer",
+                                        "example": 150000
+                                    },
+                                    "paid_amount": {
+                                        "type": "integer",
+                                        "example": 150000
+                                    },
+                                    "due_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-01-15"
+                                    },
+                                    "notes": {
+                                        "type": "string",
+                                        "example": "Sample notes"
+                                    },
+                                    "is_paid": {
+                                        "type": "boolean",
+                                        "example": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Debt created"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Debts"
+                ],
+                "summary": "Bulk delete debts",
+                "operationId": "51ca4602371cbef3b04d3c60c051b33e",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "ids": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "all": {
+                                        "type": "boolean"
+                                    },
+                                    "search": {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "Debts deleted"
+                    }
+                }
+            }
+        },
+        "/debts/{id}": {
+            "get": {
+                "tags": [
+                    "Debts"
+                ],
+                "summary": "Show a debt",
+                "operationId": "e433c8b709e3134b82eb58e28bdf80c7",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The debt"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Debts"
+                ],
+                "summary": "Update a debt",
+                "operationId": "18dc0de0800f6a19af9b332590924615",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "type": {
+                                        "type": "string",
+                                        "example": "debt",
+                                        "enum": [
+                                            "debt",
+                                            "receivable"
+                                        ]
+                                    },
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Sample name"
+                                    },
+                                    "amount": {
+                                        "type": "integer",
+                                        "example": 150000
+                                    },
+                                    "paid_amount": {
+                                        "type": "integer",
+                                        "example": 150000
+                                    },
+                                    "due_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-01-15"
+                                    },
+                                    "notes": {
+                                        "type": "string",
+                                        "example": "Sample notes"
+                                    },
+                                    "is_paid": {
+                                        "type": "boolean",
+                                        "example": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Debt updated"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Debts"
+                ],
+                "summary": "Delete a debt",
+                "operationId": "d685b438b9b204a7968205d5938fba01",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Debt deleted"
+                    }
+                }
+            }
+        },
         "/forgot-password": {
             "post": {
                 "tags": [
@@ -2484,6 +2764,482 @@
                 }
             }
         },
+        "/debts/{id}/sub-debts": {
+            "get": {
+                "tags": [
+                    "Sub Debts"
+                ],
+                "summary": "List the sub debts of a debt or receivable (they are created and edited through the debt endpoints)",
+                "operationId": "7fed3a8cfe04fdf284fefb513b8e82dc",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "name",
+                                "amount",
+                                "paid_amount",
+                                "due_date",
+                                "is_paid",
+                                "note",
+                                "created_at"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "direction",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "asc",
+                                "desc"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 10
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated sub debts in data, plus summary (total, paid, amount_total, paid_total of all the debt sub debts)"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Sub Debts"
+                ],
+                "summary": "Replace the sub debts of a debt or receivable",
+                "description": "Items with an id are updated, items without one are created and the sub debts left out are removed. A non-empty list also sets the debt amount, paid amount and paid flag from the sub debts; an empty list removes them all and keeps the debt amounts. A paid amount cannot exceed the sub debt amount.",
+                "operationId": "55892aa78c03cfe3252105e3143d0711",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "sub_debts": {
+                                        "type": "array",
+                                        "items": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "nullable": true
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "Cicilan bulan ini"
+                                                },
+                                                "amount": {
+                                                    "type": "integer",
+                                                    "example": 150000
+                                                },
+                                                "paid_amount": {
+                                                    "type": "integer",
+                                                    "example": 0,
+                                                    "nullable": true
+                                                },
+                                                "due_date": {
+                                                    "type": "string",
+                                                    "format": "date",
+                                                    "nullable": true
+                                                },
+                                                "note": {
+                                                    "type": "string",
+                                                    "nullable": true
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The sub debts in data, plus summary"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Sub Debts"
+                ],
+                "summary": "Create a sub debt; the debt amount, paid amount and paid flag follow the sub debts",
+                "operationId": "afa45b5fed5c568b5319f609e897d955",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Cicilan bulan ini"
+                                    },
+                                    "amount": {
+                                        "type": "integer",
+                                        "example": 150000
+                                    },
+                                    "paid_amount": {
+                                        "type": "integer",
+                                        "example": 0,
+                                        "nullable": true
+                                    },
+                                    "due_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "nullable": true
+                                    },
+                                    "note": {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Sub debt created"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Sub Debts"
+                ],
+                "summary": "Delete several sub debts of a debt (by ids, or every one matching the search when all is true)",
+                "operationId": "ecfd59a3979bb060d1dd8f9799427282",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "ids": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "all": {
+                                        "type": "boolean",
+                                        "example": false
+                                    },
+                                    "search": {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "Sub debts deleted"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                }
+            }
+        },
+        "/debts/{id}/sub-debts/generate": {
+            "post": {
+                "tags": [
+                    "Sub Debts"
+                ],
+                "summary": "Generate sample sub debts for a debt (local environment only)",
+                "operationId": "7f70651e7e2d22eec501d0faf88c814b",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "count": {
+                                        "type": "integer",
+                                        "example": 5
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The generated sub debts"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "404": {
+                        "description": "Not found, or not the local environment"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                }
+            }
+        },
+        "/debts/{id}/sub-debts/{subDebtId}": {
+            "get": {
+                "tags": [
+                    "Sub Debts"
+                ],
+                "summary": "Show a sub debt",
+                "operationId": "04690af522ecb607883c91122227e066",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "subDebtId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The sub debt"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Sub Debts"
+                ],
+                "summary": "Update a sub debt (details, paid amount or paid flag); the debt amounts follow",
+                "description": "Every field is optional but one must be sent. is_paid true sets the paid amount to the sub debt amount and false resets it to 0, unless a paid_amount is sent. A paid amount cannot exceed the sub debt amount.",
+                "operationId": "9c71947063be77eb9a2e0350d1238da9",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "subDebtId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Cicilan bulan ini"
+                                    },
+                                    "amount": {
+                                        "type": "integer",
+                                        "example": 150000
+                                    },
+                                    "paid_amount": {
+                                        "type": "integer",
+                                        "example": 50000
+                                    },
+                                    "due_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "nullable": true
+                                    },
+                                    "note": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "is_paid": {
+                                        "type": "boolean",
+                                        "example": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Sub debt updated"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Sub Debts"
+                ],
+                "summary": "Delete a sub debt",
+                "operationId": "3bbd15024719c7d19923d20da2aaff98",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "subDebtId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Sub debt deleted"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                }
+            }
+        },
         "/goals/{id}/sub-goals": {
             "get": {
                 "tags": [
@@ -3448,8 +4204,16 @@
             "description": "Webhook management and public record intake endpoints"
         },
         {
+            "name": "Sub Debts",
+            "description": "Sub debt endpoints (the instalments of a debt or receivable)"
+        },
+        {
             "name": "Sub Goals",
             "description": "Sub goal endpoints (the steps needed to reach a goal)"
+        },
+        {
+            "name": "Debts",
+            "description": "Debts"
         },
         {
             "name": "Goals",

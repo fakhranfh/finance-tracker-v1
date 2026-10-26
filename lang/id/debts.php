@@ -3,6 +3,7 @@
 return [
     'pages' => [
         'debt' => [
+            'sub_debts' => 'Sub utang',
             'title' => 'Kelola Utang',
             'subtitle' => 'Lihat, tambah, ubah, dan hapus uang yang Anda pinjam dari orang lain.',
             'create' => 'Tambah utang',
@@ -10,6 +11,7 @@ return [
             'back' => 'Kembali ke daftar utang',
         ],
         'receivable' => [
+            'sub_debts' => 'Sub piutang',
             'title' => 'Kelola Piutang',
             'subtitle' => 'Lihat, tambah, ubah, dan hapus uang yang dipinjam orang lain dari Anda.',
             'create' => 'Tambah piutang',

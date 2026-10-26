@@ -3,6 +3,7 @@
 return [
     'pages' => [
         'debt' => [
+            'sub_debts' => 'Sub debts',
             'title' => 'Manage Debts',
             'subtitle' => 'View, create, edit, and remove money you owe to others.',
             'create' => 'Add debt',
@@ -10,6 +11,7 @@ return [
             'back' => 'Back to debts',
         ],
         'receivable' => [
+            'sub_debts' => 'Sub receivables',
             'title' => 'Manage Receivables',
             'subtitle' => 'View, create, edit, and remove money others owe you.',
             'create' => 'Add receivable',
