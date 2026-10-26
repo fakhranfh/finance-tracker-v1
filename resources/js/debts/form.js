@@ -9,7 +9,7 @@ import { debtFormFixture } from './dev-fixtures/form.js';
 const form = document.getElementById('debt-form');
 const itemId = form?.dataset.itemId;
 
-wireDevTools(form, debtFormFixture);
+wireDevTools(form, () => debtFormFixture(form?.elements.namedItem('type')?.value));
 
 async function loadItem() {
     const { ok, data } = await get(routes.debts.show(itemId));

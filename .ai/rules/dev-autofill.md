@@ -21,3 +21,13 @@ Because generate-data creates real backing records, it stays server-side:
 - Each feature's own controller consumes its own trait directly. Do not centralize generate-data endpoints for multiple features into a single shared/dev controller.
 - Guard the endpoint/action with `app()->environment('local')` (or equivalent), never expose in production.
 - Tests for a feature's generate-data endpoint go in that feature's own test file, not bundled together into one shared test file covering multiple features.
+
+## Sample values must be realistic, never lorem ipsum
+Every generator of sample data (model factories, `GeneratesSampleData` traits, JS autofill fixtures in `dev-fixtures/`, and the seed data of Pest/Playwright tests) must produce values that look like real data for this app (an Indonesian personal finance tracker), not placeholder text.
+
+- Do not use `fake()->words()`, `sentence()`, `paragraph()`, `text()`, `lorem*`, or JS word lists like `alpha bravo cedar` for user-facing fields. Pick from a short curated list of real-looking values instead (`fake()->randomElement([...])` in PHP, a `randomItem([...])` list in JS): Indonesian person names (`Budi Santoso`, `Siti Rahmawati`), bank/e-wallet names (`BCA`, `GoPay`), and notes that describe a real situation (`Talangan bayar kontrakan`).
+- Amounts are rupiah-sized (multiples of 1.000 or 10.000, e.g. 50.000 to 5.000.000), not `randomFloat(2, 1, 1000)`.
+- Dates are near today (a due date a few weeks ahead, a past record date), not random decades.
+- Related fields stay consistent: a paid amount never exceeds the total, `is_paid` matches `paid_amount`, a note fits the record's type (debt vs receivable).
+- The JS fixture and the PHP factory for one feature use the same style of values.
+- `make:manage` stubs only emit generic placeholders. After generating, replace them in the factory, the JS fixture and the sample-data trait with realistic values for that entity.
