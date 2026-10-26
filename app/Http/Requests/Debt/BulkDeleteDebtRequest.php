@@ -25,6 +25,7 @@ class BulkDeleteDebtRequest extends FormRequest
         return [
             'all' => ['sometimes', 'boolean'],
             'search' => ['nullable', 'string'],
+            ...DebtFilterRules::rules(),
             'ids' => ['required_without:all', 'array', 'min:1'],
             'ids.*' => ['integer', 'exists:debts,id'],
         ];

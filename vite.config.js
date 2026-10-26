@@ -40,8 +40,6 @@ export default defineConfig({
                 'resources/js/webhooks/api-docs.js',
                 'resources/js/debts/index.js',
                 'resources/js/debts/form.js',
-                'resources/js/receivables/index.js',
-                'resources/js/receivables/form.js',
             ],
             refresh: true,
             fonts: [

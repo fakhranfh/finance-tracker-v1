@@ -23,6 +23,7 @@ class DebtResource extends JsonResource
 
         return [
             'id' => $debt->id,
+            'type' => $debt->type,
             'name' => $debt->name,
             'amount' => $debt->amount,
             'paid_amount' => $debt->paid_amount,

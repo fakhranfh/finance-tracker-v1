@@ -16,7 +16,6 @@ use App\Http\Controllers\Api\DebtController;
 use App\Http\Controllers\Api\GoalController;
 use App\Http\Controllers\Api\GoalSavingController;
 use App\Http\Controllers\Api\ProfileController;
-use App\Http\Controllers\Api\ReceivableController;
 use App\Http\Controllers\Api\RecordController;
 use App\Http\Controllers\Api\RecordImportController;
 use App\Http\Controllers\Api\SubGoalController;
@@ -141,14 +140,6 @@ Route::middleware('web')->name('api.')->group(function (): void {
             ->parameters(['debts' => 'debt'])
             ->except('create', 'edit')
             ->names('debts');
-        Route::delete('/receivables', [ReceivableController::class, 'bulkDestroy'])->name('receivables.bulk-destroy');
-        Route::post('/receivables/generate', [ReceivableController::class, 'generate'])
-            ->middleware(EnsureLocalEnvironment::class)
-            ->name('receivables.generate');
-        Route::resource('receivables', ReceivableController::class)
-            ->parameters(['receivables' => 'receivable'])
-            ->except('create', 'edit')
-            ->names('receivables');
         Route::post('/logout', LogoutController::class)->name('logout');
     });
 

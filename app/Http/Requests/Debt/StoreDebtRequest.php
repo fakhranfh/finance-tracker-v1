@@ -2,8 +2,10 @@
 
 namespace App\Http\Requests\Debt;
 
+use App\Enums\DebtType;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreDebtRequest extends FormRequest
 {
@@ -23,6 +25,7 @@ class StoreDebtRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'type' => ['required', Rule::enum(DebtType::class)],
             'name' => ['required', 'string', 'max:255'],
             'amount' => ['required', 'numeric', 'min:0'],
             'paid_amount' => ['required', 'numeric', 'min:0'],

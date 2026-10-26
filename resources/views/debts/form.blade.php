@@ -1,15 +1,15 @@
 @extends('layouts.dashboard')
 
-@section('title', ($id ? __('debts.edit') : __('debts.create')))
+@section('title', ($id ? __('debts.pages.'.$type.'.edit') : __('debts.pages.'.$type.'.create')))
 
 @section('content')
     <div class="mb-6 flex items-end justify-between gap-3">
         <div>
-            <a href="{{ route('debts.index') }}" class="font-body text-body-sm text-on-surface-variant hover:underline">
-                &larr; {{ __('debts.back') }}
+            <a href="{{ route($type === 'debt' ? 'debts.index' : 'receivables.index') }}" class="font-body text-body-sm text-on-surface-variant hover:underline">
+                &larr; {{ __('debts.pages.'.$type.'.back') }}
             </a>
             <h1 class="mt-2 font-heading text-headline-md font-bold text-on-surface">
-                {{ $id ? __('debts.edit') : __('debts.create') }}
+                {{ $id ? __('debts.pages.'.$type.'.edit') : __('debts.pages.'.$type.'.create') }}
             </h1>
         </div>
 
@@ -34,6 +34,8 @@
         >
             @csrf
 
+            <input type="hidden" name="type" value="{{ $type }}">
+
             <x-molecules.form-group name="name" type="text" :label="__('debts.fields.name')" required autofocus />
             <x-molecules.form-group name="amount" type="number" :label="__('debts.fields.amount')" step="0.01" min="0" required />
             <x-molecules.form-group name="paid_amount" type="number" :label="__('debts.fields.paid_amount')" step="0.01" min="0" required />
@@ -48,7 +50,7 @@
                 <x-atoms.button type="submit">
                     {{ __('debts.actions.save') }}
                 </x-atoms.button>
-                <x-atoms.button href="{{ route('debts.index') }}" variant="secondary">
+                <x-atoms.button href="{{ route($type === 'debt' ? 'debts.index' : 'receivables.index') }}" variant="secondary">
                     {{ __('debts.actions.cancel') }}
                 </x-atoms.button>
             </div>

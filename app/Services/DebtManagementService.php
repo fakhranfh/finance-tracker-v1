@@ -14,10 +14,12 @@ class DebtManagementService
 
     /**
      * List debts, paginated, optionally filtered and sorted.
+     *
+     * @param  array<string, mixed>  $filters
      */
-    public function paginate(int $perPage = 10, ?string $search = null, ?string $sort = null, string $direction = 'asc'): LengthAwarePaginator
+    public function paginate(int $perPage = 10, ?string $search = null, ?string $sort = null, string $direction = 'asc', array $filters = []): LengthAwarePaginator
     {
-        return $this->debtRepository->paginate($perPage, $search, $sort, $direction);
+        return $this->debtRepository->paginate($perPage, $search, $sort, $direction, $filters);
     }
 
     /**
@@ -67,18 +69,22 @@ class DebtManagementService
     }
 
     /**
-     * Delete every debt matching the search filter (all when null).
+     * Delete every debt matching the search and filters (all when empty).
+     *
+     * @param  array<string, mixed>  $filters
      */
-    public function deleteMatching(?string $search = null): void
+    public function deleteMatching(?string $search = null, array $filters = []): void
     {
-        $this->debtRepository->deleteMatching($search);
+        $this->debtRepository->deleteMatching($search, $filters);
     }
 
     /**
-     * Count debts matching the search filter, optionally excluding one ID.
+     * Count debts matching the search and filters, optionally excluding one ID.
+     *
+     * @param  array<string, mixed>  $filters
      */
-    public function countMatching(?string $search = null, ?int $exceptId = null): int
+    public function countMatching(?string $search = null, ?int $exceptId = null, array $filters = []): int
     {
-        return $this->debtRepository->countMatching($search, $exceptId);
+        return $this->debtRepository->countMatching($search, $exceptId, $filters);
     }
 }

@@ -7,7 +7,6 @@ use App\Http\Controllers\DebtPageController;
 use App\Http\Controllers\GoalPageController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\ProfilePageController;
-use App\Http\Controllers\ReceivablePageController;
 use App\Http\Controllers\RecordPageController;
 use App\Http\Controllers\SubGoalPageController;
 use App\Http\Controllers\WebhookPageController;
@@ -89,11 +88,9 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::get('/webhooks/{id}/test', [WebhookPageController::class, 'test'])->whereNumber('id')->name('webhooks.test');
     Route::get('/webhooks/{id}/logs', [WebhookPageController::class, 'logs'])->whereNumber('id')->name('webhooks.logs');
 
-    Route::get('/debts', [DebtPageController::class, 'index'])->name('debts.index');
-    Route::get('/debts/create', [DebtPageController::class, 'create'])->name('debts.create');
-    Route::get('/debts/{id}/edit', [DebtPageController::class, 'edit'])->name('debts.edit');
-
-    Route::get('/receivables', [ReceivablePageController::class, 'index'])->name('receivables.index');
-    Route::get('/receivables/create', [ReceivablePageController::class, 'create'])->name('receivables.create');
-    Route::get('/receivables/{id}/edit', [ReceivablePageController::class, 'edit'])->name('receivables.edit');
+    foreach (['debts' => 'debt', 'receivables' => 'receivable'] as $path => $type) {
+        Route::get("/{$path}", [DebtPageController::class, 'index'])->defaults('type', $type)->name("{$path}.index");
+        Route::get("/{$path}/create", [DebtPageController::class, 'create'])->defaults('type', $type)->name("{$path}.create");
+        Route::get("/{$path}/{id}/edit", [DebtPageController::class, 'edit'])->defaults('type', $type)->name("{$path}.edit");
+    }
 });

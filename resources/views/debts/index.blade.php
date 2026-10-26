@@ -1,6 +1,6 @@
 @extends('layouts.dashboard')
 
-@section('title', __('debts.title'))
+@section('title', __('debts.pages.'.$type.'.title'))
 
 @section('content')
     @include('debts._tabs')
@@ -8,10 +8,10 @@
     <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>
             <h1 class="font-heading text-headline-md font-bold text-on-surface">
-                {{ __('debts.title') }}
+                {{ __('debts.pages.'.$type.'.title') }}
             </h1>
             <p class="mt-1 font-body text-body-md text-on-surface-variant">
-                {{ __('debts.subtitle') }}
+                {{ __('debts.pages.'.$type.'.subtitle') }}
             </p>
         </div>
 
@@ -37,13 +37,17 @@
                     {{ __('debts.actions.generate') }}
                 </x-atoms.button>
             @endif
-            <x-atoms.button href="{{ route('debts.create') }}" class="col-span-2 sm:col-auto">
-                {{ __('debts.create') }}
+            <x-atoms.button href="{{ route($type === 'debt' ? 'debts.create' : 'receivables.create') }}" class="col-span-2 sm:col-auto">
+                {{ __('debts.pages.'.$type.'.create') }}
             </x-atoms.button>
         </div>
     </div>
 
     <div data-flash-success class="mb-6 hidden rounded-lg border border-success/20 bg-success/10 px-4 py-3 font-body text-sm text-success"></div>
+
+    <div id="debts-filters" data-debt-type="{{ $type }}">
+        <input type="hidden" name="type" value="{{ $type }}" data-table-filter>
+    </div>
 
     <x-molecules.table-toolbar
         id="debts-table-toolbar"

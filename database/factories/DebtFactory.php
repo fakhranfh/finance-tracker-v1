@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\DebtType;
 use App\Models\Debt;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -18,6 +19,7 @@ class DebtFactory extends Factory
     public function definition(): array
     {
         return [
+            'type' => fake()->randomElement(DebtType::cases()),
             'name' => fake()->words(3, true),
             'amount' => fake()->randomFloat(2, 1, 1000),
             'paid_amount' => fake()->randomFloat(2, 1, 1000),

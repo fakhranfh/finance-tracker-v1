@@ -96,15 +96,6 @@ export const routes = {
         bulkDestroy: endpoint('/debts'),
         generate: endpoint('/debts/generate'),
     },
-    receivables: {
-        index: endpoint('/receivables'),
-        show: (id) => endpoint(`/receivables/${id}`),
-        store: endpoint('/receivables'),
-        update: (id) => endpoint(`/receivables/${id}`),
-        destroy: (id) => endpoint(`/receivables/${id}`),
-        bulkDestroy: endpoint('/receivables'),
-        generate: endpoint('/receivables/generate'),
-    },
     pages: {
         home: '/',
         login: '/login',
@@ -138,9 +129,8 @@ export const routes = {
         webhookLogs: (id) => `/webhooks/${id}/logs`,
         debts: '/debts',
         debtCreate: '/debts/create',
-        debtEdit: (id) => `/debts/${id}/edit`,
+        debtEdit: (id, type = 'debt') => `/${type === 'receivable' ? 'receivables' : 'debts'}/${id}/edit`,
         receivables: '/receivables',
         receivableCreate: '/receivables/create',
-        receivableEdit: (id) => `/receivables/${id}/edit`,
     },
 };

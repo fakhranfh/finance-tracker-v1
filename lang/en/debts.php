@@ -1,11 +1,22 @@
 <?php
 
 return [
-    'title' => 'Manage Debts',
-    'subtitle' => 'View, create, edit, and remove debts.',
-    'create' => 'Add debt',
-    'edit' => 'Edit debt',
-    'back' => 'Back to debts',
+    'pages' => [
+        'debt' => [
+            'title' => 'Manage Debts',
+            'subtitle' => 'View, create, edit, and remove money you owe to others.',
+            'create' => 'Add debt',
+            'edit' => 'Edit debt',
+            'back' => 'Back to debts',
+        ],
+        'receivable' => [
+            'title' => 'Manage Receivables',
+            'subtitle' => 'View, create, edit, and remove money others owe you.',
+            'create' => 'Add receivable',
+            'edit' => 'Edit receivable',
+            'back' => 'Back to receivables',
+        ],
+    ],
 
     'table' => [
         'name' => 'Name',
@@ -34,6 +45,11 @@ return [
         'due_date' => 'Due Date',
         'notes' => 'Notes',
         'is_paid' => 'Is Paid',
+    ],
+
+    'types' => [
+        'debt' => 'Debt (I owe)',
+        'receivable' => 'Receivable (owed to me)',
     ],
 
     'actions' => [

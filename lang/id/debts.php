@@ -1,14 +1,25 @@
 <?php
 
 return [
-    'title' => 'Kelola Utang',
-    'subtitle' => 'Lihat, tambah, ubah, dan hapus utang.',
-    'create' => 'Tambah utang',
-    'edit' => 'Ubah utang',
-    'back' => 'Kembali ke daftar utang',
+    'pages' => [
+        'debt' => [
+            'title' => 'Kelola Utang',
+            'subtitle' => 'Lihat, tambah, ubah, dan hapus uang yang Anda pinjam dari orang lain.',
+            'create' => 'Tambah utang',
+            'edit' => 'Ubah utang',
+            'back' => 'Kembali ke daftar utang',
+        ],
+        'receivable' => [
+            'title' => 'Kelola Piutang',
+            'subtitle' => 'Lihat, tambah, ubah, dan hapus uang yang dipinjam orang lain dari Anda.',
+            'create' => 'Tambah piutang',
+            'edit' => 'Ubah piutang',
+            'back' => 'Kembali ke daftar piutang',
+        ],
+    ],
 
     'table' => [
-        'name' => 'Pemberi Utang',
+        'name' => 'Nama',
         'amount' => 'Jumlah',
         'paid_amount' => 'Terbayar',
         'due_date' => 'Jatuh Tempo',
@@ -17,7 +28,7 @@ return [
         'created_at' => 'Dibuat',
         'actions' => 'Aksi',
         'empty' => 'Belum ada utang.',
-        'search' => 'Cari pemberi utang atau catatan...',
+        'search' => 'Cari nama atau catatan...',
         'per_page' => 'Item per halaman',
         'selected' => 'dipilih',
         'show_more' => 'Tampilkan lebih banyak',
@@ -28,12 +39,17 @@ return [
     ],
 
     'fields' => [
-        'name' => 'Pemberi Utang',
+        'name' => 'Nama',
         'amount' => 'Jumlah',
         'paid_amount' => 'Terbayar',
         'due_date' => 'Jatuh Tempo',
         'notes' => 'Catatan',
         'is_paid' => 'Lunas',
+    ],
+
+    'types' => [
+        'debt' => 'Utang (saya berutang)',
+        'receivable' => 'Piutang (dipinjam orang)',
     ],
 
     'actions' => [

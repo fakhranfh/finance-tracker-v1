@@ -18,6 +18,7 @@ trait DocumentsApi
             new OA\Parameter(name: 'search', in: 'query', required: false, schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'sort', in: 'query', required: false, schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'direction', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['asc', 'desc'])),
+            new OA\Parameter(name: 'type', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['debt', 'receivable'])),
             new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 10)),
         ],
         responses: [new OA\Response(response: 200, description: 'Paginated list of debts')]
@@ -32,6 +33,7 @@ trait DocumentsApi
             required: true,
             content: new OA\JsonContent(
                 properties: [
+                    new OA\Property(property: 'type', type: 'string', enum: ['debt', 'receivable'], example: 'debt'),
                     new OA\Property(property: 'name', type: 'string', example: 'Sample name'),
                     new OA\Property(property: 'amount', type: 'number', format: 'float', example: 9.99),
                     new OA\Property(property: 'paid_amount', type: 'number', format: 'float', example: 9.99),
@@ -69,6 +71,7 @@ trait DocumentsApi
             required: true,
             content: new OA\JsonContent(
                 properties: [
+                    new OA\Property(property: 'type', type: 'string', enum: ['debt', 'receivable'], example: 'debt'),
                     new OA\Property(property: 'name', type: 'string', example: 'Sample name'),
                     new OA\Property(property: 'amount', type: 'number', format: 'float', example: 9.99),
                     new OA\Property(property: 'paid_amount', type: 'number', format: 'float', example: 9.99),

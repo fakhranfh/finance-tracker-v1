@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Debt\BulkDeleteDebtRequest;
+use App\Http\Requests\Debt\DebtFilterRules;
 use App\Http\Requests\Debt\StoreDebtRequest;
 use App\Http\Requests\Debt\UpdateDebtRequest;
 use App\Http\Resources\DebtResource;
@@ -27,21 +28,26 @@ class DebtController extends Controller
     public function index(Request $request): AnonymousResourceCollection
     {
         $search = $request->string('search')->value() ?: null;
+        $filters = $request->validate(DebtFilterRules::rules());
 
         return DebtResource::collection($this->debtManagementService->paginate(
             perPage: min(max($request->integer('per_page', 10), 1), 100),
             search: $search,
             sort: $request->string('sort')->value() ?: null,
             direction: $request->string('direction', 'asc')->value(),
+            filters: $filters,
         ))->additional([
-            'deletable_total' => $this->debtManagementService->countMatching($search),
+            'deletable_total' => $this->debtManagementService->countMatching($search, filters: $filters),
         ]);
     }
 
     public function bulkDestroy(BulkDeleteDebtRequest $request): Response
     {
         if ($request->boolean('all')) {
-            $this->debtManagementService->deleteMatching($request->validated('search'));
+            $this->debtManagementService->deleteMatching(
+                $request->validated('search'),
+                $request->safe()->except(['all', 'search', 'ids']),
+            );
         } else {
             $this->debtManagementService->deleteMany($request->validated('ids'));
         }

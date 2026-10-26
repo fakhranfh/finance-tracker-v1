@@ -47,6 +47,7 @@ if (form) {
         setButtonLoading(submitButton, true);
 
         const payload = {
+            type: form.elements.namedItem('type').value,
             name: form.elements.namedItem('name').value,
             amount: form.elements.namedItem('amount').value,
             paid_amount: form.elements.namedItem('paid_amount').value,
@@ -60,7 +61,7 @@ if (form) {
 
             if (ok) {
                 sessionStorage.setItem('debts-flash-success', form.dataset.successMessage);
-                window.location.href = routes.pages.debts;
+                window.location.href = payload.type === 'receivable' ? routes.pages.receivables : routes.pages.debts;
                 return;
             }
 

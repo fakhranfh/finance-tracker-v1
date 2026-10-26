@@ -12,6 +12,7 @@ createTable({
         confirmDelete: 'confirm-delete-debt',
         confirmBulkDelete: 'confirm-bulk-delete-debts',
     },
+    filtersId: 'debts-filters',
     flashKey: 'debts-flash-success',
     selectionKey: 'debts-table-selection',
     deleteModalId: 'delete-debt-modal',
@@ -32,7 +33,7 @@ createTable({
             item.is_paid ? '✓' : '—',
             formatDateTime(item.created_at),
         ],
-        editUrl: routes.pages.debtEdit(item.id),
+        editUrl: routes.pages.debtEdit(item.id, item.type),
         locked: false,
     }),
 });

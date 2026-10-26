@@ -10,6 +10,7 @@ return new class extends Migration
     {
         Schema::create('debts', function (Blueprint $table): void {
             $table->id();
+            $table->string('type')->default('debt')->index();
             $table->string('name');
             $table->decimal('amount', 12, 2);
             $table->decimal('paid_amount', 12, 2);

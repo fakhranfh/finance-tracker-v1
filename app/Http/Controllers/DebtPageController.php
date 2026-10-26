@@ -4,9 +4,12 @@ namespace App\Http\Controllers;
 
 use Illuminate\View\View;
 
+/**
+ * Debts and receivables share one table; the route default `type` picks which half a page shows.
+ */
 class DebtPageController extends Controller
 {
-    public function index(): View
+    public function index(string $type): View
     {
         $tableHeaders = [
             ['label' => __('debts.table.name'), 'sort' => 'name'],
@@ -19,16 +22,16 @@ class DebtPageController extends Controller
             __('debts.table.actions'),
         ];
 
-        return view('debts.index', ['tableHeaders' => $tableHeaders]);
+        return view('debts.index', ['tableHeaders' => $tableHeaders, 'type' => $type]);
     }
 
-    public function create(): View
+    public function create(string $type): View
     {
-        return view('debts.form', ['id' => null]);
+        return view('debts.form', ['id' => null, 'type' => $type]);
     }
 
-    public function edit(int $id): View
+    public function edit(int $id, string $type): View
     {
-        return view('debts.form', ['id' => $id]);
+        return view('debts.form', ['id' => $id, 'type' => $type]);
     }
 }

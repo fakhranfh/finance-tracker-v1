@@ -15,7 +15,7 @@ it('lists debts via the api', function () {
     $response = $this->actingAs($actor)->getJson('/api/debts');
 
     $response->assertOk();
-    $response->assertJsonStructure(['data' => [['id', 'name', 'amount', 'paid_amount', 'due_date', 'notes', 'is_paid', 'created_at']]]);
+    $response->assertJsonStructure(['data' => [['id', 'type', 'name', 'amount', 'paid_amount', 'due_date', 'notes', 'is_paid', 'created_at']]]);
     expect($response->json('data'))->toHaveCount(3);
 });
 
@@ -30,10 +30,38 @@ it('searches debts via the api', function () {
     expect($response->json('data'))->toHaveCount(1);
 });
 
+it('filters debts by type via the api', function () {
+    $actor = User::factory()->create();
+    Debt::factory()->count(2)->create(['type' => 'debt']);
+    Debt::factory()->count(3)->create(['type' => 'receivable']);
+
+    $response = $this->actingAs($actor)->getJson('/api/debts?type=receivable');
+
+    $response->assertOk();
+    expect($response->json('data'))->toHaveCount(3);
+});
+
+it('rejects an unknown debt type', function () {
+    $actor = User::factory()->create();
+
+    $this->actingAs($actor)->getJson('/api/debts?type=other')->assertStatus(422);
+});
+
+it('bulk deletes only the filtered type when all is set', function () {
+    $actor = User::factory()->create();
+    Debt::factory()->count(2)->create(['type' => 'debt']);
+    Debt::factory()->count(3)->create(['type' => 'receivable']);
+
+    $this->actingAs($actor)->deleteJson('/api/debts', ['all' => true, 'type' => 'receivable'])->assertNoContent();
+
+    expect(Debt::query()->count())->toBe(2);
+});
+
 it('creates a debt via the api', function () {
     $actor = User::factory()->create();
 
     $response = $this->actingAs($actor)->postJson('/api/debts', [
+        'type' => 'receivable',
         'name' => 'Sample name',
         'amount' => 9.99,
         'paid_amount' => 9.99,
@@ -44,6 +72,7 @@ it('creates a debt via the api', function () {
 
     $response->assertStatus(201);
     $response->assertJsonPath('data.name', 'Sample name');
+    $response->assertJsonPath('data.type', 'receivable');
     $this->assertDatabaseHas('debts', ['name' => 'Sample name']);
 });
 
@@ -53,7 +82,7 @@ it('rejects creating a debt with missing required fields', function () {
     $response = $this->actingAs($actor)->postJson('/api/debts', []);
 
     $response->assertStatus(422);
-    $response->assertJsonValidationErrors(['name', 'amount', 'paid_amount', 'is_paid']);
+    $response->assertJsonValidationErrors(['type', 'name', 'amount', 'paid_amount', 'is_paid']);
 });
 
 it('shows a debt via the api', function () {
@@ -71,6 +100,7 @@ it('updates a debt via the api', function () {
     $target = Debt::factory()->create();
 
     $response = $this->actingAs($actor)->putJson("/api/debts/{$target->id}", [
+        'type' => 'debt',
         'name' => 'Updated name',
         'amount' => 19.5,
         'paid_amount' => 19.5,
@@ -132,4 +162,13 @@ it('rejects generating sample debts outside the local environment', function () 
     $actor = User::factory()->create();
 
     $this->actingAs($actor)->postJson('/api/debts/generate', ['count' => 5])->assertNotFound();
+});
+
+it('renders the debts and receivables pages', function () {
+    $actor = User::factory()->create();
+
+    $this->actingAs($actor)->get('/debts')->assertOk()->assertSee('Manage Debts');
+    $this->actingAs($actor)->get('/receivables')->assertOk()->assertSee('Manage Receivables');
+    $this->actingAs($actor)->get('/receivables/create')->assertOk();
+    $this->actingAs($actor)->get('/receivables/1/edit')->assertOk();
 });

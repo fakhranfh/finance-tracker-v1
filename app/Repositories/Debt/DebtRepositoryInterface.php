@@ -13,9 +13,11 @@ interface DebtRepositoryInterface
     public function find(int $id): ?Debt;
 
     /**
-     * Paginate debts, optionally filtered by search and sorted by column.
+     * Paginate debts, optionally filtered by search and filters and sorted by column.
+     *
+     * @param  array<string, mixed>  $filters
      */
-    public function paginate(int $perPage, ?string $search = null, ?string $sort = null, string $direction = 'asc'): LengthAwarePaginator;
+    public function paginate(int $perPage, ?string $search = null, ?string $sort = null, string $direction = 'asc', array $filters = []): LengthAwarePaginator;
 
     /**
      * Delete debts by ID.
@@ -25,14 +27,18 @@ interface DebtRepositoryInterface
     public function deleteMany(array $ids): void;
 
     /**
-     * Delete every debt matching the search filter (all when null).
+     * Delete every debt matching the search and filters (all when empty).
+     *
+     * @param  array<string, mixed>  $filters
      */
-    public function deleteMatching(?string $search = null): void;
+    public function deleteMatching(?string $search = null, array $filters = []): void;
 
     /**
-     * Count debts matching the search filter, optionally excluding one ID.
+     * Count debts matching the search and filters, optionally excluding one ID.
+     *
+     * @param  array<string, mixed>  $filters
      */
-    public function countMatching(?string $search = null, ?int $exceptId = null): int;
+    public function countMatching(?string $search = null, ?int $exceptId = null, array $filters = []): int;
 
     /**
      * Create a new debt.

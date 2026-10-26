@@ -13,13 +13,14 @@ class DebtRepository implements DebtRepositoryInterface
         return Debt::query()->find($id);
     }
 
-    public function paginate(int $perPage, ?string $search = null, ?string $sort = null, string $direction = 'asc'): LengthAwarePaginator
+    public function paginate(int $perPage, ?string $search = null, ?string $sort = null, string $direction = 'asc', array $filters = []): LengthAwarePaginator
     {
         $query = Debt::query();
 
         $this->applySearch($query, $search);
+        $this->applyFilters($query, $filters);
 
-        $sortable = ['name', 'amount', 'paid_amount', 'due_date', 'notes', 'is_paid', 'created_at'];
+        $sortable = ['type', 'name', 'amount', 'paid_amount', 'due_date', 'notes', 'is_paid', 'created_at'];
         $direction = $direction === 'desc' ? 'desc' : 'asc';
 
         if ($sort && in_array($sort, $sortable, true)) {
@@ -36,22 +37,32 @@ class DebtRepository implements DebtRepositoryInterface
         Debt::query()->whereIn('id', $ids)->delete();
     }
 
-    public function deleteMatching(?string $search = null): void
+    public function deleteMatching(?string $search = null, array $filters = []): void
     {
         $query = Debt::query();
 
         $this->applySearch($query, $search);
+        $this->applyFilters($query, $filters);
 
         $query->delete();
     }
 
-    public function countMatching(?string $search = null, ?int $exceptId = null): int
+    public function countMatching(?string $search = null, ?int $exceptId = null, array $filters = []): int
     {
         $query = Debt::query()->when($exceptId, fn ($q) => $q->whereKeyNot($exceptId));
 
         $this->applySearch($query, $search);
+        $this->applyFilters($query, $filters);
 
         return $query->count();
+    }
+
+    /**
+     * @param  array<string, mixed>  $filters
+     */
+    private function applyFilters(Builder $query, array $filters): void
+    {
+        $query->when($filters['type'] ?? null, fn (Builder $q, string $type) => $q->where('type', $type));
     }
 
     private function applySearch(Builder $query, ?string $search): void
