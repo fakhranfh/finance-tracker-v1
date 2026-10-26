@@ -155,6 +155,18 @@ it('generates sample debts via the api in the local environment', function () {
     expect(Debt::query()->count())->toBe(5);
 });
 
+it('generates sample data of the requested type only', function () {
+    $this->withoutMiddleware(PreventRequestForgery::class);
+    app()->detectEnvironment(fn () => 'local');
+
+    $actor = User::factory()->create();
+
+    $this->actingAs($actor)->postJson('/api/debts/generate', ['count' => 6, 'type' => 'receivable'])->assertOk();
+
+    expect(Debt::query()->where('type', 'receivable')->count())->toBe(6);
+    expect(Debt::query()->where('type', 'debt')->count())->toBe(0);
+});
+
 it('rejects generating sample debts outside the local environment', function () {
     $this->withoutMiddleware(PreventRequestForgery::class);
     app()->detectEnvironment(fn () => 'production');

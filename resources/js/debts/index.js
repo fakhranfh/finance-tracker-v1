@@ -13,6 +13,7 @@ createTable({
         confirmBulkDelete: 'confirm-bulk-delete-debts',
     },
     filtersId: 'debts-filters',
+    generatePayload: () => ({ type: document.getElementById('debts-filters')?.dataset.debtType }),
     flashKey: 'debts-flash-success',
     selectionKey: 'debts-table-selection',
     deleteModalId: 'delete-debt-modal',

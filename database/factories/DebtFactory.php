@@ -35,7 +35,7 @@ class DebtFactory extends Factory
             'amount' => $amount,
             'paid_amount' => $isPaid ? $amount : fake()->numberBetween(0, 8) * $amount / 10,
             'due_date' => fake()->dateTimeBetween('-1 month', '+6 months')->format('Y-m-d'),
-            'notes' => fake()->boolean(70) ? fake()->randomElement(self::NOTES[$type->value]) : null,
+            'notes' => fn (array $attributes) => fake()->boolean(70) ? fake()->randomElement(self::NOTES[DebtType::from($attributes['type'] instanceof DebtType ? $attributes['type']->value : $attributes['type'])->value]) : null,
             'is_paid' => $isPaid,
         ];
     }

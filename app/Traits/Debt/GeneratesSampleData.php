@@ -13,11 +13,12 @@ trait GeneratesSampleData
 {
     /**
      * Create sample debts backed by real database records.
+     * A type limits them to debts or receivables; null mixes both.
      *
      * @return Collection<int, Debt>
      */
-    protected function generateSampleDebts(int $count = 10): Collection
+    protected function generateSampleDebts(int $count = 10, ?string $type = null): Collection
     {
-        return Debt::factory()->count($count)->create();
+        return Debt::factory()->count($count)->state($type ? ['type' => $type] : [])->create();
     }
 }

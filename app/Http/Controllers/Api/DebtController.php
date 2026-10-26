@@ -59,9 +59,10 @@ class DebtController extends Controller
     {
         $validated = $request->validate([
             'count' => ['required', 'integer', 'min:1', 'max:50'],
+            ...DebtFilterRules::rules(),
         ]);
 
-        return DebtResource::collection($this->generateSampleDebts($validated['count']));
+        return DebtResource::collection($this->generateSampleDebts($validated['count'], $validated['type'] ?? null));
     }
 
     public function show(Debt $debt): DebtResource
