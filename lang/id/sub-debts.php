@@ -29,7 +29,7 @@ return [
         'title' => 'Jumlah',
         'amount' => 'Satu jumlah',
         'sub_debts' => 'Pecah jadi sub utang',
-        'hint' => 'Dengan sub utang, jumlah, jumlah terbayar, dan status lunas mengikuti sub utang.',
+        'hint' => 'Dengan sub utang, jumlah mengikuti sub utang. Yang sudah terbayar berasal dari pembayaran.',
     ],
 
     'table' => [
@@ -64,13 +64,14 @@ return [
 
     'form' => [
         'title' => 'Sub utang',
-        'hint' => 'Pecah jumlah menjadi cicilan. Totalnya menjadi jumlah, dan yang sudah dibayar menjadi jumlah terbayar.',
+        'hint' => 'Pecah jumlah menjadi cicilan. Totalnya menjadi jumlah. Pembayaran ditambahkan ke tiap sub utang setelahnya.',
         'edit' => 'Ubah sub utang',
         'remove' => 'Hapus',
-        'totals' => 'Total sub utang :amount, terbayar :paid',
+        'totals' => 'Total sub utang :amount',
     ],
 
     'actions' => [
+        'payments' => 'Pembayaran',
         'delete' => 'Hapus',
         'confirm_delete' => 'Yakin ingin menghapus sub utang ini?',
         'delete_selected' => 'Hapus yang dipilih',

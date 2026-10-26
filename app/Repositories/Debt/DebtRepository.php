@@ -13,12 +13,12 @@ class DebtRepository implements DebtRepositoryInterface
 
     public function find(int $id): ?Debt
     {
-        return Debt::query()->find($id);
+        return $this->withPaid(Debt::query())->find($id);
     }
 
     public function paginate(int $perPage, ?string $search = null, ?string $sort = null, string $direction = 'asc', array $filters = []): LengthAwarePaginator
     {
-        $query = Debt::query();
+        $query = $this->withPaid(Debt::query());
 
         $this->applySearch($query, $search);
         $this->applyFilters($query, $filters);
@@ -26,7 +26,9 @@ class DebtRepository implements DebtRepositoryInterface
         $sortable = ['type', 'name', 'amount', 'paid_amount', 'due_date', 'notes', 'is_paid', 'created_at'];
         $direction = $direction === 'desc' ? 'desc' : 'asc';
 
-        if ($sort && in_array($sort, $sortable, true)) {
+        if ($sort === 'is_paid') {
+            $query->orderByRaw('((select coalesce(sum(records.amount), 0) from records where records.debt_id = debts.id) >= debts.amount) '.$direction);
+        } elseif ($sort && in_array($sort, $sortable, true)) {
             $query->orderBy($sort, $direction);
         } else {
             $query->latest();
@@ -58,6 +60,17 @@ class DebtRepository implements DebtRepositoryInterface
         $this->applyFilters($query, $filters);
 
         return $query->count();
+    }
+
+    /**
+     * Select what has been paid (the sum of the linked records) with every debt.
+     *
+     * @param  Builder<Debt>  $query
+     * @return Builder<Debt>
+     */
+    private function withPaid(Builder $query): Builder
+    {
+        return $query->withSum('payments as paid_amount', 'amount');
     }
 
     /**

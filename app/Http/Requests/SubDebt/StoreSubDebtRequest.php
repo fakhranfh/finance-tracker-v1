@@ -25,7 +25,6 @@ class StoreSubDebtRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'amount' => ['required', 'integer', 'gt:0', 'max:999999999999'],
-            'paid_amount' => ['nullable', 'integer', 'min:0', 'lte:amount'],
             'due_date' => ['nullable', 'date_format:Y-m-d'],
             'note' => ['nullable', 'string', 'max:1000'],
         ];

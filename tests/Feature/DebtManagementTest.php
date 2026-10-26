@@ -15,7 +15,7 @@ it('lists debts via the api', function () {
     $response = $this->actingAs($actor)->getJson('/api/debts');
 
     $response->assertOk();
-    $response->assertJsonStructure(['data' => [['id', 'type', 'name', 'amount', 'paid_amount', 'due_date', 'notes', 'is_paid', 'created_at']]]);
+    $response->assertJsonStructure(['data' => [['id', 'type', 'name', 'amount', 'paid_amount', 'remaining_amount', 'due_date', 'notes', 'is_paid', 'created_at']]]);
     expect($response->json('data'))->toHaveCount(3);
 });
 
@@ -64,10 +64,8 @@ it('creates a debt via the api', function () {
         'type' => 'receivable',
         'name' => 'Sample name',
         'amount' => 150000,
-        'paid_amount' => 50000,
         'due_date' => '2026-01-15',
         'notes' => 'Sample notes',
-        'is_paid' => true,
     ]);
 
     $response->assertStatus(201);
@@ -82,19 +80,23 @@ it('rejects creating a debt with missing required fields', function () {
     $response = $this->actingAs($actor)->postJson('/api/debts', []);
 
     $response->assertStatus(422);
-    $response->assertJsonValidationErrors(['type', 'name', 'amount', 'paid_amount', 'is_paid']);
+    $response->assertJsonValidationErrors(['type', 'name', 'amount']);
 });
 
-it('rejects a paid amount above the total', function () {
+it('ignores a paid amount sent with the debt, since it comes from the payments', function () {
     $actor = User::factory()->create();
 
-    $this->actingAs($actor)->postJson('/api/debts', [
+    $response = $this->actingAs($actor)->postJson('/api/debts', [
         'type' => 'debt',
         'name' => 'Budi Santoso',
         'amount' => 100000,
-        'paid_amount' => 150000,
-        'is_paid' => false,
-    ])->assertStatus(422)->assertJsonValidationErrors(['paid_amount']);
+        'paid_amount' => 100000,
+        'is_paid' => true,
+    ]);
+
+    $response->assertStatus(201);
+    $response->assertJsonPath('data.paid_amount', 0);
+    $response->assertJsonPath('data.is_paid', false);
 });
 
 it('shows a debt via the api', function () {
@@ -115,10 +117,8 @@ it('updates a debt via the api', function () {
         'type' => 'debt',
         'name' => 'Updated name',
         'amount' => 200000,
-        'paid_amount' => 200000,
         'due_date' => '2026-02-20',
         'notes' => 'Updated notes',
-        'is_paid' => false,
     ]);
 
     $response->assertOk();

@@ -53,7 +53,6 @@
     ></div>
 
     <div data-flash-success class="mb-6 hidden rounded-lg border border-success/20 bg-success/10 px-4 py-3 font-body text-sm text-success"></div>
-    <div data-status-error role="alert" class="mb-6 hidden rounded-lg border border-error/20 bg-error/10 px-4 py-3 font-body text-sm text-error">{{ __('sub-debts.flash.status_failed') }}</div>
 
     <p class="mb-4 hidden font-body text-body-md font-medium text-on-surface" data-sub-debts-summary></p>
 
@@ -84,6 +83,7 @@
                     'empty' => __('sub-debts.table.empty'),
                     'expand' => __('sub-debts.table.show_more'),
                     'collapse' => __('sub-debts.table.show_less'),
+                    'view' => __('sub-debts.actions.payments'),
                     'edit' => __('sub-debts.actions.edit'),
                     'delete' => __('sub-debts.actions.delete'),
                 ],

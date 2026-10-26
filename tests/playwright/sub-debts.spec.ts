@@ -10,7 +10,7 @@ async function login(page, email: string, password: string) {
 }
 
 test.describe('Sub debts', () => {
-    test('splits a debt into sub debts and marks them paid', async ({ page }) => {
+    test('splits a debt into sub debts and edits them together', async ({ page }) => {
         const { email, password } = seedUser();
         const name = `E2E ${Date.now()}`;
 
@@ -22,7 +22,6 @@ test.describe('Sub debts', () => {
 
         await page.locator('[name="sub_debts.0.name"]').fill('Uang muka');
         await page.locator('[name="sub_debts.0.amount"]').fill('100000');
-        await page.locator('[name="sub_debts.0.paid_amount"]').fill('100000');
 
         await page.getByRole('button', { name: 'Add sub debt' }).click();
         await page.locator('[name="sub_debts.1.name"]').fill('Pelunasan');
@@ -30,7 +29,7 @@ test.describe('Sub debts', () => {
 
         await expect(page.locator('#sub-debts [data-sub-debts-totals]')).toContainText('300.000');
         await expect(page.locator('#amount')).toHaveValue('300.000');
-        await expect(page.locator('#paid_amount')).toHaveValue('100.000');
+        await expect(page.locator('#paid_amount')).toHaveCount(0);
 
         await page.getByRole('button', { name: 'Save' }).click();
         await expect(page).toHaveURL('/debts');
@@ -41,11 +40,8 @@ test.describe('Sub debts', () => {
 
         await expect(page).toHaveURL(/\/debts\/\d+\/sub-debts$/);
         await expect(page.getByRole('heading', { name: 'Sub debts' })).toBeVisible();
-        await expect(page.getByRole('row', { name: /Uang muka/ })).toContainText('Paid');
-
-        await page.getByRole('checkbox', { name: 'Pelunasan' }).check();
-        await expect(page.getByRole('row', { name: /Pelunasan/ })).toContainText('200.000');
-        await expect(page.locator('[data-sub-debts-summary]')).toContainText('2 of 2 sub debts paid');
+        await expect(page.getByRole('row', { name: /Uang muka/ })).toContainText('Not paid');
+        await expect(page.locator('[data-sub-debts-summary]')).toContainText('0 of 2 sub debts paid');
 
         const listUrl = page.url();
         await page.goto(`${listUrl}/edit`);
@@ -63,7 +59,7 @@ test.describe('Sub debts', () => {
         await expect(page).toHaveURL(/\/debts\/\d+\/sub-debts$/);
         await expect(page.getByRole('row', { name: /Pelunasan akhir/ })).toBeVisible();
         await expect(page.getByRole('row', { name: /Biaya admin/ })).toContainText('Not paid');
-        await expect(page.locator('[data-sub-debts-summary]')).toContainText('2 of 3 sub debts paid');
+        await expect(page.locator('[data-sub-debts-summary]')).toContainText('0 of 3 sub debts paid');
 
         await page.getByRole('row', { name: /Uang muka/ }).getByRole('link', { name: 'Edit' }).click();
         await expect(page).toHaveURL(/\/debts\/\d+\/sub-debts\/\d+\/edit$/);
@@ -129,7 +125,6 @@ test.describe('Sub debts', () => {
         await expect(page).toHaveURL(/\/debts\/\d+\/sub-debts\/create$/);
         await page.getByLabel('Name', { exact: true }).fill('Cicilan motor');
         await page.getByLabel('Amount', { exact: true }).fill('120000');
-        await page.getByLabel('Paid Amount', { exact: true }).fill('20000');
         await page.getByRole('button', { name: 'Save' }).click();
 
         await expect(page).toHaveURL(/\/debts\/\d+\/sub-debts$/);

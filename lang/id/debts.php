@@ -55,6 +55,7 @@ return [
     ],
 
     'actions' => [
+        'payments' => 'Pembayaran',
         'edit' => 'Ubah',
         'delete' => 'Hapus',
         'save' => 'Simpan',

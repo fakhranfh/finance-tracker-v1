@@ -45,7 +45,7 @@
 
     <div data-flash-success class="mb-6 hidden rounded-lg border border-success/20 bg-success/10 px-4 py-3 font-body text-sm text-success"></div>
 
-    <div id="debts-filters" data-debt-type="{{ $type }}">
+    <div id="debts-filters" data-debt-type="{{ $type }}" data-payments-label="{{ __('debts.actions.payments') }}">
         <input type="hidden" name="type" value="{{ $type }}" data-table-filter>
     </div>
 

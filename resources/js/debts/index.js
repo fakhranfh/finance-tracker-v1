@@ -36,6 +36,7 @@ createTable({
             formatDateTime(item.created_at),
         ],
         viewUrl: routes.pages.debtSubDebts(item.id, item.type),
+        extraActions: [{ label: document.getElementById('debts-filters').dataset.paymentsLabel, url: routes.pages.debtPayments(item.id, item.type) }],
         editUrl: routes.pages.debtEdit(item.id, item.type),
         locked: false,
     }),

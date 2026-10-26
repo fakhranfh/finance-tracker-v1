@@ -29,7 +29,7 @@ return [
         'title' => 'Amount',
         'amount' => 'A single amount',
         'sub_debts' => 'Split into sub debts',
-        'hint' => 'With sub debts, the amount, the paid amount and the paid status follow the sub debts.',
+        'hint' => 'With sub debts, the amount follows the sub debts. What was paid comes from the payments.',
     ],
 
     'table' => [
@@ -64,13 +64,14 @@ return [
 
     'form' => [
         'title' => 'Sub debts',
-        'hint' => 'Break the amount down into instalments. Their total becomes the amount, and what has been paid becomes the paid amount.',
+        'hint' => 'Break the amount down into instalments. Their total becomes the amount. Payments are added to each sub debt afterwards.',
         'edit' => 'Edit sub debts',
         'remove' => 'Remove',
-        'totals' => 'Sub debts total :amount, paid :paid',
+        'totals' => 'Sub debts total :amount',
     ],
 
     'actions' => [
+        'payments' => 'Payments',
         'delete' => 'Delete',
         'confirm_delete' => 'Are you sure you want to delete this sub debt?',
         'delete_selected' => 'Delete selected',

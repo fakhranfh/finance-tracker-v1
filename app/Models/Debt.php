@@ -6,11 +6,16 @@ use App\Enums\DebtType;
 use App\Models\Concerns\HasUserTimezone;
 use Database\Factories\DebtFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['type', 'name', 'amount', 'paid_amount', 'due_date', 'notes', 'is_paid'])]
+/**
+ * Money the user owes (debt) or is owed (receivable). What has been paid is the sum of the records
+ * linked to it as payments, never stored.
+ */
+#[Fillable(['type', 'name', 'amount', 'due_date', 'notes'])]
 class Debt extends Model
 {
     /** @use HasFactory<DebtFactory> */
@@ -19,16 +24,52 @@ class Debt extends Model
     /**
      * Get the attributes that should be cast.
      *
-     * @return array<string, string>
+     * @return array{type: 'App\Enums\DebtType', amount: 'integer'}
      */
     protected function casts(): array
     {
         return [
             'type' => DebtType::class,
             'amount' => 'integer',
-            'paid_amount' => 'integer',
-            'is_paid' => 'boolean',
         ];
+    }
+
+    /**
+     * The sum of the linked records; read from the `paid_amount` the repository selected when it is there.
+     *
+     * @return Attribute<int, never>
+     */
+    protected function paidAmount(): Attribute
+    {
+        return Attribute::get(fn (mixed $value, array $attributes): int => array_key_exists('paid_amount', $attributes)
+            ? (int) $value
+            : (int) $this->payments()->sum('amount'));
+    }
+
+    /**
+     * @return Attribute<bool, never>
+     */
+    protected function isPaid(): Attribute
+    {
+        return Attribute::get(fn (): bool => $this->paid_amount >= $this->amount);
+    }
+
+    /**
+     * @return Attribute<int<0, max>, never>
+     */
+    protected function remainingAmount(): Attribute
+    {
+        return Attribute::get(fn (): int => max(0, $this->amount - $this->paid_amount));
+    }
+
+    /**
+     * The records that pay this debt off.
+     *
+     * @return HasMany<Record, $this>
+     */
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Record::class);
     }
 
     /**

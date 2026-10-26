@@ -23,12 +23,10 @@ function dateFromToday(days) {
 
 export function subDebtItemFormFixture() {
     const amount = randomInt(5, 100) * 10000;
-    const isPaid = Math.random() < 0.4;
 
     return {
         name: randomItem(NAMES),
         amount: String(amount),
-        paid_amount: String(isPaid ? amount : randomInt(0, 8) * (amount / 10)),
         due_date: dateFromToday(randomInt(-30, 180)),
         note: randomItem(NOTES),
     };

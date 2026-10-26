@@ -11,7 +11,7 @@ const debtId = form?.dataset.debtId;
 const type = form?.dataset.type;
 
 /**
- * Edits all sub debts of one debt on their own page. The debt's amount and paid amount sit in hidden inputs
+ * Edits all sub debts of one debt on their own page. The debt's amount and due date sit in hidden inputs
  * so the repeater has something to keep in step; the server derives the debt's totals from the rows.
  */
 async function loadDebt(subDebtsField) {
@@ -24,7 +24,6 @@ async function loadDebt(subDebtsField) {
     } else {
         document.querySelector('[data-debt-name]').textContent = data.data.name;
         form.elements.namedItem('amount').value = data.data.amount;
-        form.elements.namedItem('paid_amount').value = data.data.paid_amount;
         form.elements.namedItem('due_date').value = data.data.due_date ?? '';
         subDebtsField.load(subDebts);
     }

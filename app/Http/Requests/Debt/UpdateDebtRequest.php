@@ -30,10 +30,8 @@ class UpdateDebtRequest extends FormRequest
             'type' => ['required', Rule::enum(DebtType::class)],
             'name' => ['required', 'string', 'max:255'],
             'amount' => ['required', 'integer', 'gt:0', 'max:999999999999'],
-            'paid_amount' => ['required', 'integer', 'min:0', 'lte:amount'],
             'due_date' => ['nullable', 'date'],
             'notes' => ['nullable', 'string'],
-            'is_paid' => ['required', 'boolean'],
             ...$this->subDebtRules($this->route('debt')),
         ];
     }

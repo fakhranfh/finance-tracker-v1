@@ -53,20 +53,14 @@ class SubDebtManagementService
     }
 
     /**
-     * Create one sub debt for the debt; it counts as paid once its paid amount reaches its amount and the debt follows.
+     * Create one sub debt for the debt; the debt's amount follows the sub debts.
      *
      * @param  array<string, mixed>  $data
      */
     public function create(Debt $debt, array $data): SubDebt
     {
         return $this->subDebtRepository->transaction(function () use ($debt, $data): SubDebt {
-            $paid = min((int) ($data['paid_amount'] ?? 0), (int) $data['amount']);
-
-            $subDebt = $this->subDebtRepository->create($debt->id, [
-                ...$data,
-                'paid_amount' => $paid,
-                'is_paid' => $paid >= (int) $data['amount'],
-            ]);
+            $subDebt = $this->subDebtRepository->create($debt->id, $data);
             $this->refreshTotals($debt);
 
             return $subDebt;
@@ -74,26 +68,13 @@ class SubDebtManagementService
     }
 
     /**
-     * Update a sub debt by hand. `is_paid` marks it fully paid (or back to nothing paid) unless a `paid_amount` is
-     * given; the sub debt counts as paid once its paid amount reaches its amount and the debt follows.
+     * Update a sub debt's details; the debt's amount follows the sub debts. What was paid comes from its payments.
      *
      * @param  array<string, mixed>  $data
      */
     public function update(SubDebt $subDebt, array $data): SubDebt
     {
         return $this->subDebtRepository->transaction(function () use ($subDebt, $data): SubDebt {
-            $amount = (int) ($data['amount'] ?? $subDebt->amount);
-
-            if (array_key_exists('is_paid', $data) && ! array_key_exists('paid_amount', $data)) {
-                $paid = $data['is_paid'] ? $amount : 0;
-            } else {
-                $paid = (int) ($data['paid_amount'] ?? $subDebt->paid_amount);
-            }
-
-            $paid = min($paid, $amount);
-            $data['paid_amount'] = $paid;
-            $data['is_paid'] = $paid >= $amount;
-
             $subDebt = $this->subDebtRepository->update($subDebt, $data);
             $this->refreshTotals($subDebt->debt);
 
@@ -102,7 +83,7 @@ class SubDebtManagementService
     }
 
     /**
-     * Delete a sub debt; the debt's totals follow the sub debts left.
+     * Delete a sub debt; its payments stay as records, and the debt's amount follows the sub debts left.
      */
     public function delete(SubDebt $subDebt): void
     {
@@ -140,8 +121,7 @@ class SubDebtManagementService
 
     /**
      * Make the debt's sub debts match the given list, all or nothing: items with an id are updated, items without
-     * one are created and the sub debts left out are removed. A non-empty list also sets the debt's amount, paid
-     * amount and paid flag from the sub debts.
+     * one are created and the sub debts left out are removed. A non-empty list also sets the debt's amount from them.
      *
      * @param  array<int, array<string, mixed>>  $items
      */
@@ -152,13 +132,10 @@ class SubDebtManagementService
             $kept = [];
 
             foreach ($items as $item) {
-                $paid = (int) ($item['paid_amount'] ?? 0);
                 $fields = [
                     'name' => $item['name'],
                     'amount' => $item['amount'],
-                    'paid_amount' => $paid,
                     'due_date' => $item['due_date'] ?? null,
-                    'is_paid' => $paid >= (int) $item['amount'],
                     'note' => $item['note'] ?? null,
                 ];
                 $id = (int) ($item['id'] ?? 0);
@@ -182,7 +159,7 @@ class SubDebtManagementService
     }
 
     /**
-     * Set the debt's amount, paid amount and paid flag from its sub debts (left alone when it has none).
+     * Set the debt's amount from its sub debts (left alone when it has none).
      */
     public function refreshTotals(Debt $debt): void
     {
@@ -192,10 +169,6 @@ class SubDebtManagementService
             return;
         }
 
-        $this->debtRepository->update($debt, [
-            'amount' => $summary['amount_total'],
-            'paid_amount' => $summary['paid_total'],
-            'is_paid' => $summary['paid'] === $summary['total'],
-        ]);
+        $this->debtRepository->update($debt, ['amount' => $summary['amount_total']]);
     }
 }

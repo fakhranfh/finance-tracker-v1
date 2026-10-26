@@ -28,10 +28,8 @@ async function loadItem() {
     if (ok) {
         form.elements.namedItem('name').value = data.data.name ?? '';
         form.elements.namedItem('amount').value = data.data.amount ?? '';
-        form.elements.namedItem('paid_amount').value = data.data.paid_amount ?? '';
         form.elements.namedItem('due_date').value = data.data.due_date ?? '';
         form.elements.namedItem('notes').value = data.data.notes ?? '';
-        form.elements.namedItem('is_paid').checked = Boolean(data.data.is_paid);
     }
 
     const subDebts = ok ? await getAll(routes.debts.subDebts(itemId)) : null;
@@ -69,10 +67,8 @@ if (form) {
             type: form.elements.namedItem('type').value,
             name: form.elements.namedItem('name').value,
             amount: form.elements.namedItem('amount').value,
-            paid_amount: form.elements.namedItem('paid_amount').value,
             due_date: form.elements.namedItem('due_date').value,
             notes: form.elements.namedItem('notes').value,
-            is_paid: form.elements.namedItem('is_paid').checked,
             sub_debts: subDebtsField.payload(),
         };
 

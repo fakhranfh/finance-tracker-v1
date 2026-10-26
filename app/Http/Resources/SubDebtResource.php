@@ -27,6 +27,7 @@ class SubDebtResource extends JsonResource
             'name' => $subDebt->name,
             'amount' => $subDebt->amount,
             'paid_amount' => $subDebt->paid_amount,
+            'remaining_amount' => $subDebt->remaining_amount,
             'due_date' => $subDebt->due_date,
             'is_paid' => $subDebt->is_paid,
             'note' => $subDebt->note,

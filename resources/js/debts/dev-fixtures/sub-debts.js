@@ -1,6 +1,6 @@
 /**
  * Dev-only autofill fixture for the debt form's sub debt rows — generated entirely in JS (no REST call).
- * Splits the debt's amount over two to four instalments, paying the first ones in full.
+ * Splits the debt's amount over two to four instalments.
  * Per .ai/rules/dev-autofill.md.
  */
 
@@ -22,7 +22,6 @@ export function subDebtFixtures({ amount }) {
     const total = Number(amount) || randomInt(5, 500) * 10000;
     const parts = randomInt(2, 4);
     const share = Math.floor(total / parts / 1000) * 1000;
-    const paidParts = randomInt(0, parts - 1);
 
     return Array.from({ length: parts }, (_, index) => {
         const rowAmount = index === parts - 1 ? total - share * (parts - 1) : share;
@@ -30,7 +29,6 @@ export function subDebtFixtures({ amount }) {
         return {
             name: NAMES[index] ?? NAMES[NAMES.length - 1],
             amount: String(rowAmount),
-            paid_amount: String(index < paidParts ? rowAmount : 0),
             due_date: dateFromToday((index + 1) * 30),
             note: NOTES[randomInt(0, NOTES.length - 1)],
         };

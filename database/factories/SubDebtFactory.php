@@ -23,15 +23,12 @@ class SubDebtFactory extends Factory
     public function definition(): array
     {
         $amount = fake()->numberBetween(5, 100) * 10_000;
-        $isPaid = fake()->boolean(40);
 
         return [
             'debt_id' => Debt::factory(),
             'name' => fake()->randomElement(self::NAMES),
             'amount' => $amount,
-            'paid_amount' => $isPaid ? $amount : 0,
             'due_date' => fake()->dateTimeBetween('-1 month', '+6 months')->format('Y-m-d'),
-            'is_paid' => $isPaid,
             'note' => fake()->boolean(50) ? fake()->randomElement(self::NOTES) : null,
         ];
     }

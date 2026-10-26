@@ -18,6 +18,7 @@ use OpenApi\Attributes as OA;
 #[OA\Tag(name: 'Accounts', description: 'Account endpoints')]
 #[OA\Tag(name: 'Categories', description: 'Record category endpoints')]
 #[OA\Tag(name: 'Webhooks', description: 'Webhook management and public record intake endpoints')]
+#[OA\Tag(name: 'Debt Payments', description: 'Records that pay a debt or receivable off')]
 #[OA\Tag(name: 'Sub Debts', description: 'Sub debt endpoints (the instalments of a debt or receivable)')]
 #[OA\Tag(name: 'Sub Goals', description: 'Sub goal endpoints (the steps needed to reach a goal)')]
 #[OA\Schema(

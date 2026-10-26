@@ -27,6 +27,7 @@ class DebtResource extends JsonResource
             'name' => $debt->name,
             'amount' => $debt->amount,
             'paid_amount' => $debt->paid_amount,
+            'remaining_amount' => $debt->remaining_amount,
             'due_date' => $debt->due_date,
             'notes' => $debt->notes,
             'is_paid' => $debt->is_paid,

@@ -32,6 +32,42 @@ class RecordRepository implements RecordRepositoryInterface
         return $query->paginate($perPage)->withQueryString();
     }
 
+    public function paginateForDebt(int $debtId, ?int $subDebtId, int $perPage, ?string $search = null, ?string $sort = null, string $direction = 'desc'): LengthAwarePaginator
+    {
+        $query = Record::query()
+            ->with(['account', 'category', 'subDebt'])
+            ->where('debt_id', $debtId)
+            ->when($subDebtId, fn (Builder $q, int $id) => $q->where('sub_debt_id', $id));
+
+        $this->applySearch($query, $search);
+        $this->applySort($query, $sort, $direction);
+
+        return $query->paginate($perPage)->withQueryString();
+    }
+
+    public function paginateAvailable(string $type, int $perPage, ?string $search = null, ?string $sort = null, string $direction = 'desc'): LengthAwarePaginator
+    {
+        $query = Record::query()
+            ->with(['account', 'category', 'subDebt'])
+            ->where('type', $type)
+            ->whereNull('debt_id');
+
+        $this->applySearch($query, $search);
+        $this->applySort($query, $sort, $direction);
+
+        return $query->paginate($perPage)->withQueryString();
+    }
+
+    public function linkToDebt(Record $record, int $debtId, ?int $subDebtId = null): void
+    {
+        Record::query()->whereKey($record->id)->update(['debt_id' => $debtId, 'sub_debt_id' => $subDebtId]);
+    }
+
+    public function unlinkFromDebt(Record $record): void
+    {
+        Record::query()->whereKey($record->id)->update(['debt_id' => null, 'sub_debt_id' => null]);
+    }
+
     public function export(?string $search = null, ?string $sort = null, string $direction = 'asc', array $filters = []): LazyCollection
     {
         $query = Record::query()->with(['account', 'toAccount', 'category']);

@@ -22,7 +22,7 @@ async function loadItem() {
     }
 
     if (item.ok) {
-        ['name', 'amount', 'paid_amount', 'due_date', 'note'].forEach((field) => {
+        ['name', 'amount', 'due_date', 'note'].forEach((field) => {
             form.elements.namedItem(field).value = item.data.data[field] ?? '';
         });
     } else {
@@ -66,7 +66,6 @@ if (form) {
         const payload = {
             name: form.elements.namedItem('name').value,
             amount: form.elements.namedItem('amount').value,
-            paid_amount: form.elements.namedItem('paid_amount').value || '0',
             due_date: form.elements.namedItem('due_date').value || null,
             note: form.elements.namedItem('note').value || null,
         };

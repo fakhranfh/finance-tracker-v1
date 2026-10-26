@@ -55,6 +55,7 @@ return [
     ],
 
     'actions' => [
+        'payments' => 'Payments',
         'edit' => 'Edit',
         'delete' => 'Delete',
         'save' => 'Save',

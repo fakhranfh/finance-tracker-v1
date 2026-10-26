@@ -2,7 +2,7 @@
     id="sub-debts"
     class="space-y-3"
     data-sub-debts-field
-    data-totals-template="{{ __('sub-debts.form.totals', ['amount' => ':amount', 'paid' => ':paid']) }}"
+    data-totals-template="{{ __('sub-debts.form.totals', ['amount' => ':amount']) }}"
 >
     <legend class="font-body text-body-sm font-medium text-on-surface">{{ __('sub-debts.form.title') }}</legend>
     <p class="font-body text-body-sm text-on-surface-variant">{{ __('sub-debts.form.hint') }}</p>
@@ -13,10 +13,7 @@
         <div class="space-y-3 rounded-lg border border-outline-variant p-4" data-sub-debt-row>
             <input type="hidden" name="sub_debts.__INDEX__.id">
             <x-molecules.form-group name="sub_debts.__INDEX__.name" type="text" :label="__('sub-debts.fields.name')" maxlength="255" required />
-            <div class="grid gap-3 sm:grid-cols-2">
-                <x-molecules.form-group name="sub_debts.__INDEX__.amount" type="text" inputmode="numeric" :label="__('sub-debts.fields.amount')" data-money required />
-                <x-molecules.form-group name="sub_debts.__INDEX__.paid_amount" type="text" inputmode="numeric" :label="__('sub-debts.fields.paid_amount')" data-money />
-            </div>
+            <x-molecules.form-group name="sub_debts.__INDEX__.amount" type="text" inputmode="numeric" :label="__('sub-debts.fields.amount')" data-money required />
             <x-molecules.form-group name="sub_debts.__INDEX__.due_date" type="date" :label="__('sub-debts.fields.due_date')" />
             <div class="flex items-center gap-2">
                 <x-atoms.checkbox name="sub_debts.__INDEX__.same_due_date" id="sub_debts.__INDEX__.same_due_date" />

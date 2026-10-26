@@ -55,12 +55,7 @@
             <x-organisms.sub-debts-field />
 
             <x-molecules.form-group name="amount" type="text" inputmode="numeric" :label="__('debts.fields.amount')" data-money required />
-            <x-molecules.form-group name="paid_amount" type="text" inputmode="numeric" :label="__('debts.fields.paid_amount')" value="0" data-money required />
             <x-molecules.form-group name="notes" type="text" :label="__('debts.fields.notes')" />
-            <div class="flex items-center gap-2">
-                <x-atoms.checkbox name="is_paid" id="is_paid" />
-                <x-atoms.label for="is_paid">{{ __('debts.fields.is_paid') }}</x-atoms.label>
-            </div>
 
             <div class="flex items-center gap-3">
                 <x-atoms.button type="submit">

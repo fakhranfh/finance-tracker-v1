@@ -35,7 +35,6 @@
             @csrf
 
             <input type="hidden" name="amount">
-            <input type="hidden" name="paid_amount">
             <input type="hidden" name="due_date">
 
             <x-organisms.sub-debts-field />

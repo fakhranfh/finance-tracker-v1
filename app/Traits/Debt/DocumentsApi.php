@@ -36,10 +36,8 @@ trait DocumentsApi
                     new OA\Property(property: 'type', type: 'string', enum: ['debt', 'receivable'], example: 'debt'),
                     new OA\Property(property: 'name', type: 'string', example: 'Sample name'),
                     new OA\Property(property: 'amount', type: 'integer', example: 150000),
-                    new OA\Property(property: 'paid_amount', type: 'integer', example: 150000),
                     new OA\Property(property: 'due_date', type: 'string', format: 'date', example: '2026-01-15'),
                     new OA\Property(property: 'notes', type: 'string', example: 'Sample notes'),
-                    new OA\Property(property: 'is_paid', type: 'boolean', example: true),
                 ]
             )
         ),
@@ -74,10 +72,8 @@ trait DocumentsApi
                     new OA\Property(property: 'type', type: 'string', enum: ['debt', 'receivable'], example: 'debt'),
                     new OA\Property(property: 'name', type: 'string', example: 'Sample name'),
                     new OA\Property(property: 'amount', type: 'integer', example: 150000),
-                    new OA\Property(property: 'paid_amount', type: 'integer', example: 150000),
                     new OA\Property(property: 'due_date', type: 'string', format: 'date', example: '2026-01-15'),
                     new OA\Property(property: 'notes', type: 'string', example: 'Sample notes'),
-                    new OA\Property(property: 'is_paid', type: 'boolean', example: true),
                 ]
             )
         ),

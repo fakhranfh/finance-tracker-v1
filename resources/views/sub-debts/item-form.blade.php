@@ -39,7 +39,6 @@
 
             <x-molecules.form-group name="name" type="text" :label="__('sub-debts.fields.name')" maxlength="255" required autofocus />
             <x-molecules.form-group name="amount" type="text" inputmode="numeric" :label="__('sub-debts.fields.amount')" data-money required />
-            <x-molecules.form-group name="paid_amount" type="text" inputmode="numeric" :label="__('sub-debts.fields.paid_amount')" value="0" data-money />
             <x-molecules.form-group name="due_date" type="date" :label="__('sub-debts.fields.due_date')" />
             <x-molecules.form-group name="note" type="text" :label="__('sub-debts.fields.note')" maxlength="1000" />
 

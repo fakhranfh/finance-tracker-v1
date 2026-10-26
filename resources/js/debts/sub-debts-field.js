@@ -1,12 +1,13 @@
 import { wireMoneyInputs } from '../shared/money-input.js';
 import { formatMoney } from '../shared/money.js';
 
-const FIELDS = ['id', 'name', 'amount', 'paid_amount', 'due_date', 'note'];
+const FIELDS = ['id', 'name', 'amount', 'due_date', 'note'];
 
 /**
  * The "Sub debts" repeater of the debt form: one row per instalment, edited together with the debt.
- * With the "sub debts" mode on, the amount and paid amount inputs follow the rows (their sums) and the paid
- * checkbox ticks itself once every row is paid. In "amount" mode the field is hidden and an empty list is sent.
+ * With the "sub debts" mode on, the amount input follows the rows (their sum). In "amount" mode the field is
+ * hidden and an empty list is sent. What was paid is not typed in: it comes from the records that pay the
+ * debt or sub debt off.
  * config: { form }
  * returns: { add, fill, load, markUnloaded, payload }
  */
@@ -16,8 +17,6 @@ export function createSubDebtsField({ form }) {
     const template = root.querySelector('template');
     const totals = root.querySelector('[data-sub-debts-totals]');
     const amountInput = form.elements.namedItem('amount');
-    const paidInput = form.elements.namedItem('paid_amount');
-    const isPaidInput = form.elements.namedItem('is_paid');
     const dueDateInput = form.elements.namedItem('due_date');
     const modeInputs = [...form.querySelectorAll('[name="debt_mode"]')];
 
@@ -29,7 +28,6 @@ export function createSubDebtsField({ form }) {
     const rows = () => [...rowsNode.querySelectorAll('[data-sub-debt-row]')];
     const input = (row, name) => row.querySelector(`[name$=".${name}"]`);
     const sum = (name) => rows().reduce((total, row) => total + (Number(input(row, name).value) || 0), 0);
-    const allPaid = () => rows().length > 0 && rows().every((row) => (Number(input(row, 'paid_amount').value) || 0) >= (Number(input(row, 'amount').value) || 0));
 
     /** Keeps the field names, ids and error slots of every row in step with its position, so server errors land on the right row. */
     function renumber() {
@@ -44,23 +42,15 @@ export function createSubDebtsField({ form }) {
         });
     }
 
-    /** Refreshes the totals line and the debt's own amount, paid amount and paid flag. */
+    /** Refreshes the totals line, the debt's own amount and the rows that follow the debt's due date. */
     function sync() {
         const items = rows();
         const follow = useSubDebts && items.length > 0;
 
         amountInput.readOnly = follow;
-        paidInput.readOnly = follow;
-        if (isPaidInput) {
-            isPaidInput.disabled = follow;
-        }
 
         if (follow) {
             amountInput.value = String(sum('amount'));
-            paidInput.value = String(sum('paid_amount'));
-            if (isPaidInput) {
-                isPaidInput.checked = allPaid();
-            }
         }
 
         items.forEach((row) => {
@@ -79,9 +69,7 @@ export function createSubDebtsField({ form }) {
         });
 
         totals.classList.toggle('hidden', items.length === 0);
-        totals.textContent = root.dataset.totalsTemplate
-            .replace(':amount', formatMoney(sum('amount')))
-            .replace(':paid', formatMoney(sum('paid_amount')));
+        totals.textContent = root.dataset.totalsTemplate.replace(':amount', formatMoney(sum('amount')));
     }
 
     function add(values = {}) {
@@ -92,7 +80,7 @@ export function createSubDebtsField({ form }) {
         wireMoneyInputs(row);
 
         FIELDS.forEach((name) => {
-            input(row, name).value = values[name] ?? (name === 'paid_amount' ? '0' : '');
+            input(row, name).value = values[name] ?? '';
         });
 
         // A new sub debt starts out due on the same day as its debt; an existing one only when its date already matches.
@@ -177,7 +165,6 @@ export function createSubDebtsField({ form }) {
                 id: input(row, 'id').value ? Number(input(row, 'id').value) : undefined,
                 name: input(row, 'name').value,
                 amount: input(row, 'amount').value,
-                paid_amount: input(row, 'paid_amount').value || '0',
                 due_date: input(row, 'due_date').value || null,
                 note: input(row, 'note').value || null,
             }));

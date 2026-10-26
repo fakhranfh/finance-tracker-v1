@@ -1,12 +1,11 @@
 import { createTable } from '../shared/table/table.js';
 import { formatDate } from '../shared/datetime.js';
 import { formatMoney } from '../shared/money.js';
-import { get, put } from '../shared/http.js';
+import { get } from '../shared/http.js';
 import { routes } from '../routes.js';
 
 const page = document.getElementById('sub-debts-page');
 const debtId = page?.dataset.debtId;
-const statusError = document.querySelector('[data-status-error]');
 const summaryNode = document.querySelector('[data-sub-debts-summary]');
 
 async function refreshSummary() {
@@ -22,48 +21,13 @@ async function refreshSummary() {
     }
 }
 
-/** Inline checkbox: saves the sub debt as paid / unpaid and reverts the tick if that fails. */
-function paidNode(item, paidAmountNode) {
-    const label = document.createElement('label');
-    label.className = 'inline-flex cursor-pointer items-center gap-2';
-
-    const checkbox = document.createElement('input');
-    checkbox.type = 'checkbox';
-    checkbox.className = 'h-4 w-4 cursor-pointer rounded border-outline-variant text-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:cursor-default';
-    checkbox.checked = item.is_paid;
-    checkbox.setAttribute('aria-label', item.name);
-
+/** Whether the sub debt has been paid off, in words. */
+function statusNode(item) {
     const text = document.createElement('span');
+
     text.textContent = item.is_paid ? page.dataset.paidLabel : page.dataset.unpaidLabel;
 
-    checkbox.addEventListener('change', async () => {
-        checkbox.disabled = true;
-        statusError.classList.add('hidden');
-
-        try {
-            const { ok, data } = await put(routes.debts.subDebt(debtId, item.id), { is_paid: checkbox.checked });
-
-            if (ok) {
-                item.is_paid = data.data.is_paid;
-                item.paid_amount = data.data.paid_amount;
-                text.textContent = item.is_paid ? page.dataset.paidLabel : page.dataset.unpaidLabel;
-                paidAmountNode.textContent = formatMoney(item.paid_amount);
-                refreshSummary();
-            } else {
-                checkbox.checked = item.is_paid;
-                statusError.classList.remove('hidden');
-            }
-        } catch {
-            checkbox.checked = item.is_paid;
-            statusError.classList.remove('hidden');
-        } finally {
-            checkbox.disabled = false;
-        }
-    });
-
-    label.append(checkbox, text);
-
-    return label;
+    return text;
 }
 
 if (page) {
@@ -96,19 +60,16 @@ if (page) {
             generate: routes.debts.generateSubDebts(debtId),
         },
         row: (item) => {
-            const paidAmountNode = document.createElement('span');
-
-            paidAmountNode.textContent = formatMoney(item.paid_amount);
-
             return {
                 cells: [
                     item.name ?? '',
                     formatMoney(item.amount),
-                    paidAmountNode,
+                    formatMoney(item.paid_amount),
                     item.due_date ? formatDate(item.due_date) : '-',
-                    paidNode(item, paidAmountNode),
+                    statusNode(item),
                     item.note ?? '',
                 ],
+                viewUrl: `${routes.pages.debtPayments(debtId, data?.data?.type)}?sub_debt_id=${item.id}`,
                 editUrl: routes.pages.debtSubDebtEdit(debtId, item.id, data?.data?.type),
                 locked: false,
             };

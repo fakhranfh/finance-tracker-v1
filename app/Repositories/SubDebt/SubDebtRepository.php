@@ -14,14 +14,16 @@ class SubDebtRepository implements SubDebtRepositoryInterface
 
     public function paginate(int $debtId, int $perPage, ?string $search = null, ?string $sort = null, string $direction = 'asc'): LengthAwarePaginator
     {
-        $query = SubDebt::query()->where('debt_id', $debtId);
+        $query = $this->withPaid(SubDebt::query())->where('debt_id', $debtId);
 
         $this->applySearch($query, $search);
 
         $sortable = ['name', 'amount', 'paid_amount', 'due_date', 'is_paid', 'note', 'created_at'];
         $direction = $direction === 'desc' ? 'desc' : 'asc';
 
-        if ($sort && in_array($sort, $sortable, true)) {
+        if ($sort === 'is_paid') {
+            $query->orderByRaw('((select coalesce(sum(records.amount), 0) from records where records.sub_debt_id = sub_debts.id) >= sub_debts.amount) '.$direction);
+        } elseif ($sort && in_array($sort, $sortable, true)) {
             $query->orderBy($sort, $direction);
         } else {
             $query->oldest();
@@ -32,18 +34,18 @@ class SubDebtRepository implements SubDebtRepositoryInterface
 
     public function getForDebt(int $debtId): Collection
     {
-        return SubDebt::query()->where('debt_id', $debtId)->orderBy('id')->get();
+        return $this->withPaid(SubDebt::query())->where('debt_id', $debtId)->orderBy('id')->get();
     }
 
     public function summary(int $debtId): array
     {
-        $query = SubDebt::query()->where('debt_id', $debtId);
+        $subDebts = $this->getForDebt($debtId);
 
         return [
-            'total' => (clone $query)->count(),
-            'paid' => (clone $query)->where('is_paid', true)->count(),
-            'amount_total' => (int) (clone $query)->sum('amount'),
-            'paid_total' => (int) $query->sum('paid_amount'),
+            'total' => $subDebts->count(),
+            'paid' => $subDebts->filter(fn (SubDebt $subDebt) => $subDebt->is_paid)->count(),
+            'amount_total' => (int) $subDebts->sum('amount'),
+            'paid_total' => (int) $subDebts->sum('paid_amount'),
         ];
     }
 
@@ -85,6 +87,17 @@ class SubDebtRepository implements SubDebtRepositoryInterface
         $subDebt->update($data);
 
         return $subDebt;
+    }
+
+    /**
+     * Select what has been paid (the sum of the linked records) with every sub debt.
+     *
+     * @param  Builder<SubDebt>  $query
+     * @return Builder<SubDebt>
+     */
+    private function withPaid(Builder $query): Builder
+    {
+        return $query->withSum('payments as paid_amount', 'amount');
     }
 
     private function applySearch(Builder $query, ?string $search): void

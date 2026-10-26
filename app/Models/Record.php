@@ -15,7 +15,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * An income, expense or transfer. For transfers, `account_id` is the source
  * and `to_account_id` the destination.
  * */
-#[Fillable(['type', 'account_id', 'to_account_id', 'category_id', 'amount', 'note', 'recorded_at'])]
+#[Fillable(['type', 'account_id', 'to_account_id', 'category_id', 'debt_id', 'sub_debt_id', 'amount', 'note', 'recorded_at'])]
 #[ObservedBy(RecordObserver::class)]
 class Record extends Model
 {
@@ -50,6 +50,26 @@ class Record extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
+    }
+
+    /**
+     * The debt this record pays off, if any.
+     *
+     * @return BelongsTo<Debt, $this>
+     */
+    public function debt(): BelongsTo
+    {
+        return $this->belongsTo(Debt::class);
+    }
+
+    /**
+     * The sub debt this record pays off, if any.
+     *
+     * @return BelongsTo<SubDebt, $this>
+     */
+    public function subDebt(): BelongsTo
+    {
+        return $this->belongsTo(SubDebt::class);
     }
 
     /**

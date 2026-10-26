@@ -31,7 +31,7 @@ trait DocumentsApi
 
     #[OA\Post(
         path: '/debts/{id}/sub-debts',
-        summary: 'Create a sub debt; the debt amount, paid amount and paid flag follow the sub debts',
+        summary: 'Create a sub debt; the debt amount follows the sub debts',
         tags: ['Sub Debts'],
         parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],
         requestBody: new OA\RequestBody(
@@ -40,7 +40,6 @@ trait DocumentsApi
                 properties: [
                     new OA\Property(property: 'name', type: 'string', example: 'Cicilan bulan ini'),
                     new OA\Property(property: 'amount', type: 'integer', example: 150000),
-                    new OA\Property(property: 'paid_amount', type: 'integer', nullable: true, example: 0),
                     new OA\Property(property: 'due_date', type: 'string', format: 'date', nullable: true),
                     new OA\Property(property: 'note', type: 'string', nullable: true),
                 ]
@@ -116,7 +115,7 @@ trait DocumentsApi
     #[OA\Put(
         path: '/debts/{id}/sub-debts',
         summary: 'Replace the sub debts of a debt or receivable',
-        description: 'Items with an id are updated, items without one are created and the sub debts left out are removed. A non-empty list also sets the debt amount, paid amount and paid flag from the sub debts; an empty list removes them all and keeps the debt amounts. A paid amount cannot exceed the sub debt amount.',
+        description: 'Items with an id are updated, items without one are created and the sub debts left out are removed. A non-empty list also sets the debt amount from the sub debts; an empty list removes them all and keeps the debt amount. What was paid comes from the records linked as payments.',
         tags: ['Sub Debts'],
         parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],
         requestBody: new OA\RequestBody(
@@ -130,7 +129,6 @@ trait DocumentsApi
                             new OA\Property(property: 'id', type: 'integer', nullable: true),
                             new OA\Property(property: 'name', type: 'string', example: 'Cicilan bulan ini'),
                             new OA\Property(property: 'amount', type: 'integer', example: 150000),
-                            new OA\Property(property: 'paid_amount', type: 'integer', nullable: true, example: 0),
                             new OA\Property(property: 'due_date', type: 'string', format: 'date', nullable: true),
                             new OA\Property(property: 'note', type: 'string', nullable: true),
                         ])
@@ -165,8 +163,8 @@ trait DocumentsApi
 
     #[OA\Put(
         path: '/debts/{id}/sub-debts/{subDebtId}',
-        summary: 'Update a sub debt (details, paid amount or paid flag); the debt amounts follow',
-        description: 'Every field is optional but one must be sent. is_paid true sets the paid amount to the sub debt amount and false resets it to 0, unless a paid_amount is sent. A paid amount cannot exceed the sub debt amount.',
+        summary: 'Update a sub debt; the debt amount follows the sub debts',
+        description: 'Every field is optional. What was paid comes from the records linked as payments.',
         tags: ['Sub Debts'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
@@ -178,10 +176,8 @@ trait DocumentsApi
                 properties: [
                     new OA\Property(property: 'name', type: 'string', example: 'Cicilan bulan ini'),
                     new OA\Property(property: 'amount', type: 'integer', example: 150000),
-                    new OA\Property(property: 'paid_amount', type: 'integer', example: 50000),
                     new OA\Property(property: 'due_date', type: 'string', format: 'date', nullable: true),
                     new OA\Property(property: 'note', type: 'string', nullable: true),
-                    new OA\Property(property: 'is_paid', type: 'boolean', example: true),
                 ]
             )
         ),
