@@ -32,8 +32,8 @@ test.describe('Manage Debts', () => {
         await page.goto('/debts/create');
 
         await page.getByLabel('Name', { exact: true }).fill(`${mainValue}`);
-        await page.getByLabel('Amount', { exact: true }).fill('12.50');
-        await page.getByLabel('Paid Amount', { exact: true }).fill('12.50');
+        await page.getByLabel('Amount', { exact: true }).fill('150000');
+        await page.getByLabel('Paid Amount', { exact: true }).fill('50000');
         await page.getByLabel('Due Date', { exact: true }).fill('2026-01-15');
         await page.getByLabel('Notes', { exact: true }).fill('E2E Notes');
         await page.getByLabel('Is Paid', { exact: true }).check();

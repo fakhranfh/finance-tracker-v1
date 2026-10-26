@@ -25,7 +25,7 @@ test.describe('Manage Receivables', () => {
         await expect(page).toHaveURL('/receivables/create');
 
         await page.getByLabel('Name', { exact: true }).fill(mainValue);
-        await page.getByLabel('Amount', { exact: true }).fill('50');
+        await page.getByLabel('Amount', { exact: true }).fill('50000');
         await page.getByLabel('Paid Amount', { exact: true }).fill('0');
         await page.getByRole('button', { name: 'Save' }).click();
 

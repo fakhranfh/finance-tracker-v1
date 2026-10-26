@@ -63,8 +63,8 @@ it('creates a debt via the api', function () {
     $response = $this->actingAs($actor)->postJson('/api/debts', [
         'type' => 'receivable',
         'name' => 'Sample name',
-        'amount' => 9.99,
-        'paid_amount' => 9.99,
+        'amount' => 150000,
+        'paid_amount' => 50000,
         'due_date' => '2026-01-15',
         'notes' => 'Sample notes',
         'is_paid' => true,
@@ -85,6 +85,18 @@ it('rejects creating a debt with missing required fields', function () {
     $response->assertJsonValidationErrors(['type', 'name', 'amount', 'paid_amount', 'is_paid']);
 });
 
+it('rejects a paid amount above the total', function () {
+    $actor = User::factory()->create();
+
+    $this->actingAs($actor)->postJson('/api/debts', [
+        'type' => 'debt',
+        'name' => 'Budi Santoso',
+        'amount' => 100000,
+        'paid_amount' => 150000,
+        'is_paid' => false,
+    ])->assertStatus(422)->assertJsonValidationErrors(['paid_amount']);
+});
+
 it('shows a debt via the api', function () {
     $actor = User::factory()->create();
     $target = Debt::factory()->create();
@@ -102,8 +114,8 @@ it('updates a debt via the api', function () {
     $response = $this->actingAs($actor)->putJson("/api/debts/{$target->id}", [
         'type' => 'debt',
         'name' => 'Updated name',
-        'amount' => 19.5,
-        'paid_amount' => 19.5,
+        'amount' => 200000,
+        'paid_amount' => 200000,
         'due_date' => '2026-02-20',
         'notes' => 'Updated notes',
         'is_paid' => false,

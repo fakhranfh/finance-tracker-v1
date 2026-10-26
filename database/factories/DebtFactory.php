@@ -26,14 +26,14 @@ class DebtFactory extends Factory
     public function definition(): array
     {
         $type = fake()->randomElement(DebtType::cases());
-        $amount = fake()->numberBetween(5, 500) * 100_000 / 10;
+        $amount = fake()->numberBetween(5, 500) * 10_000;
         $isPaid = fake()->boolean(30);
 
         return [
             'type' => $type,
             'name' => fake()->randomElement(self::NAMES),
             'amount' => $amount,
-            'paid_amount' => $isPaid ? $amount : fake()->numberBetween(0, 8) * $amount / 10,
+            'paid_amount' => $isPaid ? $amount : intdiv(fake()->numberBetween(0, 8) * $amount, 10),
             'due_date' => fake()->dateTimeBetween('-1 month', '+6 months')->format('Y-m-d'),
             'notes' => fn (array $attributes) => fake()->boolean(70) ? fake()->randomElement(self::NOTES[DebtType::from($attributes['type'] instanceof DebtType ? $attributes['type']->value : $attributes['type'])->value]) : null,
             'is_paid' => $isPaid,

@@ -24,8 +24,8 @@ class Debt extends Model
     {
         return [
             'type' => DebtType::class,
-            'amount' => 'decimal:2',
-            'paid_amount' => 'decimal:2',
+            'amount' => 'integer',
+            'paid_amount' => 'integer',
             'is_paid' => 'boolean',
         ];
     }

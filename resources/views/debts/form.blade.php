@@ -37,8 +37,8 @@
             <input type="hidden" name="type" value="{{ $type }}">
 
             <x-molecules.form-group name="name" type="text" :label="__('debts.fields.name')" required autofocus />
-            <x-molecules.form-group name="amount" type="number" :label="__('debts.fields.amount')" step="0.01" min="0" required />
-            <x-molecules.form-group name="paid_amount" type="number" :label="__('debts.fields.paid_amount')" step="0.01" min="0" required />
+            <x-molecules.form-group name="amount" type="text" inputmode="numeric" :label="__('debts.fields.amount')" data-money required />
+            <x-molecules.form-group name="paid_amount" type="text" inputmode="numeric" :label="__('debts.fields.paid_amount')" value="0" data-money required />
             <x-molecules.form-group name="due_date" type="date" :label="__('debts.fields.due_date')" />
             <x-molecules.form-group name="notes" type="text" :label="__('debts.fields.notes')" />
             <div class="flex items-center gap-2">

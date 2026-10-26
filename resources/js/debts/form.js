@@ -2,6 +2,7 @@ import { hideSnackbar } from '../shared/error-snackbar.js';
 import { clearFieldErrors, showFieldErrors, showGenericError, validateForm } from '../shared/field-errors.js';
 import { setButtonLoading, hideSkeleton } from '../shared/loading-state.js';
 import { get, post, put } from '../shared/http.js';
+import '../shared/money-input.js';
 import { routes } from '../routes.js';
 import { wireDevTools } from './dev-tools.js';
 import { debtFormFixture } from './dev-fixtures/form.js';

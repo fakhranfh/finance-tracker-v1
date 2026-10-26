@@ -1,5 +1,6 @@
 import { createTable } from '../shared/table/table.js';
-import { formatDateTime } from '../shared/datetime.js';
+import { formatDate, formatDateTime } from '../shared/datetime.js';
+import { formatMoney } from '../shared/money.js';
 import { routes } from '../routes.js';
 
 createTable({
@@ -27,9 +28,9 @@ createTable({
     row: (item) => ({
         cells: [
             item.name ?? '',
-            item.amount ?? '',
-            item.paid_amount ?? '',
-            item.due_date ? formatDateTime(item.due_date) : '',
+            formatMoney(item.amount),
+            formatMoney(item.paid_amount),
+            item.due_date ? formatDate(item.due_date) : '',
             item.notes ?? '',
             item.is_paid ? '✓' : '—',
             formatDateTime(item.created_at),
