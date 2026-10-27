@@ -6,6 +6,7 @@ import { routes } from '../routes.js';
 import { toDateTimeLocal } from '../shared/datetime.js';
 import { formatMoney } from '../shared/money.js';
 import '../shared/money-input.js';
+import { searchableSelect } from '../shared/searchable-select.js';
 import { wireDevTools } from '../debts/dev-tools.js';
 import { debtPaymentFormFixture } from './dev-fixtures/form.js';
 
@@ -14,6 +15,10 @@ const debtId = form?.dataset.debtId;
 const type = form?.dataset.type;
 const subDebtSelect = form?.elements.namedItem('sub_debt_id');
 const amountInput = form?.elements.namedItem('amount');
+const searchables = form
+    ? ['sub_debt_id', 'account_id', 'category_id'].map((name) => searchableSelect(form.elements.namedItem(name)))
+    : [];
+const refreshSearchables = () => searchables.forEach((searchable) => searchable.refresh());
 const subDebts = [];
 let debtRemaining = 0;
 
@@ -68,10 +73,14 @@ async function load() {
     }
 
     amountInput.value = String(remainingOfSelection());
+    refreshSearchables();
 }
 
 if (form) {
     form.elements.namedItem('recorded_at').value = toDateTimeLocal();
+
+    // Registered after wireDevTools, so it runs once autofill has set the values.
+    document.querySelector('[data-dev-autofill]')?.addEventListener('click', refreshSearchables);
 
     load();
 

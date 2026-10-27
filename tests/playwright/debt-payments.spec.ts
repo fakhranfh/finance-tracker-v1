@@ -58,7 +58,7 @@ test.describe('Debt payments', () => {
         await page.getByRole('link', { name: 'Add payment' }).click();
         await expect(page).toHaveURL(/\/debts\/\d+\/payments\/create$/);
         await expect(page.getByLabel('Amount', { exact: true })).toHaveValue('100.000');
-        await page.getByLabel('Account', { exact: true }).selectOption({ label: account });
+        await pickDebtAccount(page, account);
         await page.getByLabel('Amount', { exact: true }).fill('40000');
         await page.getByLabel('Note', { exact: true }).fill(`Cicilan ${stamp}`);
         await page.getByRole('button', { name: 'Save' }).click();
@@ -80,7 +80,7 @@ test.describe('Debt payments', () => {
 
         // Nothing can be paid beyond what is still owed.
         await page.getByRole('link', { name: 'Add payment' }).click();
-        await page.getByLabel('Account', { exact: true }).selectOption({ label: account });
+        await pickDebtAccount(page, account);
         await page.getByLabel('Amount', { exact: true }).fill('50000');
         await page.getByRole('button', { name: 'Save' }).click();
         await expect(page.getByText(/more than what is still owed/)).toBeVisible();
@@ -126,15 +126,17 @@ await answerRecordPrompt(page);
 
         await page.getByRole('link', { name: 'Add payment' }).click();
         await expect(page).toHaveURL(/\/payments\/create\?sub_debt_id=\d+$/);
-        await expect(page.getByLabel('Sub debt')).toHaveValue(/\d+/);
+        await expect(page.getByLabel('Sub debt')).toHaveValue(/Uang muka/);
         await expect(page.getByLabel('Amount', { exact: true })).toHaveValue('100.000');
 
-        await page.getByLabel('Sub debt').selectOption('');
-        await page.getByLabel('Account', { exact: true }).selectOption({ label: account });
+        await page.getByLabel('Sub debt').fill('');
+        await page.getByRole('option', { name: 'Select a sub debt' }).click();
+        await pickDebtAccount(page, account);
         await page.getByRole('button', { name: 'Save' }).click();
         await expect(page.getByText('Choose which sub debt this payment is for.')).toBeVisible();
 
-        await page.getByLabel('Sub debt').selectOption({ label: 'Uang muka (Rp 100.000)' });
+        await page.getByLabel('Sub debt').fill('Uang muka');
+        await page.getByRole('option', { name: 'Uang muka (Rp 100.000)' }).click();
         await page.getByRole('button', { name: 'Save' }).click();
 
         await expect(page).toHaveURL(/\/debts\/\d+\/payments$/);
@@ -162,7 +164,7 @@ await answerRecordPrompt(page);
         await expect(page.getByRole('heading', { name: 'Payments received' })).toBeVisible();
 
         await page.getByRole('link', { name: 'Add payment received' }).click();
-        await page.getByLabel('Account', { exact: true }).selectOption({ label: account });
+        await pickDebtAccount(page, account);
         await page.getByLabel('Note', { exact: true }).fill(`Diterima ${stamp}`);
         await page.getByRole('button', { name: 'Save' }).click();
 
