@@ -59,10 +59,11 @@ if (page) {
             index: routes.debts.payments(debtId),
             destroy: (id) => routes.debts.payment(debtId, id),
         },
-        // The payment is a record: its link can be removed here, and the record itself is edited on the records page.
+        // A payment is usually a record: its link can be removed here, and the record itself is edited on the records page.
+        // One saved without a record has no account or category and nothing to open.
         row: (item) => ({
-            cells: [formatDateTime(item.recorded_at), item.account, item.category ?? '-', formatMoney(item.amount), item.note ?? '', item.sub_debt ?? '-'],
-            viewUrl: routes.pages.recordEdit(item.id),
+            cells: [formatDateTime(item.recorded_at), item.account ?? '-', item.category ?? '-', formatMoney(item.amount), item.note ?? '', item.sub_debt ?? '-'],
+            viewUrl: item.record_id ? routes.pages.recordEdit(item.record_id) : null,
             noEdit: true,
         }),
     });

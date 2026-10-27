@@ -58,7 +58,7 @@ return [
     'actions' => [
         'open_record' => 'Buka record',
         'remove' => 'Hapus pembayaran',
-        'confirm_remove' => 'Berhenti menghitung record ini sebagai pembayaran? Recordnya sendiri tetap ada.',
+        'confirm_remove' => 'Hapus pembayaran ini? Record yang tersimpan untuknya tetap ada.',
         'use' => 'Pakai record ini',
         'save' => 'Simpan',
         'cancel' => 'Batal',
@@ -68,7 +68,14 @@ return [
     'flash' => [
         'created' => 'Pembayaran berhasil ditambahkan.',
         'used' => 'Record berhasil dijadikan pembayaran.',
-        'removed' => 'Pembayaran dihapus. Recordnya tetap ada.',
+        'removed' => 'Pembayaran dihapus. Recordnya, jika ada, tetap ada.',
+    ],
+
+    'record_prompt' => [
+        'title' => 'Simpan juga sebagai record?',
+        'body' => 'Simpan juga pembayaran ini sebagai record di akun yang dipilih? Saldo akun hanya berubah jika Anda melakukannya.',
+        'yes' => 'Ya, buat record',
+        'no' => 'Tidak, simpan saja',
     ],
 
     'validation' => [

@@ -22,13 +22,6 @@ interface RecordRepositoryInterface
     public function paginate(int $perPage, ?string $search = null, ?string $sort = null, string $direction = 'asc', array $filters = []): LengthAwarePaginator;
 
     /**
-     * Paginate the records that pay a debt off (or one of its sub debts), optionally filtered by search.
-     *
-     * @return LengthAwarePaginator<int, Record>
-     */
-    public function paginateForDebt(int $debtId, ?int $subDebtId, int $perPage, ?string $search = null, ?string $sort = null, string $direction = 'desc'): LengthAwarePaginator;
-
-    /**
      * Paginate the records of the given type that do not pay any debt off yet.
      *
      * @return LengthAwarePaginator<int, Record>

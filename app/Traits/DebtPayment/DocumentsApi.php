@@ -62,7 +62,8 @@ trait DocumentsApi
                 properties: [
                     new OA\Property(property: 'record_id', type: 'integer', nullable: true, description: 'Use this existing record; the fields below are then ignored'),
                     new OA\Property(property: 'sub_debt_id', type: 'integer', nullable: true),
-                    new OA\Property(property: 'account_id', type: 'integer', example: 1),
+                    new OA\Property(property: 'create_record', type: 'boolean', example: true, description: 'Default true. When false the payment is saved without a record: it counts as paid but no account is touched, so account_id and category_id are ignored'),
+                    new OA\Property(property: 'account_id', type: 'integer', example: 1, description: 'Required unless record_id is given or create_record is false'),
                     new OA\Property(property: 'category_id', type: 'integer', nullable: true),
                     new OA\Property(property: 'amount', type: 'integer', example: 50000),
                     new OA\Property(property: 'note', type: 'string', nullable: true, example: 'Cicilan bulan ini'),
@@ -81,7 +82,8 @@ trait DocumentsApi
 
     #[OA\Delete(
         path: '/debts/{id}/payments/{recordId}',
-        summary: 'Stop a record from paying the debt off (the record itself is kept)',
+        summary: 'Remove a payment: a record stops paying the debt off (the record itself is kept), a payment saved without a record is deleted',
+        description: 'The payment id is the one listed: a record id, or the negative id of a payment saved without a record.',
         tags: ['Debt Payments'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
@@ -90,7 +92,7 @@ trait DocumentsApi
         responses: [
             new OA\Response(response: 204, description: 'Payment removed'),
             new OA\Response(response: 401, description: 'Unauthenticated'),
-            new OA\Response(response: 404, description: 'Not found, or the record does not pay this debt'),
+            new OA\Response(response: 404, description: 'Not found, or the payment does not belong to this debt'),
         ]
     )]
     private function documentDestroyEndpoint(): void {}

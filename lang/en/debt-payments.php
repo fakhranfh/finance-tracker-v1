@@ -58,7 +58,7 @@ return [
     'actions' => [
         'open_record' => 'Open record',
         'remove' => 'Remove payment',
-        'confirm_remove' => 'Stop counting this record as a payment? The record itself is kept.',
+        'confirm_remove' => 'Remove this payment? A record saved for it is kept.',
         'use' => 'Use this record',
         'save' => 'Save',
         'cancel' => 'Cancel',
@@ -68,7 +68,14 @@ return [
     'flash' => [
         'created' => 'Payment added successfully.',
         'used' => 'Record added as a payment.',
-        'removed' => 'Payment removed. The record is kept.',
+        'removed' => 'Payment removed. Its record, if any, is kept.',
+    ],
+
+    'record_prompt' => [
+        'title' => 'Save as a record too?',
+        'body' => 'Also save this payment as a record on the chosen account? The account balance only changes if you do.',
+        'yes' => 'Yes, create record',
+        'no' => 'No, just save',
     ],
 
     'validation' => [

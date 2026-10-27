@@ -14,7 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * Money the user owes (debt) or is owed (receivable). What has been paid is the sum of the records
- * linked to it as payments, never stored. Forgiving it writes the rest off (`forgiven_at`).
+ * linked to it as payments and of its payments saved without a record, never stored. Forgiving it writes the rest off (`forgiven_at`).
  */
 #[Fillable(['type', 'account_id', 'name', 'amount', 'due_date', 'notes'])]
 class Debt extends Model
@@ -37,7 +37,7 @@ class Debt extends Model
     }
 
     /**
-     * The sum of the linked records; read from the `paid_amount` the repository selected when it is there.
+     * The sum of the linked records and of the payments without a record; read from the `paid_amount` the repository selected when it is there.
      *
      * @return Attribute<int, never>
      */
@@ -45,7 +45,7 @@ class Debt extends Model
     {
         return Attribute::get(fn (mixed $value, array $attributes): int => array_key_exists('paid_amount', $attributes)
             ? (int) $value
-            : (int) $this->payments()->sum('amount'));
+            : (int) $this->payments()->sum('amount') + (int) $this->unrecordedPayments()->sum('amount'));
     }
 
     /**
@@ -90,6 +90,16 @@ class Debt extends Model
     public function payments(): HasMany
     {
         return $this->hasMany(Record::class);
+    }
+
+    /**
+     * The payments that were not saved as records.
+     *
+     * @return HasMany<DebtPayment, $this>
+     */
+    public function unrecordedPayments(): HasMany
+    {
+        return $this->hasMany(DebtPayment::class);
     }
 
     /**
