@@ -16,7 +16,7 @@ const ICON_DELETE =
  * render({ id, cells, editUrl, onDelete, locked }):
  *   cells    text (or a DOM node, e.g. an icon) for each data column (first is emphasised)
  *   locked   row can't be selected or deleted (e.g. the current user)
- *   extraActions  [{ label, url }] links shown after the view link (e.g. a "Test" page)
+ *   extraActions  [{ label, url, onClick }] links (buttons with onClick) shown after the view link (e.g. a "Test" page)
  *   onEdit   edit button handler, used instead of the editUrl link (e.g. to open a modal)
  *   readOnly row has no edit or delete action at all
  *   noEdit   row has no edit action but can still be deleted
@@ -94,10 +94,17 @@ export function createTableRow({ tbody, selection, selectAll }) {
                 actions.append(viewLink);
             }
 
-            extraActions.forEach(({ label, url }) => {
-                const link = document.createElement('a');
+            extraActions.forEach(({ label, url, onClick = null }) => {
+                const link = document.createElement(onClick ? 'button' : 'a');
 
-                link.href = url;
+                if (onClick) {
+                    link.type = 'button';
+                    link.classList.add('cursor-pointer');
+                    link.addEventListener('click', onClick);
+                } else {
+                    link.href = url;
+                }
+
                 link.className = 'inline-flex items-center font-medium text-primary hover:underline';
                 link.title = label;
                 link.innerHTML = `${ICON_EXTRA}<span class="max-sm:sr-only"></span>`;

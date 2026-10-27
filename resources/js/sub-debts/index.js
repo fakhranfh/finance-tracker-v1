@@ -1,7 +1,8 @@
 import { createTable } from '../shared/table/table.js';
 import { formatDate } from '../shared/datetime.js';
 import { formatMoney } from '../shared/money.js';
-import { get } from '../shared/http.js';
+import { get, post } from '../shared/http.js';
+import { closeModal, openModal } from '../shared/modal.js';
 import { routes } from '../routes.js';
 
 const page = document.getElementById('sub-debts-page');
@@ -29,6 +30,26 @@ function statusNode(item) {
 
     return text;
 }
+
+let forgiveId = null;
+
+function askForgive(id) {
+    forgiveId = id;
+    openModal('forgive-sub-debt-modal');
+}
+
+document.getElementById('confirm-forgive-sub-debt')?.addEventListener('click', async () => {
+    const { ok, data } = await post(routes.debts.forgiveSubDebt(debtId, forgiveId));
+
+    closeModal('forgive-sub-debt-modal');
+
+    if (ok) {
+        sessionStorage.setItem('sub-debts-flash-success', page.dataset.forgiveMessage);
+        window.location.reload();
+    } else {
+        window.alert(data?.message ?? 'Something went wrong.');
+    }
+});
 
 if (page) {
     const { ok, data } = await get(routes.debts.show(debtId));
@@ -71,6 +92,7 @@ if (page) {
                 ],
                 viewUrl: `${routes.pages.debtPayments(debtId, data?.data?.type)}?sub_debt_id=${item.id}`,
                 editUrl: routes.pages.debtSubDebtEdit(debtId, item.id, data?.data?.type),
+                extraActions: item.is_paid ? [] : [{ label: page.dataset.forgiveLabel, onClick: () => askForgive(item.id) }],
                 locked: false,
             };
         },

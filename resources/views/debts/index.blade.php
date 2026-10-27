@@ -45,7 +45,7 @@
 
     <div data-flash-success class="mb-6 hidden rounded-lg border border-success/20 bg-success/10 px-4 py-3 font-body text-sm text-success"></div>
 
-    <div id="debts-filters" data-debt-type="{{ $type }}" data-payments-label="{{ __('debts.actions.payments') }}">
+    <div id="debts-filters" data-debt-type="{{ $type }}" data-payments-label="{{ __('debts.actions.payments') }}" data-forgive-label="{{ __('debts.actions.forgive') }}" data-forgive-message="{{ __('debts.flash.forgiven') }}">
         <input type="hidden" name="type" value="{{ $type }}" data-table-filter>
     </div>
 
@@ -85,6 +85,18 @@
 
         <x-molecules.pagination data-pagination />
     </div>
+
+    <x-organisms.modal id="forgive-debt-modal" :title="__('debts.actions.confirm_forgive')">
+        <p class="mb-6 font-body text-body-md text-on-surface-variant">{{ __('debts.actions.forgive_hint') }}</p>
+        <div class="flex justify-end gap-3">
+            <x-atoms.button type="button" variant="secondary" data-modal-close>
+                {{ __('debts.actions.cancel') }}
+            </x-atoms.button>
+            <x-atoms.button type="button" id="confirm-forgive-debt">
+                {{ __('debts.actions.forgive') }}
+            </x-atoms.button>
+        </div>
+    </x-organisms.modal>
 
     <x-organisms.modal id="delete-debt-modal" :title="__('debts.actions.confirm_delete')">
         <div class="flex justify-end gap-3">

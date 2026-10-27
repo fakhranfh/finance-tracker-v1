@@ -27,7 +27,7 @@ class DebtRepository implements DebtRepositoryInterface
         $direction = $direction === 'desc' ? 'desc' : 'asc';
 
         if ($sort === 'is_paid') {
-            $query->orderByRaw('((select coalesce(sum(records.amount), 0) from records where records.debt_id = debts.id) >= debts.amount) '.$direction);
+            $query->orderByRaw('(debts.forgiven_at is not null or (select coalesce(sum(records.amount), 0) from records where records.debt_id = debts.id) >= debts.amount) '.$direction);
         } elseif ($sort && in_array($sort, $sortable, true)) {
             $query->orderBy($sort, $direction);
         } else {
@@ -101,6 +101,20 @@ class DebtRepository implements DebtRepositoryInterface
     public function update(Debt $debt, array $data): Debt
     {
         $debt->update($data);
+
+        return $debt;
+    }
+
+    public function forgive(Debt $debt): Debt
+    {
+        $now = now();
+
+        $debt->forceFill(['forgiven_at' => $now])->save();
+        // Sub debts that are not paid off yet are written off with it.
+        $debt->subDebts()
+            ->whereNull('forgiven_at')
+            ->whereRaw('(select coalesce(sum(records.amount), 0) from records where records.sub_debt_id = sub_debts.id) < sub_debts.amount')
+            ->update(['forgiven_at' => $now]);
 
         return $debt;
     }

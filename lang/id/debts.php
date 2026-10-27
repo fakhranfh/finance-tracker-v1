@@ -47,6 +47,8 @@ return [
         'due_date' => 'Jatuh Tempo',
         'notes' => 'Catatan',
         'is_paid' => 'Lunas',
+        'account' => 'Akun',
+        'select_account' => 'Pilih akun',
     ],
 
     'types' => [
@@ -65,13 +67,28 @@ return [
         'confirm_bulk_delete' => 'Yakin ingin menghapus utang yang dipilih?',
         'generate' => 'Generate',
         'generate_count' => 'Jumlah utang yang akan dibuat',
+        'forgive' => 'Ikhlaskan',
+        'confirm_forgive' => 'Ikhlaskan sisa utang ini?',
+        'forgive_hint' => 'Sisa yang belum dibayar, termasuk sub utang, dihapuskan dan dianggap lunas. Tindakan ini tidak bisa dibatalkan.',
         'autofill' => 'Isi otomatis',
+    ],
+
+    'record_prompt' => [
+        'title' => 'Buat record?',
+        'body' => 'Buat record di akun yang dipilih untuk jumlah ini?',
+        'yes' => 'Ya, buat record',
+        'no' => 'Tidak, simpan saja',
+    ],
+
+    'errors' => [
+        'already_settled' => 'Utang ini sudah lunas.',
     ],
 
     'flash' => [
         'created' => 'Utang berhasil ditambahkan.',
         'updated' => 'Utang berhasil diperbarui.',
         'deleted' => 'Utang berhasil dihapus.',
+        'forgiven' => 'Utang berhasil diikhlaskan.',
         'generated' => 'Utang palsu berhasil dibuat.',
     ],
 ];

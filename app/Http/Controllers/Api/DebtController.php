@@ -82,6 +82,13 @@ class DebtController extends Controller
         return new DebtResource($this->debtManagementService->update($debt, $request->validated()));
     }
 
+    public function forgive(Debt $debt): DebtResource
+    {
+        abort_if($debt->is_paid, 422, __('debts.errors.already_settled'));
+
+        return new DebtResource($this->debtManagementService->forgive($debt));
+    }
+
     public function destroy(Debt $debt): Response
     {
         $this->debtManagementService->delete($debt);

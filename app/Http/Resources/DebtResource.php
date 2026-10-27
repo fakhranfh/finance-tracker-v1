@@ -24,6 +24,7 @@ class DebtResource extends JsonResource
         return [
             'id' => $debt->id,
             'type' => $debt->type,
+            'account_id' => $debt->account_id,
             'name' => $debt->name,
             'amount' => $debt->amount,
             'paid_amount' => $debt->paid_amount,
@@ -31,6 +32,7 @@ class DebtResource extends JsonResource
             'due_date' => $debt->due_date,
             'notes' => $debt->notes,
             'is_paid' => $debt->is_paid,
+            'is_forgiven' => $debt->is_forgiven,
             'created_at' => $debt->created_at?->toIso8601String(),
         ];
     }

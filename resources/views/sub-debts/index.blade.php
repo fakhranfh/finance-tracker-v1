@@ -49,6 +49,8 @@
         data-debt-id="{{ $debtId }}"
         data-paid-label="{{ __('sub-debts.table.paid') }}"
         data-unpaid-label="{{ __('sub-debts.table.unpaid') }}"
+        data-forgive-label="{{ __('sub-debts.actions.forgive') }}"
+        data-forgive-message="{{ __('sub-debts.flash.forgiven') }}"
         data-summary-template="{{ __('sub-debts.summary', ['paid' => ':paid', 'total' => ':total', 'amount' => ':amount', 'paid_amount' => ':paid_amount']) }}"
     ></div>
 
@@ -92,6 +94,18 @@
 
         <x-molecules.pagination data-pagination />
     </div>
+
+    <x-organisms.modal id="forgive-sub-debt-modal" :title="__('sub-debts.actions.confirm_forgive')">
+        <p class="mb-6 font-body text-body-md text-on-surface-variant">{{ __('sub-debts.actions.forgive_hint') }}</p>
+        <div class="flex justify-end gap-3">
+            <x-atoms.button type="button" variant="secondary" data-modal-close>
+                {{ __('sub-debts.actions.cancel') }}
+            </x-atoms.button>
+            <x-atoms.button type="button" id="confirm-forgive-sub-debt">
+                {{ __('sub-debts.actions.forgive') }}
+            </x-atoms.button>
+        </div>
+    </x-organisms.modal>
 
     <x-organisms.modal id="delete-sub-debt-modal" :title="__('sub-debts.actions.confirm_delete')">
         <div class="flex justify-end gap-3">

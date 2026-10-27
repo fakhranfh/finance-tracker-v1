@@ -80,13 +80,21 @@ return [
         'generate_count' => 'Number of sub debts to generate',
         'save' => 'Save',
         'cancel' => 'Cancel',
+        'forgive' => 'Forgive',
+        'confirm_forgive' => 'Forgive the rest of this sub debt?',
+        'forgive_hint' => 'Whatever is still unpaid is written off and the sub debt counts as settled. This cannot be undone.',
         'autofill' => 'Autofill',
         'edit' => 'Edit',
+    ],
+
+    'errors' => [
+        'already_settled' => 'This sub debt is already settled.',
     ],
 
     'flash' => [
         'created' => 'Sub debt created successfully.',
         'updated_item' => 'Sub debt updated successfully.',
+        'forgiven' => 'Sub debt forgiven successfully.',
         'generated' => 'Fake sub debts generated successfully.',
         'updated' => 'Sub debts saved successfully.',
         'status_failed' => 'Could not update the sub debt. Please try again.',

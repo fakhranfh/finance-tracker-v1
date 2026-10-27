@@ -22,7 +22,7 @@ class SubDebtRepository implements SubDebtRepositoryInterface
         $direction = $direction === 'desc' ? 'desc' : 'asc';
 
         if ($sort === 'is_paid') {
-            $query->orderByRaw('((select coalesce(sum(records.amount), 0) from records where records.sub_debt_id = sub_debts.id) >= sub_debts.amount) '.$direction);
+            $query->orderByRaw('(sub_debts.forgiven_at is not null or (select coalesce(sum(records.amount), 0) from records where records.sub_debt_id = sub_debts.id) >= sub_debts.amount) '.$direction);
         } elseif ($sort && in_array($sort, $sortable, true)) {
             $query->orderBy($sort, $direction);
         } else {
@@ -70,6 +70,13 @@ class SubDebtRepository implements SubDebtRepositoryInterface
     public function delete(SubDebt $subDebt): void
     {
         $subDebt->delete();
+    }
+
+    public function forgive(SubDebt $subDebt): SubDebt
+    {
+        $subDebt->forceFill(['forgiven_at' => now()])->save();
+
+        return $subDebt;
     }
 
     public function deleteMany(int $debtId, array $ids): void

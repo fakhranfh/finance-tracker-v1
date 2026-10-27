@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { seedUser } from './support/seed';
+import { answerRecordPrompt, ensureAccount, pickDebtAccount } from './support/accounts';
 
 async function login(page, email: string, password: string) {
     await page.goto('/login');
@@ -15,7 +16,9 @@ test.describe('Sub debts', () => {
         const name = `E2E ${Date.now()}`;
 
         await login(page, email, password);
+        const debtAccount = await ensureAccount(page);
         await page.goto('/debts/create');
+        await pickDebtAccount(page, debtAccount);
 
         await page.getByLabel('Name', { exact: true }).first().fill(name);
         await page.getByLabel('Split into sub debts').check();
@@ -32,6 +35,7 @@ test.describe('Sub debts', () => {
         await expect(page.locator('#paid_amount')).toHaveCount(0);
 
         await page.getByRole('button', { name: 'Save' }).click();
+await answerRecordPrompt(page);
         await expect(page).toHaveURL('/debts');
 
         const row = page.getByRole('row', { name: new RegExp(name) });
@@ -78,7 +82,9 @@ test.describe('Sub debts', () => {
         const name = `E2E ${Date.now()}`;
 
         await login(page, email, password);
+        const debtAccount = await ensureAccount(page);
         await page.goto('/debts/create');
+        await pickDebtAccount(page, debtAccount);
 
         await page.getByLabel('Name', { exact: true }).first().fill(name);
         await page.getByLabel('Split into sub debts').check();
@@ -98,6 +104,7 @@ test.describe('Sub debts', () => {
         await expect(page.locator('[name="sub_debts.0.due_date"]')).toHaveValue('2027-01-15');
 
         await page.getByRole('button', { name: 'Save' }).click();
+await answerRecordPrompt(page);
         await expect(page).toHaveURL('/debts');
 
         await page.getByRole('row', { name: new RegExp(name) }).getByRole('link', { name: 'Sub debts' }).click();
@@ -112,10 +119,13 @@ test.describe('Sub debts', () => {
         const name = `E2E ${Date.now()}`;
 
         await login(page, email, password);
+        const debtAccount = await ensureAccount(page);
         await page.goto('/debts/create');
+        await pickDebtAccount(page, debtAccount);
         await page.getByLabel('Name', { exact: true }).first().fill(name);
         await page.locator('#amount').fill('500000');
         await page.getByRole('button', { name: 'Save' }).click();
+await answerRecordPrompt(page);
         await expect(page).toHaveURL('/debts');
 
         await page.getByRole('row', { name: new RegExp(name) }).getByRole('link', { name: 'Sub debts' }).click();
@@ -138,6 +148,10 @@ test.describe('Sub debts', () => {
         await page.getByRole('button', { name: 'Save' }).click();
         await expect(page.getByRole('row', { name: /Cicilan motor Honda/ })).toBeVisible();
 
+        await page.getByRole('row', { name: /Cicilan motor Honda/ }).getByRole('button', { name: 'Forgive' }).click();
+        await page.getByRole('dialog').getByRole('button', { name: 'Forgive' }).click();
+        await expect(page.getByText('Sub debt forgiven successfully.')).toBeVisible();
+        await expect(page.getByRole('row', { name: /Cicilan motor Honda/ }).getByRole('button', { name: 'Forgive' })).toHaveCount(0);
         await page.getByRole('row', { name: /Cicilan motor Honda/ }).getByRole('button', { name: 'Delete' }).click();
         await expect(page.getByText('Are you sure you want to delete this sub debt?')).toBeVisible();
         await page.locator('#confirm-delete-sub-debt').click();
@@ -149,13 +163,16 @@ test.describe('Sub debts', () => {
         const name = `E2E ${Date.now()}`;
 
         await login(page, email, password);
+        const debtAccount = await ensureAccount(page);
         await page.goto('/receivables/create');
+        await pickDebtAccount(page, debtAccount);
 
         await page.getByLabel('Name', { exact: true }).first().fill(name);
         await page.getByLabel('Split into sub debts').check();
         await page.locator('[name="sub_debts.0.name"]').fill('Cicilan 1');
         await page.locator('[name="sub_debts.0.amount"]').fill('50000');
         await page.getByRole('button', { name: 'Save' }).click();
+await answerRecordPrompt(page);
         await expect(page).toHaveURL('/receivables');
 
         await page.getByRole('row', { name: new RegExp(name) }).getByRole('link', { name: 'Sub receivables' }).click();

@@ -64,6 +64,11 @@ interface SubDebtRepositoryInterface
     public function update(SubDebt $subDebt, array $data): SubDebt;
 
     /**
+     * Write off what is left of a sub debt.
+     */
+    public function forgive(SubDebt $subDebt): SubDebt;
+
+    /**
      * Run the callback inside a database transaction and return its result.
      *
      * @template T

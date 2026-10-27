@@ -80,6 +80,13 @@ class SubDebtController extends Controller
         return response()->noContent();
     }
 
+    public function forgive(Debt $debt, SubDebt $subDebt): SubDebtResource
+    {
+        abort_if($subDebt->is_paid, 422, __('sub-debts.errors.already_settled'));
+
+        return new SubDebtResource($this->subDebtManagementService->forgive($subDebt));
+    }
+
     public function sync(SyncSubDebtsRequest $request, Debt $debt): AnonymousResourceCollection
     {
         $this->subDebtManagementService->replace($debt, $request->validated('sub_debts'));

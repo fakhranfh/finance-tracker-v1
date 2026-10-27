@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Account;
 use App\Models\Debt;
 use App\Models\Record;
 use App\Models\SubDebt;
@@ -10,6 +11,7 @@ function debtPayload(array $overrides = []): array
 {
     return [
         'type' => 'debt',
+        'account_id' => Account::factory()->create()->id,
         'name' => 'Budi Santoso',
         'amount' => 300000,
         ...$overrides,
@@ -345,4 +347,26 @@ it('renders the create and edit pages of a single sub debt', function () {
     $this->actingAs($actor)->get('/debts/1/sub-debts/2/edit')->assertOk()->assertSee('Edit sub debt');
     $this->actingAs($actor)->get('/receivables/1/sub-debts/create')->assertOk()->assertSee('Add sub receivable');
     $this->actingAs($actor)->get('/receivables/1/sub-debts/2/edit')->assertOk()->assertSee('Edit sub receivable');
+});
+
+it('forgives a single sub debt', function () {
+    $actor = User::factory()->create();
+    $debt = Debt::factory()->create();
+    $sub = SubDebt::factory()->for($debt)->create(['amount' => 100000]);
+
+    $this->actingAs($actor)->postJson("/api/debts/{$debt->id}/sub-debts/{$sub->id}/forgive")
+        ->assertOk()
+        ->assertJsonPath('data.is_forgiven', true)
+        ->assertJsonPath('data.is_paid', true)
+        ->assertJsonPath('data.remaining_amount', 0);
+
+    $this->actingAs($actor)->postJson("/api/debts/{$debt->id}/sub-debts/{$sub->id}/forgive")->assertStatus(422);
+});
+
+it('does not forgive a sub debt through another debt', function () {
+    $actor = User::factory()->create();
+    $debt = Debt::factory()->create();
+    $foreign = SubDebt::factory()->create();
+
+    $this->actingAs($actor)->postJson("/api/debts/{$debt->id}/sub-debts/{$foreign->id}/forgive")->assertNotFound();
 });

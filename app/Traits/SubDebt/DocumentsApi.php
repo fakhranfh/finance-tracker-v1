@@ -112,6 +112,22 @@ trait DocumentsApi
     )]
     private function documentDestroyEndpoint(): void {}
 
+    #[OA\Post(
+        path: '/debts/{id}/sub-debts/{subDebtId}/forgive',
+        summary: 'Forgive a sub debt (write off what is left)',
+        tags: ['Sub debts'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'subDebtId', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'Sub debt forgiven'),
+            new OA\Response(response: 422, description: 'Already settled'),
+            new OA\Response(response: 404, description: 'Not found'),
+        ]
+    )]
+    private function documentForgiveEndpoint(): void {}
+
     #[OA\Put(
         path: '/debts/{id}/sub-debts',
         summary: 'Replace the sub debts of a debt or receivable',

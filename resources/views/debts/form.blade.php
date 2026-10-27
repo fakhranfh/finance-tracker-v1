@@ -37,6 +37,13 @@
             <input type="hidden" name="type" value="{{ $type }}">
 
             <x-molecules.form-group name="name" type="text" :label="__('debts.fields.name')" required autofocus />
+            <div>
+                <x-atoms.label for="account_id">{{ __('debts.fields.account') }}</x-atoms.label>
+                <x-atoms.select name="account_id" required>
+                    <option value="">{{ __('debts.fields.select_account') }}</option>
+                </x-atoms.select>
+                <x-atoms.form-error for="account_id" />
+            </div>
             <x-molecules.form-group name="due_date" type="date" :label="__('debts.fields.due_date')" />
             <fieldset class="space-y-2">
                 <legend class="font-body text-body-sm font-medium text-on-surface">{{ __('sub-debts.mode.title') }}</legend>
@@ -67,6 +74,25 @@
             </div>
         </form>
     </div>
+
+    @unless ($id)
+        <x-organisms.modal id="debt-record-modal" :title="__('debts.record_prompt.title')">
+            <p class="mb-6 font-body text-body-md text-on-surface-variant">
+                {{ __('debts.record_prompt.body') }}
+            </p>
+            <div class="flex justify-end gap-3">
+                <x-atoms.button type="button" variant="secondary" data-modal-close>
+                    {{ __('debts.actions.cancel') }}
+                </x-atoms.button>
+                <x-atoms.button type="button" variant="secondary" data-record-choice="0">
+                    {{ __('debts.record_prompt.no') }}
+                </x-atoms.button>
+                <x-atoms.button type="button" data-record-choice="1">
+                    {{ __('debts.record_prompt.yes') }}
+                </x-atoms.button>
+            </div>
+        </x-organisms.modal>
+    @endunless
 @endsection
 
 @push('scripts')

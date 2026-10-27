@@ -34,10 +34,12 @@ trait DocumentsApi
             content: new OA\JsonContent(
                 properties: [
                     new OA\Property(property: 'type', type: 'string', enum: ['debt', 'receivable'], example: 'debt'),
+                    new OA\Property(property: 'account_id', type: 'integer', example: 1),
                     new OA\Property(property: 'name', type: 'string', example: 'Sample name'),
                     new OA\Property(property: 'amount', type: 'integer', example: 150000),
                     new OA\Property(property: 'due_date', type: 'string', format: 'date', example: '2026-01-15'),
                     new OA\Property(property: 'notes', type: 'string', example: 'Sample notes'),
+                    new OA\Property(property: 'create_record', type: 'boolean', example: false, description: 'Also record the money moving in (debt) or out (receivable) of the account'),
                 ]
             )
         ),
@@ -70,6 +72,7 @@ trait DocumentsApi
             content: new OA\JsonContent(
                 properties: [
                     new OA\Property(property: 'type', type: 'string', enum: ['debt', 'receivable'], example: 'debt'),
+                    new OA\Property(property: 'account_id', type: 'integer', example: 1),
                     new OA\Property(property: 'name', type: 'string', example: 'Sample name'),
                     new OA\Property(property: 'amount', type: 'integer', example: 150000),
                     new OA\Property(property: 'due_date', type: 'string', format: 'date', example: '2026-01-15'),
@@ -83,6 +86,18 @@ trait DocumentsApi
         ]
     )]
     private function documentUpdateEndpoint(): void {}
+
+    #[OA\Post(
+        path: '/debts/{id}/forgive',
+        summary: 'Forgive a debt (write off what is left)',
+        tags: ['Debts'],
+        parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],
+        responses: [
+            new OA\Response(response: 200, description: 'Debt forgiven'),
+            new OA\Response(response: 422, description: 'Already settled'),
+        ]
+    )]
+    private function documentForgiveEndpoint(): void {}
 
     #[OA\Delete(
         path: '/debts/{id}',

@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { seedUser } from './support/seed';
+import { answerRecordPrompt, ensureAccount, pickDebtAccount } from './support/accounts';
 
 async function login(page, email: string, password: string) {
     await page.goto('/login');
@@ -21,12 +22,16 @@ test.describe('Manage Receivables', () => {
         await expect(page).toHaveURL('/receivables');
         await expect(page.getByRole('heading', { name: 'Manage Receivables' })).toBeVisible();
 
+        const debtAccount = await ensureAccount(page);
+        await page.goto('/receivables');
         await page.getByRole('link', { name: 'Add receivable' }).click();
         await expect(page).toHaveURL('/receivables/create');
+        await pickDebtAccount(page, debtAccount);
 
         await page.getByLabel('Name', { exact: true }).fill(mainValue);
         await page.getByLabel('Amount', { exact: true }).fill('50000');
         await page.getByRole('button', { name: 'Save' }).click();
+await answerRecordPrompt(page);
 
         await expect(page).toHaveURL('/receivables');
         await expect(page.getByRole('row', { name: new RegExp(mainValue) })).toBeVisible();

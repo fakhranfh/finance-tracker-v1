@@ -47,6 +47,8 @@ return [
         'due_date' => 'Due Date',
         'notes' => 'Notes',
         'is_paid' => 'Is Paid',
+        'account' => 'Account',
+        'select_account' => 'Select account',
     ],
 
     'types' => [
@@ -65,13 +67,28 @@ return [
         'confirm_bulk_delete' => 'Are you sure you want to delete the selected debts?',
         'generate' => 'Generate',
         'generate_count' => 'Number of debts to generate',
+        'forgive' => 'Forgive',
+        'confirm_forgive' => 'Forgive the rest of this debt?',
+        'forgive_hint' => 'Whatever is still unpaid, sub debts included, is written off and the debt counts as settled. This cannot be undone.',
         'autofill' => 'Autofill',
+    ],
+
+    'record_prompt' => [
+        'title' => 'Create a record?',
+        'body' => 'Create a record on the chosen account for this amount?',
+        'yes' => 'Yes, create record',
+        'no' => 'No, just save',
+    ],
+
+    'errors' => [
+        'already_settled' => 'This debt is already settled.',
     ],
 
     'flash' => [
         'created' => 'Debt created successfully.',
         'updated' => 'Debt updated successfully.',
         'deleted' => 'Debt deleted successfully.',
+        'forgiven' => 'Debt forgiven successfully.',
         'generated' => 'Fake debts generated successfully.',
     ],
 ];

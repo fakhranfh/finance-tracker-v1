@@ -55,6 +55,11 @@ interface DebtRepositoryInterface
     public function update(Debt $debt, array $data): Debt;
 
     /**
+     * Write off what is left of a debt.
+     */
+    public function forgive(Debt $debt): Debt;
+
+    /**
      * Delete a debt.
      */
     public function delete(Debt $debt): void;

@@ -80,13 +80,21 @@ return [
         'generate_count' => 'Jumlah sub utang yang akan dibuat',
         'save' => 'Simpan',
         'cancel' => 'Batal',
+        'forgive' => 'Ikhlaskan',
+        'confirm_forgive' => 'Ikhlaskan sisa sub utang ini?',
+        'forgive_hint' => 'Sisa yang belum dibayar dihapuskan dan dianggap lunas. Tindakan ini tidak bisa dibatalkan.',
         'autofill' => 'Isi otomatis',
         'edit' => 'Ubah',
+    ],
+
+    'errors' => [
+        'already_settled' => 'Sub utang ini sudah lunas.',
     ],
 
     'flash' => [
         'created' => 'Sub utang berhasil ditambahkan.',
         'updated_item' => 'Sub utang berhasil diperbarui.',
+        'forgiven' => 'Sub utang berhasil diikhlaskan.',
         'generated' => 'Sub utang palsu berhasil dibuat.',
         'updated' => 'Sub utang berhasil disimpan.',
         'status_failed' => 'Gagal memperbarui sub utang. Silakan coba lagi.',

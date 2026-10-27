@@ -139,6 +139,7 @@ Route::middleware('web')->name('api.')->group(function (): void {
         Route::post('/debts/generate', [DebtController::class, 'generate'])
             ->middleware(EnsureLocalEnvironment::class)
             ->name('debts.generate');
+        Route::post('/debts/{debt}/forgive', [DebtController::class, 'forgive'])->name('debts.forgive');
         Route::get('/debts/{debt}/payments', [DebtPaymentController::class, 'index'])->name('debts.payments.index');
         Route::get('/debts/{debt}/payments/available', [DebtPaymentController::class, 'available'])->name('debts.payments.available');
         Route::post('/debts/{debt}/payments', [DebtPaymentController::class, 'store'])->name('debts.payments.store');
@@ -152,6 +153,9 @@ Route::middleware('web')->name('api.')->group(function (): void {
         Route::delete('/debts/{debt}/sub-debts/{subDebt}', [SubDebtController::class, 'destroy'])
             ->scopeBindings()
             ->name('debts.sub-debts.destroy');
+        Route::post('/debts/{debt}/sub-debts/{subDebt}/forgive', [SubDebtController::class, 'forgive'])
+            ->scopeBindings()
+            ->name('debts.sub-debts.forgive');
         Route::put('/debts/{debt}/sub-debts', [SubDebtController::class, 'sync'])->name('debts.sub-debts.sync');
         Route::get('/debts/{debt}/sub-debts/{subDebt}', [SubDebtController::class, 'show'])
             ->scopeBindings()

@@ -30,6 +30,7 @@ class SubDebtResource extends JsonResource
             'remaining_amount' => $subDebt->remaining_amount,
             'due_date' => $subDebt->due_date,
             'is_paid' => $subDebt->is_paid,
+            'is_forgiven' => $subDebt->forgiven_at !== null,
             'note' => $subDebt->note,
             'created_at' => $subDebt->created_at?->toIso8601String(),
         ];

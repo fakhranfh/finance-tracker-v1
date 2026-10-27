@@ -28,10 +28,12 @@ class StoreDebtRequest extends FormRequest
     {
         return [
             'type' => ['required', Rule::enum(DebtType::class)],
+            'account_id' => ['required', 'integer', 'exists:accounts,id'],
             'name' => ['required', 'string', 'max:255'],
             'amount' => ['required', 'integer', 'gt:0', 'max:999999999999'],
             'due_date' => ['nullable', 'date'],
             'notes' => ['nullable', 'string'],
+            'create_record' => ['sometimes', 'boolean'],
             ...$this->subDebtRules(null),
         ];
     }

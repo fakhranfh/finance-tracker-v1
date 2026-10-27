@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { seedUser } from './support/seed';
+import { answerRecordPrompt, ensureAccount, pickDebtAccount } from './support/accounts';
 
 async function login(page, email: string, password: string) {
     await page.goto('/login');
@@ -29,13 +30,16 @@ test.describe('Manage Debts', () => {
         const mainValue = `E2E ${Date.now()}`;
 
         await login(page, email, password);
+        const debtAccount = await ensureAccount(page);
         await page.goto('/debts/create');
+        await pickDebtAccount(page, debtAccount);
 
         await page.getByLabel('Name', { exact: true }).fill(`${mainValue}`);
         await page.getByLabel('Amount', { exact: true }).fill('150000');
         await page.getByLabel('Due Date', { exact: true }).fill('2026-01-15');
         await page.getByLabel('Notes', { exact: true }).fill('E2E Notes');
         await page.getByRole('button', { name: 'Save' }).click();
+await answerRecordPrompt(page, true);
 
         await expect(page).toHaveURL('/debts');
         await expect(page.getByText('Debt created successfully.')).toBeVisible();
@@ -55,6 +59,29 @@ test.describe('Manage Debts', () => {
         await page.locator('#confirm-delete-debt').click();
 
         await expect(page.getByRole('row', { name: new RegExp(mainValue) })).toHaveCount(0);
+    });
+
+    test('forgives a debt from the list', async ({ page }) => {
+        const { email, password } = seedUser();
+        const mainValue = `E2E Forgive ${Date.now()}`;
+
+        await login(page, email, password);
+        const debtAccount = await ensureAccount(page);
+        await page.goto('/debts/create');
+        await pickDebtAccount(page, debtAccount);
+
+        await page.getByLabel('Name', { exact: true }).fill(mainValue);
+        await page.getByLabel('Amount', { exact: true }).fill('75000');
+        await page.getByRole('button', { name: 'Save' }).click();
+        await answerRecordPrompt(page);
+        await expect(page).toHaveURL('/debts');
+
+        const row = page.getByRole('row', { name: new RegExp(mainValue) });
+        await row.getByRole('button', { name: 'Forgive' }).click();
+        await page.getByRole('dialog').getByRole('button', { name: 'Forgive' }).click();
+
+        await expect(page.getByText('Debt forgiven successfully.')).toBeVisible();
+        await expect(page.getByRole('row', { name: new RegExp(mainValue) }).getByRole('button', { name: 'Forgive' })).toHaveCount(0);
     });
 
     test('redirects a guest to login', async ({ page }) => {

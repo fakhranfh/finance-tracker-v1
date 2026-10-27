@@ -83,6 +83,14 @@ class SubDebtManagementService
     }
 
     /**
+     * Forgive a sub debt: the rest of it is written off and it counts as settled.
+     */
+    public function forgive(SubDebt $subDebt): SubDebt
+    {
+        return $this->subDebtRepository->forgive($subDebt);
+    }
+
+    /**
      * Delete a sub debt; its payments stay as records, and the debt's amount follows the sub debts left.
      */
     public function delete(SubDebt $subDebt): void

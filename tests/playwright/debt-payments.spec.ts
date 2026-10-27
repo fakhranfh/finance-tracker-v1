@@ -1,5 +1,6 @@
 import { test, expect, Page } from '@playwright/test';
 import { seedUser } from './support/seed';
+import { answerRecordPrompt, ensureAccount, pickDebtAccount } from './support/accounts';
 
 async function login(page: Page, email: string, password: string) {
     await page.goto('/login');
@@ -18,10 +19,13 @@ async function createAccount(page: Page, name: string) {
 }
 
 async function createDebt(page: Page, path: string, name: string, amount: string) {
+    const debtAccount = await ensureAccount(page);
     await page.goto(`${path}/create`);
+    await pickDebtAccount(page, debtAccount);
     await page.getByLabel('Name', { exact: true }).first().fill(name);
     await page.locator('#amount').fill(amount);
     await page.getByRole('button', { name: 'Save' }).click();
+await answerRecordPrompt(page);
     await expect(page).toHaveURL(path);
 }
 
@@ -102,7 +106,9 @@ test.describe('Debt payments', () => {
         await login(page, email, password);
         await createAccount(page, account);
 
+        const debtAccount = await ensureAccount(page);
         await page.goto('/debts/create');
+        await pickDebtAccount(page, debtAccount);
         await page.getByLabel('Name', { exact: true }).first().fill(debt);
         await page.getByLabel('Split into sub debts').check();
         await page.locator('[name="sub_debts.0.name"]').fill('Uang muka');
@@ -111,6 +117,7 @@ test.describe('Debt payments', () => {
         await page.locator('[name="sub_debts.1.name"]').fill('Pelunasan');
         await page.locator('[name="sub_debts.1.amount"]').fill('200000');
         await page.getByRole('button', { name: 'Save' }).click();
+await answerRecordPrompt(page);
         await expect(page).toHaveURL('/debts');
 
         await page.getByRole('row', { name: new RegExp(debt) }).getByRole('link', { name: 'Sub debts' }).click();

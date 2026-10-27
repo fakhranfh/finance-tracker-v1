@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * One instalment or part of a debt or receivable, e.g. a single monthly payment. What has been paid is the
- * sum of the records linked to it, never stored.
+ * sum of the records linked to it, never stored. Forgiving its debt writes the rest off (`forgiven_at`).
  */
 #[Fillable(['debt_id', 'name', 'amount', 'due_date', 'note'])]
 class SubDebt extends Model
@@ -24,12 +24,13 @@ class SubDebt extends Model
     /**
      * Get the attributes that should be cast.
      *
-     * @return array<string, string>
+     * @return array{amount: 'integer', forgiven_at: 'datetime'}
      */
     protected function casts(): array
     {
         return [
             'amount' => 'integer',
+            'forgiven_at' => 'datetime',
         ];
     }
 
@@ -50,15 +51,15 @@ class SubDebt extends Model
      */
     protected function isPaid(): Attribute
     {
-        return Attribute::get(fn (): bool => $this->paid_amount >= $this->amount);
+        return Attribute::get(fn (): bool => $this->forgiven_at !== null || $this->paid_amount >= $this->amount);
     }
 
     /**
-     * @return Attribute<int, never>
+     * @return Attribute<int<0, max>, never>
      */
     protected function remainingAmount(): Attribute
     {
-        return Attribute::get(fn (): int => max(0, $this->amount - $this->paid_amount));
+        return Attribute::get(fn (): int => $this->forgiven_at !== null ? 0 : max(0, $this->amount - $this->paid_amount));
     }
 
     /**

@@ -2,6 +2,28 @@ import { createTable } from '../shared/table/table.js';
 import { formatDate, formatDateTime } from '../shared/datetime.js';
 import { formatMoney } from '../shared/money.js';
 import { routes } from '../routes.js';
+import { post } from '../shared/http.js';
+import { closeModal, openModal } from '../shared/modal.js';
+
+let forgiveId = null;
+
+function askForgive(id) {
+    forgiveId = id;
+    openModal('forgive-debt-modal');
+}
+
+document.getElementById('confirm-forgive-debt')?.addEventListener('click', async () => {
+    const { ok, data } = await post(routes.debts.forgive(forgiveId));
+
+    closeModal('forgive-debt-modal');
+
+    if (ok) {
+        sessionStorage.setItem('debts-flash-success', document.getElementById('debts-filters').dataset.forgiveMessage);
+        window.location.reload();
+    } else {
+        window.alert(data?.message ?? 'Something went wrong.');
+    }
+});
 
 createTable({
     ids: {
@@ -36,7 +58,10 @@ createTable({
             formatDateTime(item.created_at),
         ],
         viewUrl: routes.pages.debtSubDebts(item.id, item.type),
-        extraActions: [{ label: document.getElementById('debts-filters').dataset.paymentsLabel, url: routes.pages.debtPayments(item.id, item.type) }],
+        extraActions: [
+            { label: document.getElementById('debts-filters').dataset.paymentsLabel, url: routes.pages.debtPayments(item.id, item.type) },
+            ...(item.is_paid ? [] : [{ label: document.getElementById('debts-filters').dataset.forgiveLabel, onClick: () => askForgive(item.id) }]),
+        ],
         editUrl: routes.pages.debtEdit(item.id, item.type),
         locked: false,
     }),

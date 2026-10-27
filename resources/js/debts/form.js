@@ -8,11 +8,14 @@ import { wireDevTools } from './dev-tools.js';
 import { debtFormFixture } from './dev-fixtures/form.js';
 import { subDebtFixtures } from './dev-fixtures/sub-debts.js';
 import { createSubDebtsField } from './sub-debts-field.js';
+import { closeModal, openModal } from '../shared/modal.js';
+import { searchableSelect } from '../shared/searchable-select.js';
 
 const form = document.getElementById('debt-form');
 const itemId = form?.dataset.itemId;
 
 wireDevTools(form, () => debtFormFixture(form?.elements.namedItem('type')?.value));
+const accountSelect = form ? searchableSelect(form.elements.namedItem('account_id')) : null;
 const subDebtsField = form ? createSubDebtsField({ form }) : null;
 
 // A new debt sometimes also gets sample sub debts that split the autofilled amount.
@@ -22,10 +25,21 @@ document.querySelector('[data-dev-autofill]')?.addEventListener('click', () => {
     }
 });
 
+async function loadAccounts() {
+    const accounts = await getAll(`${routes.accounts.index}?sort=name`);
+
+    form.elements.namedItem('account_id').append(...(accounts ?? []).map((account) => new Option(account.name, account.id)));
+    accountSelect.refresh();
+}
+
 async function loadItem() {
+    await loadAccounts();
+
     const { ok, data } = await get(routes.debts.show(itemId));
 
     if (ok) {
+        form.elements.namedItem('account_id').value = data.data.account_id ?? '';
+        accountSelect.refresh();
         form.elements.namedItem('name').value = data.data.name ?? '';
         form.elements.namedItem('amount').value = data.data.amount ?? '';
         form.elements.namedItem('due_date').value = data.data.due_date ?? '';
@@ -46,9 +60,11 @@ async function loadItem() {
 if (form) {
     if (itemId) {
         loadItem();
+    } else {
+        loadAccounts();
     }
 
-    form.addEventListener('submit', async (event) => {
+    form.addEventListener('submit', (event) => {
         event.preventDefault();
 
         clearFieldErrors(form);
@@ -60,16 +76,34 @@ if (form) {
             return;
         }
 
+        // A new debt asks first whether the money moving in or out should be recorded too.
+        if (itemId) {
+            save();
+        } else {
+            openModal('debt-record-modal');
+        }
+    });
+
+    document.querySelectorAll('[data-record-choice]').forEach((button) => {
+        button.addEventListener('click', () => {
+            closeModal('debt-record-modal');
+            save(button.dataset.recordChoice === '1');
+        });
+    });
+
+    async function save(createRecord = false) {
         const submitButton = form.querySelector('button[type="submit"]');
         setButtonLoading(submitButton, true);
 
         const payload = {
             type: form.elements.namedItem('type').value,
             name: form.elements.namedItem('name').value,
+            account_id: form.elements.namedItem('account_id').value,
             amount: form.elements.namedItem('amount').value,
             due_date: form.elements.namedItem('due_date').value,
             notes: form.elements.namedItem('notes').value,
             sub_debts: subDebtsField.payload(),
+            ...(itemId ? {} : { create_record: createRecord }),
         };
 
         try {
@@ -91,5 +125,5 @@ if (form) {
         } finally {
             setButtonLoading(submitButton, false);
         }
-    });
+    }
 }

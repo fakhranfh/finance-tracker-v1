@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Enums\DebtType;
+use App\Enums\RecordType;
 use App\Models\Debt;
 use App\Repositories\Debt\DebtRepositoryInterface;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -12,6 +14,7 @@ class DebtManagementService
     public function __construct(
         protected DebtRepositoryInterface $debtRepository,
         protected SubDebtManagementService $subDebtService,
+        protected RecordManagementService $recordService,
     ) {}
 
     /**
@@ -33,20 +36,33 @@ class DebtManagementService
     }
 
     /**
-     * Create a new debt, together with its sub debts when `sub_debts` is given.
+     * Create a new debt, together with its sub debts when `sub_debts` is given. With `create_record`
+     * the money moving into or out of the account is recorded too (not linked, so it is no payment).
      *
      * @param  array<string, mixed>  $data
      */
     public function create(array $data): Debt
     {
         $subDebts = Arr::pull($data, 'sub_debts');
+        $createRecord = (bool) Arr::pull($data, 'create_record');
 
-        return $this->debtRepository->transaction(function () use ($data, $subDebts): Debt {
+        return $this->debtRepository->transaction(function () use ($data, $subDebts, $createRecord): Debt {
             $debt = $this->debtRepository->create($data);
 
             if ($subDebts) {
                 $this->subDebtService->replace($debt, $subDebts);
                 $debt->refresh();
+            }
+
+            if ($createRecord) {
+                // Borrowing brings money in, lending sends it out: the opposite of paying the debt off.
+                $this->recordService->create([
+                    'type' => $debt->type === DebtType::Debt ? RecordType::Income->value : RecordType::Expense->value,
+                    'account_id' => $debt->account_id,
+                    'amount' => $debt->amount,
+                    'note' => $debt->name,
+                    'recorded_at' => now(),
+                ]);
             }
 
             return $debt;
@@ -73,6 +89,14 @@ class DebtManagementService
 
             return $debt;
         });
+    }
+
+    /**
+     * Forgive a debt: the rest of it and of its sub debts is written off and it counts as settled.
+     */
+    public function forgive(Debt $debt): Debt
+    {
+        return $this->debtRepository->transaction(fn (): Debt => $this->debtRepository->forgive($debt));
     }
 
     /**
