@@ -11,8 +11,9 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
 /**
- * Pays a debt off with an existing record (`record_id`) or a new one. A debt split into sub debts is paid per
- * sub debt, and nothing can be paid beyond what is still owed.
+ * Pays a debt off with an existing record (`record_id`) or a new payment, which is saved as a record on an account
+ * unless `create_record` is false. A debt split into sub debts is paid per sub debt, and nothing can be paid
+ * beyond what is still owed.
  */
 class StoreDebtPaymentRequest extends FormRequest
 {
@@ -38,7 +39,8 @@ class StoreDebtPaymentRequest extends FormRequest
         return [
             'record_id' => ['nullable', 'integer', Rule::exists('records', 'id')->where('type', $type)->whereNull('debt_id')],
             'sub_debt_id' => ['nullable', 'integer', Rule::exists('sub_debts', 'id')->where('debt_id', $debt->id)],
-            'account_id' => ['required_without:record_id', 'integer', 'exists:accounts,id'],
+            'create_record' => ['sometimes', 'boolean'],
+            'account_id' => [Rule::requiredIf(fn (): bool => ! $this->filled('record_id') && $this->boolean('create_record', true)), 'nullable', 'integer', 'exists:accounts,id'],
             'category_id' => ['nullable', 'integer', Rule::exists('categories', 'id')->where('type', $type)],
             'amount' => ['required_without:record_id', 'integer', 'gt:0', 'max:999999999999'],
             'note' => ['nullable', 'string'],

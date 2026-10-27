@@ -702,7 +702,13 @@
                                         "type": "integer",
                                         "nullable": true
                                     },
+                                    "create_record": {
+                                        "description": "Default true. When false the payment is saved without a record: it counts as paid but no account is touched, so account_id and category_id are ignored",
+                                        "type": "boolean",
+                                        "example": true
+                                    },
                                     "account_id": {
+                                        "description": "Required unless record_id is given or create_record is false",
                                         "type": "integer",
                                         "example": 1
                                     },
@@ -824,7 +830,8 @@
                 "tags": [
                     "Debt Payments"
                 ],
-                "summary": "Stop a record from paying the debt off (the record itself is kept)",
+                "summary": "Remove a payment: a record stops paying the debt off (the record itself is kept), a payment saved without a record is deleted",
+                "description": "The payment id is the one listed: a record id, or the negative id of a payment saved without a record.",
                 "operationId": "b3ca4094738f9b1cacf2243428bb48c9",
                 "parameters": [
                     {
@@ -852,7 +859,7 @@
                         "description": "Unauthenticated"
                     },
                     "404": {
-                        "description": "Not found, or the record does not pay this debt"
+                        "description": "Not found, or the payment does not belong to this debt"
                     }
                 }
             }
@@ -941,6 +948,10 @@
                                             "receivable"
                                         ]
                                     },
+                                    "account_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
                                     "name": {
                                         "type": "string",
                                         "example": "Sample name"
@@ -957,6 +968,11 @@
                                     "notes": {
                                         "type": "string",
                                         "example": "Sample notes"
+                                    },
+                                    "create_record": {
+                                        "description": "Also record the money moving in (debt) or out (receivable) of the account",
+                                        "type": "boolean",
+                                        "example": false
                                     }
                                 },
                                 "type": "object"
@@ -1066,6 +1082,10 @@
                                             "receivable"
                                         ]
                                     },
+                                    "account_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
                                     "name": {
                                         "type": "string",
                                         "example": "Sample name"
@@ -1117,6 +1137,33 @@
                 "responses": {
                     "204": {
                         "description": "Debt deleted"
+                    }
+                }
+            }
+        },
+        "/debts/{id}/forgive": {
+            "post": {
+                "tags": [
+                    "Debts"
+                ],
+                "summary": "Forgive a debt (write off what is left)",
+                "operationId": "c19f6ad0bf14e57b776a6e258155c5e7",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Debt forgiven"
+                    },
+                    "422": {
+                        "description": "Already settled"
                     }
                 }
             }
@@ -3473,6 +3520,44 @@
                 }
             }
         },
+        "/debts/{id}/sub-debts/{subDebtId}/forgive": {
+            "post": {
+                "tags": [
+                    "Sub debts"
+                ],
+                "summary": "Forgive a sub debt (write off what is left)",
+                "operationId": "3079d7bfdff28caac0c4eee74c248c92",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "subDebtId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Sub debt forgiven"
+                    },
+                    "422": {
+                        "description": "Already settled"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                }
+            }
+        },
         "/goals/{id}/sub-goals": {
             "get": {
                 "tags": [
@@ -4487,6 +4572,10 @@
         {
             "name": "Records",
             "description": "Records"
+        },
+        {
+            "name": "Sub debts",
+            "description": "Sub debts"
         }
     ]
 }

@@ -32,19 +32,6 @@ class RecordRepository implements RecordRepositoryInterface
         return $query->paginate($perPage)->withQueryString();
     }
 
-    public function paginateForDebt(int $debtId, ?int $subDebtId, int $perPage, ?string $search = null, ?string $sort = null, string $direction = 'desc'): LengthAwarePaginator
-    {
-        $query = Record::query()
-            ->with(['account', 'category', 'subDebt'])
-            ->where('debt_id', $debtId)
-            ->when($subDebtId, fn (Builder $q, int $id) => $q->where('sub_debt_id', $id));
-
-        $this->applySearch($query, $search);
-        $this->applySort($query, $sort, $direction);
-
-        return $query->paginate($perPage)->withQueryString();
-    }
-
     public function paginateAvailable(string $type, int $perPage, ?string $search = null, ?string $sort = null, string $direction = 'desc'): LengthAwarePaginator
     {
         $query = Record::query()

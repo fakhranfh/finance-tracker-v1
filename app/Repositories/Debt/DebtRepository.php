@@ -3,6 +3,7 @@
 namespace App\Repositories\Debt;
 
 use App\Models\Debt;
+use App\Repositories\Concerns\PaidSql;
 use App\Repositories\Concerns\RunsTransactions;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -27,7 +28,7 @@ class DebtRepository implements DebtRepositoryInterface
         $direction = $direction === 'desc' ? 'desc' : 'asc';
 
         if ($sort === 'is_paid') {
-            $query->orderByRaw('(debts.forgiven_at is not null or (select coalesce(sum(records.amount), 0) from records where records.debt_id = debts.id) >= debts.amount) '.$direction);
+            $query->orderByRaw('(debts.forgiven_at is not null or ('.PaidSql::debt().') >= debts.amount) '.$direction);
         } elseif ($sort && in_array($sort, $sortable, true)) {
             $query->orderBy($sort, $direction);
         } else {
@@ -63,14 +64,14 @@ class DebtRepository implements DebtRepositoryInterface
     }
 
     /**
-     * Select what has been paid (the sum of the linked records) with every debt.
+     * Select what has been paid (the linked records and the payments without a record) with every debt.
      *
      * @param  Builder<Debt>  $query
      * @return Builder<Debt>
      */
     private function withPaid(Builder $query): Builder
     {
-        return $query->withSum('payments as paid_amount', 'amount');
+        return $query->select('debts.*')->selectRaw(PaidSql::debt().' as paid_amount');
     }
 
     /**
@@ -113,7 +114,7 @@ class DebtRepository implements DebtRepositoryInterface
         // Sub debts that are not paid off yet are written off with it.
         $debt->subDebts()
             ->whereNull('forgiven_at')
-            ->whereRaw('(select coalesce(sum(records.amount), 0) from records where records.sub_debt_id = sub_debts.id) < sub_debts.amount')
+            ->whereRaw('('.PaidSql::subDebt().') < sub_debts.amount')
             ->update(['forgiven_at' => $now]);
 
         return $debt;
