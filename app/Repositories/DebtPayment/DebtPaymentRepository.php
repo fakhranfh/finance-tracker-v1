@@ -26,7 +26,7 @@ class DebtPaymentRepository implements DebtPaymentRepositoryInterface
             ->leftJoin('sub_debts', 'sub_debts.id', '=', 'debt_payments.sub_debt_id')
             ->where('debt_payments.debt_id', $debtId)
             ->when($subDebtId, fn (Builder $q, int $id) => $q->where('debt_payments.sub_debt_id', $id))
-            ->selectRaw("'payment' as source, debt_payments.id, debt_payments.debt_id, debt_payments.sub_debt_id, sub_debts.name as sub_debt, cast(null as varchar) as account, cast(null as varchar) as category, debt_payments.amount, debt_payments.note, debt_payments.paid_at as recorded_at, debt_payments.created_at");
+            ->selectRaw("'payment' as source, debt_payments.id, debt_payments.debt_id, debt_payments.sub_debt_id, sub_debts.name as sub_debt, null as account, null as category, debt_payments.amount, debt_payments.note, debt_payments.paid_at as recorded_at, debt_payments.created_at");
 
         $query = DB::query()->fromSub($records->unionAll($unrecorded), 'payments');
 
