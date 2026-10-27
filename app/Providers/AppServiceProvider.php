@@ -12,6 +12,8 @@ use App\Repositories\Category\CategoryRepository;
 use App\Repositories\Category\CategoryRepositoryInterface;
 use App\Repositories\Debt\DebtRepository;
 use App\Repositories\Debt\DebtRepositoryInterface;
+use App\Repositories\DebtPayment\DebtPaymentRepository;
+use App\Repositories\DebtPayment\DebtPaymentRepositoryInterface;
 use App\Repositories\Goal\GoalRepository;
 use App\Repositories\Goal\GoalRepositoryInterface;
 use App\Repositories\GoalSaving\GoalSavingRepository;
@@ -45,6 +47,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(DebtRepositoryInterface::class, DebtRepository::class);
+        $this->app->bind(DebtPaymentRepositoryInterface::class, DebtPaymentRepository::class);
         $this->app->bind(SubDebtRepositoryInterface::class, SubDebtRepository::class);
         $this->app->bind(WebhookRepositoryInterface::class, WebhookRepository::class);
         $this->app->bind(WebhookLogRepositoryInterface::class, WebhookLogRepository::class);

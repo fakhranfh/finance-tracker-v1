@@ -3,6 +3,7 @@
 namespace App\Repositories\SubDebt;
 
 use App\Models\SubDebt;
+use App\Repositories\Concerns\PaidSql;
 use App\Repositories\Concerns\RunsTransactions;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -22,7 +23,7 @@ class SubDebtRepository implements SubDebtRepositoryInterface
         $direction = $direction === 'desc' ? 'desc' : 'asc';
 
         if ($sort === 'is_paid') {
-            $query->orderByRaw('(sub_debts.forgiven_at is not null or (select coalesce(sum(records.amount), 0) from records where records.sub_debt_id = sub_debts.id) >= sub_debts.amount) '.$direction);
+            $query->orderByRaw('(sub_debts.forgiven_at is not null or ('.PaidSql::subDebt().') >= sub_debts.amount) '.$direction);
         } elseif ($sort && in_array($sort, $sortable, true)) {
             $query->orderBy($sort, $direction);
         } else {
@@ -97,14 +98,14 @@ class SubDebtRepository implements SubDebtRepositoryInterface
     }
 
     /**
-     * Select what has been paid (the sum of the linked records) with every sub debt.
+     * Select what has been paid (the linked records and the payments without a record) with every sub debt.
      *
      * @param  Builder<SubDebt>  $query
      * @return Builder<SubDebt>
      */
     private function withPaid(Builder $query): Builder
     {
-        return $query->withSum('payments as paid_amount', 'amount');
+        return $query->select('sub_debts.*')->selectRaw(PaidSql::subDebt().' as paid_amount');
     }
 
     private function applySearch(Builder $query, ?string $search): void

@@ -70,6 +70,23 @@
             </div>
         </form>
     </div>
+
+    <x-organisms.modal id="debt-payment-record-modal" :title="__('debt-payments.record_prompt.title')">
+        <p class="mb-6 font-body text-body-md text-on-surface-variant">
+            {{ __('debt-payments.record_prompt.body') }}
+        </p>
+        <div class="flex justify-end gap-3">
+            <x-atoms.button type="button" variant="secondary" data-modal-close>
+                {{ __('debt-payments.actions.cancel') }}
+            </x-atoms.button>
+            <x-atoms.button type="button" variant="secondary" data-record-choice="0">
+                {{ __('debt-payments.record_prompt.no') }}
+            </x-atoms.button>
+            <x-atoms.button type="button" data-record-choice="1">
+                {{ __('debt-payments.record_prompt.yes') }}
+            </x-atoms.button>
+        </div>
+    </x-organisms.modal>
 @endsection
 
 @push('scripts')

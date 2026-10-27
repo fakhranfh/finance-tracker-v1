@@ -62,6 +62,8 @@ test.describe('Debt payments', () => {
         await page.getByLabel('Amount', { exact: true }).fill('40000');
         await page.getByLabel('Note', { exact: true }).fill(`Cicilan ${stamp}`);
         await page.getByRole('button', { name: 'Save' }).click();
+        await expect(page.getByText('Save as a record too?')).toBeVisible();
+        await answerRecordPrompt(page, true);
 
         await expect(page).toHaveURL(/\/debts\/\d+\/payments$/);
         await expect(page.getByText('Payment added successfully.')).toBeVisible();
@@ -83,12 +85,13 @@ test.describe('Debt payments', () => {
         await pickDebtAccount(page, account);
         await page.getByLabel('Amount', { exact: true }).fill('50000');
         await page.getByRole('button', { name: 'Save' }).click();
+        await answerRecordPrompt(page, true);
         await expect(page.getByText(/more than what is still owed/)).toBeVisible();
         await page.getByRole('link', { name: 'Cancel' }).click();
 
         // Removing a payment keeps its record.
         await page.getByRole('row', { name: new RegExp(`Cicilan ${stamp}`) }).getByRole('button', { name: 'Remove payment' }).click();
-        await expect(page.getByText('Stop counting this record as a payment?')).toBeVisible();
+        await expect(page.getByText('Remove this payment?')).toBeVisible();
         await page.locator('#confirm-delete-payment').click();
         await expect(page.getByRole('row', { name: new RegExp(`Cicilan ${stamp}`) })).toHaveCount(0);
         await expect(page.locator('[data-payments-summary]')).toContainText('30.000');
@@ -133,11 +136,13 @@ await answerRecordPrompt(page);
         await page.getByRole('option', { name: 'Select a sub debt' }).click();
         await pickDebtAccount(page, account);
         await page.getByRole('button', { name: 'Save' }).click();
+        await answerRecordPrompt(page, true);
         await expect(page.getByText('Choose which sub debt this payment is for.')).toBeVisible();
 
         await page.getByLabel('Sub debt').fill('Uang muka');
         await page.getByRole('option', { name: 'Uang muka (Rp 100.000)' }).click();
         await page.getByRole('button', { name: 'Save' }).click();
+        await answerRecordPrompt(page, true);
 
         await expect(page).toHaveURL(/\/debts\/\d+\/payments$/);
         await expect(page.getByRole('row', { name: /Uang muka/ })).toContainText('100.000');
@@ -167,9 +172,40 @@ await answerRecordPrompt(page);
         await pickDebtAccount(page, account);
         await page.getByLabel('Note', { exact: true }).fill(`Diterima ${stamp}`);
         await page.getByRole('button', { name: 'Save' }).click();
+        await answerRecordPrompt(page, true);
 
         await expect(page).toHaveURL(/\/receivables\/\d+\/payments$/);
         await expect(page.getByRole('row', { name: new RegExp(`Diterima ${stamp}`) })).toContainText('80.000');
+    });
+
+    test('saves a payment received without a record', async ({ page }) => {
+        const { email, password } = seedUser();
+        const stamp = Date.now();
+        const account = `E2E Cash ${stamp}`;
+        const receivable = `E2E Receivable ${stamp}`;
+
+        await login(page, email, password);
+        await createAccount(page, account);
+        await createDebt(page, '/receivables', receivable, '80000');
+
+        await page.getByRole('row', { name: new RegExp(receivable) }).getByRole('link', { name: 'Payments' }).click();
+        await page.getByRole('link', { name: 'Add payment received' }).click();
+        await pickDebtAccount(page, account);
+        await page.getByLabel('Amount', { exact: true }).fill('30000');
+        await page.getByLabel('Note', { exact: true }).fill(`Tunai ${stamp}`);
+        await page.getByRole('button', { name: 'Save' }).click();
+        await expect(page.getByText('Save as a record too?')).toBeVisible();
+        await answerRecordPrompt(page, false);
+
+        await expect(page).toHaveURL(/\/receivables\/\d+\/payments$/);
+        const row = page.getByRole('row', { name: new RegExp(`Tunai ${stamp}`) });
+        await expect(row).toContainText('30.000');
+        await expect(row.getByRole('link', { name: 'Open record' })).toHaveCount(0);
+        await expect(page.locator('[data-payments-summary]')).toContainText('30.000');
+
+        await row.getByRole('button', { name: 'Remove payment' }).click();
+        await page.locator('#confirm-delete-payment').click();
+        await expect(row).toHaveCount(0);
     });
 
     test('redirects a guest to login', async ({ page }) => {

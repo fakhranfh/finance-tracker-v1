@@ -5,6 +5,7 @@ import { get, getAll, post } from '../shared/http.js';
 import { routes } from '../routes.js';
 import { toDateTimeLocal } from '../shared/datetime.js';
 import { formatMoney } from '../shared/money.js';
+import { closeModal, openModal } from '../shared/modal.js';
 import '../shared/money-input.js';
 import { searchableSelect } from '../shared/searchable-select.js';
 import { wireDevTools } from '../debts/dev-tools.js';
@@ -88,7 +89,7 @@ if (form) {
         amountInput.value = String(remainingOfSelection());
     });
 
-    form.addEventListener('submit', async (event) => {
+    form.addEventListener('submit', (event) => {
         event.preventDefault();
 
         clearFieldErrors(form);
@@ -100,10 +101,23 @@ if (form) {
             return;
         }
 
+        // Ask first whether the payment should be saved as a record on the account too.
+        openModal('debt-payment-record-modal');
+    });
+
+    document.querySelectorAll('[data-record-choice]').forEach((button) => {
+        button.addEventListener('click', () => {
+            closeModal('debt-payment-record-modal');
+            save(button.dataset.recordChoice === '1');
+        });
+    });
+
+    async function save(createRecord) {
         const submitButton = form.querySelector('button[type="submit"]');
         setButtonLoading(submitButton, true);
 
         const payload = {
+            create_record: createRecord,
             sub_debt_id: subDebtSelect.value || null,
             account_id: form.elements.namedItem('account_id').value,
             category_id: form.elements.namedItem('category_id').value || null,
@@ -131,5 +145,5 @@ if (form) {
         } finally {
             setButtonLoading(submitButton, false);
         }
-    });
+    }
 }

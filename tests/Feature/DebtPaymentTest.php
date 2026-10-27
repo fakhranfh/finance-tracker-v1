@@ -3,6 +3,7 @@
 use App\Models\Account;
 use App\Models\Category;
 use App\Models\Debt;
+use App\Models\DebtPayment;
 use App\Models\Record;
 use App\Models\SubDebt;
 use App\Models\User;
@@ -208,6 +209,115 @@ it('does not accept a sub debt of another debt', function () {
 
     $this->actingAs($actor)->postJson("/api/debts/{$debt->id}/payments", newPayment($account, ['sub_debt_id' => $foreign->id]))
         ->assertStatus(422)->assertJsonValidationErrors(['sub_debt_id']);
+});
+
+it('saves a payment without a record when create_record is false', function () {
+    $actor = User::factory()->create();
+    $debt = Debt::factory()->create(['type' => 'receivable', 'amount' => 100000]);
+
+    $response = $this->actingAs($actor)->postJson("/api/debts/{$debt->id}/payments", [
+        'create_record' => false,
+        'amount' => 40000,
+        'note' => 'Dibayar tunai',
+        'recorded_at' => '2026-10-20T10:00:00+07:00',
+    ]);
+
+    $payment = DebtPayment::query()->firstOrFail();
+    $response->assertStatus(201)->assertJsonPath('data.id', -$payment->id)->assertJsonPath('data.record_id', null)->assertJsonPath('data.amount', 40000)->assertJsonPath('data.account', null);
+    $this->assertDatabaseHas('debt_payments', ['debt_id' => $debt->id, 'sub_debt_id' => null, 'amount' => 40000, 'note' => 'Dibayar tunai']);
+    $this->assertDatabaseCount('records', 0);
+    $this->actingAs($actor)->getJson("/api/debts/{$debt->id}")->assertJsonPath('data.paid_amount', 40000)->assertJsonPath('data.remaining_amount', 60000);
+});
+
+it('also records the payment when create_record is true', function () {
+    $actor = User::factory()->create();
+    $account = Account::factory()->create();
+    $debt = Debt::factory()->create(['type' => 'debt', 'amount' => 100000]);
+
+    $this->actingAs($actor)->postJson("/api/debts/{$debt->id}/payments", newPayment($account, ['create_record' => true]))->assertStatus(201);
+
+    $this->assertDatabaseHas('records', ['debt_id' => $debt->id, 'account_id' => $account->id, 'amount' => 40000]);
+    $this->assertDatabaseCount('debt_payments', 0);
+});
+
+it('needs no account for a payment without a record but still validates it', function () {
+    $actor = User::factory()->create();
+    $debt = Debt::factory()->create(['amount' => 100000]);
+
+    $this->actingAs($actor)->postJson("/api/debts/{$debt->id}/payments", ['create_record' => false])
+        ->assertStatus(422)->assertJsonValidationErrors(['amount', 'recorded_at'])->assertJsonMissingValidationErrors(['account_id']);
+    $this->actingAs($actor)->postJson("/api/debts/{$debt->id}/payments", ['create_record' => 'maybe'])
+        ->assertStatus(422)->assertJsonValidationErrors(['create_record']);
+});
+
+it('counts payments without a record in the totals and the limit', function () {
+    $actor = User::factory()->create();
+    $debt = Debt::factory()->create(['amount' => 100000]);
+    $sub = SubDebt::factory()->for($debt)->create(['amount' => 100000]);
+    Record::factory()->payingOff($debt, $sub)->create(['amount' => 30000]);
+    DebtPayment::query()->create(['debt_id' => $debt->id, 'sub_debt_id' => $sub->id, 'amount' => 50000, 'paid_at' => now()]);
+
+    $this->actingAs($actor)->getJson("/api/debts/{$debt->id}")->assertJsonPath('data.paid_amount', 80000);
+    $this->actingAs($actor)->getJson('/api/debts?sort=paid_amount&direction=desc')->assertOk()->assertJsonPath('data.0.paid_amount', 80000);
+    $this->actingAs($actor)->getJson('/api/debts?sort=is_paid&direction=desc')->assertOk();
+    $this->actingAs($actor)->getJson("/api/debts/{$debt->id}/sub-debts?sort=is_paid")->assertOk()
+        ->assertJsonPath('data.0.paid_amount', 80000)->assertJsonPath('summary.paid_total', 80000);
+
+    $this->actingAs($actor)->postJson("/api/debts/{$debt->id}/payments", ['create_record' => false, 'sub_debt_id' => $sub->id, 'amount' => 30000, 'recorded_at' => now()->toIso8601String()])
+        ->assertStatus(422)->assertJsonValidationErrors(['amount']);
+    $this->actingAs($actor)->postJson("/api/debts/{$debt->id}/payments", ['create_record' => false, 'sub_debt_id' => $sub->id, 'amount' => 20000, 'recorded_at' => now()->toIso8601String()])
+        ->assertStatus(201);
+    expect($sub->refresh()->is_paid)->toBeTrue();
+});
+
+it('lists records and payments without a record together', function () {
+    $actor = User::factory()->create();
+    $debt = Debt::factory()->create(['amount' => 300000]);
+    $sub = SubDebt::factory()->for($debt)->create(['amount' => 300000]);
+    $record = Record::factory()->payingOff($debt)->create(['amount' => 10000, 'note' => 'Lewat rekening', 'recorded_at' => '2026-10-10 10:00:00']);
+    $payment = DebtPayment::query()->create(['debt_id' => $debt->id, 'sub_debt_id' => $sub->id, 'amount' => 20000, 'note' => 'Tunai', 'paid_at' => '2026-10-12 10:00:00']);
+    DebtPayment::query()->create(['debt_id' => Debt::factory()->create()->id, 'amount' => 5000, 'paid_at' => now()]);
+
+    $all = $this->actingAs($actor)->getJson("/api/debts/{$debt->id}/payments");
+
+    $all->assertOk();
+    $all->assertJsonStructure(['data' => [['id', 'record_id', 'debt_id', 'sub_debt_id', 'sub_debt', 'account', 'category', 'amount', 'note', 'recorded_at']], 'summary']);
+    expect($all->json('data.*.id'))->toBe([-$payment->id, $record->id]);
+    expect($all->json('data.0.account'))->toBeNull();
+    expect($all->json('data.0.sub_debt'))->toBe($sub->name);
+    expect($all->json('data.1.record_id'))->toBe($record->id);
+    expect($all->json('summary.paid'))->toBe(30000);
+
+    expect($this->actingAs($actor)->getJson("/api/debts/{$debt->id}/payments?sub_debt_id={$sub->id}")->json('data'))->toHaveCount(1);
+    expect($this->actingAs($actor)->getJson("/api/debts/{$debt->id}/payments?search=Tunai")->json('data'))->toHaveCount(1);
+    expect($this->actingAs($actor)->getJson("/api/debts/{$debt->id}/payments?sort=amount&direction=asc")->json('data.0.amount'))->toBe(10000);
+});
+
+it('deletes a payment without a record', function () {
+    $actor = User::factory()->create();
+    $debt = Debt::factory()->create(['amount' => 100000]);
+    $payment = DebtPayment::query()->create(['debt_id' => $debt->id, 'amount' => 40000, 'paid_at' => now()]);
+    $foreign = DebtPayment::query()->create(['debt_id' => Debt::factory()->create()->id, 'amount' => 1000, 'paid_at' => now()]);
+
+    $this->actingAs($actor)->deleteJson("/api/debts/{$debt->id}/payments/-{$foreign->id}")->assertNotFound();
+    $this->actingAs($actor)->deleteJson("/api/debts/{$debt->id}/payments/-{$payment->id}")->assertNoContent();
+
+    $this->assertDatabaseMissing('debt_payments', ['id' => $payment->id]);
+    $this->assertDatabaseHas('debt_payments', ['id' => $foreign->id]);
+    $this->actingAs($actor)->getJson("/api/debts/{$debt->id}")->assertJsonPath('data.paid_amount', 0);
+});
+
+it('forgives the sub debts that are not paid off by payments without a record', function () {
+    $actor = User::factory()->create();
+    $debt = Debt::factory()->create(['amount' => 300000]);
+    $paid = SubDebt::factory()->for($debt)->create(['amount' => 100000]);
+    $open = SubDebt::factory()->for($debt)->create(['amount' => 200000]);
+    DebtPayment::query()->create(['debt_id' => $debt->id, 'sub_debt_id' => $paid->id, 'amount' => 100000, 'paid_at' => now()]);
+
+    $this->actingAs($actor)->postJson("/api/debts/{$debt->id}/forgive")->assertOk();
+
+    expect($paid->refresh()->forgiven_at)->toBeNull();
+    expect($open->refresh()->forgiven_at)->not->toBeNull();
 });
 
 it('unlinks a payment without deleting its record', function () {

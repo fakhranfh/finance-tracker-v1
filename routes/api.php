@@ -143,7 +143,7 @@ Route::middleware('web')->name('api.')->group(function (): void {
         Route::get('/debts/{debt}/payments', [DebtPaymentController::class, 'index'])->name('debts.payments.index');
         Route::get('/debts/{debt}/payments/available', [DebtPaymentController::class, 'available'])->name('debts.payments.available');
         Route::post('/debts/{debt}/payments', [DebtPaymentController::class, 'store'])->name('debts.payments.store');
-        Route::delete('/debts/{debt}/payments/{record}', [DebtPaymentController::class, 'destroy'])->name('debts.payments.destroy');
+        Route::delete('/debts/{debt}/payments/{payment}', [DebtPaymentController::class, 'destroy'])->where('payment', '-?[0-9]+')->name('debts.payments.destroy');
         Route::get('/debts/{debt}/sub-debts', [SubDebtController::class, 'index'])->name('debts.sub-debts.index');
         Route::post('/debts/{debt}/sub-debts', [SubDebtController::class, 'store'])->name('debts.sub-debts.store');
         Route::delete('/debts/{debt}/sub-debts', [SubDebtController::class, 'bulkDestroy'])->name('debts.sub-debts.bulk-destroy');

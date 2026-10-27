@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\DebtPayment\StoreDebtPaymentRequest;
 use App\Http\Resources\DebtPaymentResource;
+use App\Http\Resources\DebtPaymentRowResource;
+use App\Http\Resources\UnrecordedPaymentResource;
 use App\Models\Debt;
-use App\Models\Record;
+use App\Models\DebtPayment;
 use App\Services\DebtPaymentService;
 use App\Traits\DebtPayment\DocumentsApi;
 use Illuminate\Http\JsonResponse;
@@ -15,7 +17,8 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
 
 /**
- * Payments of a debt or receivable: the records linked to it (or to one of its sub debts).
+ * Payments of a debt or receivable: the records linked to it (or to one of its sub debts) and the payments
+ * saved without a record.
  */
 class DebtPaymentController extends Controller
 {
@@ -27,7 +30,7 @@ class DebtPaymentController extends Controller
 
     public function index(Request $request, Debt $debt): AnonymousResourceCollection
     {
-        return DebtPaymentResource::collection($this->debtPaymentService->paginate(
+        return DebtPaymentRowResource::collection($this->debtPaymentService->paginate(
             $debt,
             $request->integer('sub_debt_id') ?: null,
             perPage: min(max($request->integer('per_page', 10), 1), 100),
@@ -56,16 +59,15 @@ class DebtPaymentController extends Controller
 
     public function store(StoreDebtPaymentRequest $request, Debt $debt): JsonResponse
     {
-        $record = $this->debtPaymentService->add($debt, $request->validated());
+        $payment = $this->debtPaymentService->add($debt, $request->validated());
+        $resource = $payment instanceof DebtPayment ? new UnrecordedPaymentResource($payment) : new DebtPaymentResource($payment);
 
-        return (new DebtPaymentResource($record))->response()->setStatusCode(201);
+        return $resource->response()->setStatusCode(201);
     }
 
-    public function destroy(Debt $debt, Record $record): Response
+    public function destroy(Debt $debt, int $payment): Response
     {
-        abort_unless($record->debt_id === $debt->id, 404);
-
-        $this->debtPaymentService->remove($record);
+        abort_unless($this->debtPaymentService->remove($debt, $payment), 404);
 
         return response()->noContent();
     }
