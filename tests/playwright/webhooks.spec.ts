@@ -161,7 +161,29 @@ test.describe('Manage Webhooks', () => {
         await expect(page.locator('#token')).not.toHaveValue('');
     });
 
-    test('redirects a guest to login', async ({ page }) => {
+    test('rotates a webhook token from the edit page', async ({ page }) => {
+        const { email, password } = seedUser();
+
+        await login(page, email, password);
+        await page.goto('/webhooks/create');
+        await page.getByLabel('Name', { exact: true }).fill(`Rotate edit ${Date.now()}`);
+        await page.getByRole('button', { name: 'Save' }).click();
+        await expect(page).toHaveURL('/webhooks');
+
+        await page.getByRole('link', { name: 'Edit' }).first().click();
+        const token = page.locator('#token');
+        await expect(token).not.toHaveValue('');
+        const before = await token.inputValue();
+
+        await page.getByRole('button', { name: 'Rotate token' }).click();
+        await page.locator('#rotate-webhook-token-modal').getByRole('button', { name: 'Rotate token' }).click();
+
+        await expect(token).not.toHaveValue(before);
+        await expect(token).not.toHaveValue('');
+        await expect(page).toHaveURL(/\/webhooks\/\d+\/edit$/);
+    });
+
+    test('redirects a guest to login',async ({ page }) => {
         await page.goto('/webhooks');
 
         await expect(page).toHaveURL(/\/login$/);

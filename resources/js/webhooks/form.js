@@ -4,6 +4,7 @@ import { setButtonLoading, hideSkeleton } from '../shared/loading-state.js';
 import { get, getAll, post, put } from '../shared/http.js';
 import { wireCopyButtons } from '../shared/copy-to-clipboard.js';
 import { routes } from '../routes.js';
+import { wireRotateToken } from './rotate-token.js';
 import { wireDevTools } from './dev-tools.js';
 import { webhookFormFixture } from './dev-fixtures/form.js';
 
@@ -170,6 +171,7 @@ async function loadItem() {
 
 if (form) {
     if (itemId) {
+        wireRotateToken(form, itemId);
         loadItem();
     } else {
         renderAccounts([]);

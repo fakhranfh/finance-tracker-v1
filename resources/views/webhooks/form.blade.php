@@ -47,7 +47,7 @@
 
             <x-molecules.form-group name="name" type="text" :label="__('webhooks.fields.name')" required autofocus />
             @if ($id)
-                <x-molecules.copy-field name="token" :label="__('webhooks.fields.token')" :copy-label="__('webhooks.actions.copy')" :copied-label="__('webhooks.actions.copied')" />
+                <x-molecules.rotate-token-field />
                 <x-molecules.copy-field name="url" :label="__('webhooks.fields.url')" :copy-label="__('webhooks.actions.copy')" :copied-label="__('webhooks.actions.copied')" />
             @endif
             <div class="space-y-2" id="allowed_ips" data-ip-required-message="{{ __('webhooks.errors.ip_required') }}">
