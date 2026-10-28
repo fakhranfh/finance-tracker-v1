@@ -62,6 +62,7 @@
                     'expand' => __('debt-payments.table.show_more'),
                     'collapse' => __('debt-payments.table.show_less'),
                     'view' => __('debt-payments.actions.open_record'),
+                    'edit' => __('debt-payments.actions.edit'),
                     'delete' => __('debt-payments.actions.remove'),
                 ],
             ]"

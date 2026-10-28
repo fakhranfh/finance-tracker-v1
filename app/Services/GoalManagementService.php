@@ -100,6 +100,16 @@ class GoalManagementService
     }
 
     /**
+     * Total target and saved amounts across all goals.
+     *
+     * @return array{target_total: float, saved_total: float}
+     */
+    public function totals(): array
+    {
+        return $this->goalRepository->totals();
+    }
+
+    /**
      * Count goals matching the search filter, optionally excluding one ID.
      */
     public function countMatching(?string $search = null, ?int $exceptId = null): int

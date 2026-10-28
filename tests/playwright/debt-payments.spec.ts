@@ -175,7 +175,20 @@ await answerRecordPrompt(page);
         await answerRecordPrompt(page, true);
 
         await expect(page).toHaveURL(/\/receivables\/\d+\/payments$/);
-        await expect(page.getByRole('row', { name: new RegExp(`Diterima ${stamp}`) })).toContainText('80.000');
+        const received = page.getByRole('row', { name: new RegExp(`Diterima ${stamp}`) });
+        await expect(received).toContainText('80.000');
+
+        // A payment that is a record is edited here too.
+        await received.getByRole('link', { name: 'Edit payment' }).click();
+        await expect(page).toHaveURL(/\/receivables\/\d+\/payments\/\d+\/edit$/);
+        await expect(page.getByLabel('Amount', { exact: true })).toHaveValue('80.000');
+        await expect(page.getByLabel('Account')).toHaveValue(account);
+        await page.getByLabel('Note', { exact: true }).fill(`Diterima revisi ${stamp}`);
+        await page.getByRole('button', { name: 'Save' }).click();
+
+        await expect(page).toHaveURL(/\/receivables\/\d+\/payments$/);
+        await expect(page.getByText('Payment updated successfully.')).toBeVisible();
+        await expect(page.getByRole('row', { name: new RegExp(`Diterima revisi ${stamp}`) })).toContainText('80.000');
     });
 
     test('saves a payment received without a record', async ({ page }) => {
@@ -203,9 +216,25 @@ await answerRecordPrompt(page);
         await expect(row.getByRole('link', { name: 'Open record' })).toHaveCount(0);
         await expect(page.locator('[data-payments-summary]')).toContainText('30.000');
 
-        await row.getByRole('button', { name: 'Remove payment' }).click();
+        // A payment without a record can be edited; one with a record is edited as a record.
+        await row.getByRole('link', { name: 'Edit payment' }).click();
+        await expect(page).toHaveURL(/\/receivables\/\d+\/payments\/-\d+\/edit$/);
+        await expect(page.getByRole('heading', { name: 'Edit payment received' })).toBeVisible();
+        await expect(page.getByLabel('Amount', { exact: true })).toHaveValue('30.000');
+        await expect(page.getByLabel('Account')).toHaveCount(0);
+        await page.getByLabel('Amount', { exact: true }).fill('50000');
+        await page.getByLabel('Note', { exact: true }).fill(`Tunai revisi ${stamp}`);
+        await page.getByRole('button', { name: 'Save' }).click();
+
+        await expect(page).toHaveURL(/\/receivables\/\d+\/payments$/);
+        await expect(page.getByText('Payment updated successfully.')).toBeVisible();
+        const edited = page.getByRole('row', { name: new RegExp(`Tunai revisi ${stamp}`) });
+        await expect(edited).toContainText('50.000');
+        await expect(page.locator('[data-payments-summary]')).toContainText('50.000');
+
+        await edited.getByRole('button', { name: 'Remove payment' }).click();
         await page.locator('#confirm-delete-payment').click();
-        await expect(row).toHaveCount(0);
+        await expect(edited).toHaveCount(0);
     });
 
     test('redirects a guest to login', async ({ page }) => {

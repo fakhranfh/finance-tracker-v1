@@ -1,13 +1,26 @@
 import { createTable } from '../shared/table/table.js';
 import { formatDate } from '../shared/datetime.js';
 import { formatMoney } from '../shared/money.js';
-import { put } from '../shared/http.js';
+import { get, put } from '../shared/http.js';
 import { routes } from '../routes.js';
 
 const table = document.getElementById('goals-table');
 const icons = JSON.parse(table?.dataset.icons ?? '{}');
 const statusError = document.querySelector('[data-status-error]');
 const statusLabels = JSON.parse(table?.dataset.statusLabels ?? '{}');
+
+const summaryNode = document.querySelector('[data-goals-summary]');
+
+async function refreshSummary() {
+    const { ok, data } = await get(`${routes.goals.index}?per_page=1`);
+
+    if (ok && summaryNode) {
+        summaryNode.textContent = summaryNode.dataset.summaryTemplate
+            .replace(':saved', formatMoney(data.summary.saved_total))
+            .replace(':target', formatMoney(data.summary.target_total));
+        summaryNode.classList.remove('hidden');
+    }
+}
 
 function iconNode(name, color) {
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -89,6 +102,7 @@ createTable({
     deleteModalId: 'delete-goal-modal',
     bulkDeleteModalId: 'bulk-delete-goals-modal',
     defaultSort: { key: 'desired_date', direction: 'asc' },
+    onLoaded: refreshSummary,
     routes: {
         index: routes.goals.index,
         destroy: routes.goals.destroy,

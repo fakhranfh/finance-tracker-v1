@@ -44,6 +44,12 @@
     <div data-flash-success class="mb-6 hidden rounded-lg border border-success/20 bg-success/10 px-4 py-3 font-body text-sm text-success"></div>
     <div data-status-error role="alert" class="mb-6 hidden rounded-lg border border-error/20 bg-error/10 px-4 py-3 font-body text-sm text-error">{{ __('goals.flash.status_failed') }}</div>
 
+    <p
+        class="mb-4 hidden font-body text-body-md font-medium text-on-surface"
+        data-goals-summary
+        data-summary-template="{{ __('goals.summary', ['saved' => ':saved', 'target' => ':target']) }}"
+    ></p>
+
     <x-molecules.table-toolbar
         id="goals-table-toolbar"
         :search-placeholder="__('goals.table.search')"

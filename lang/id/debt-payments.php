@@ -10,6 +10,7 @@ return [
             'back' => 'Kembali ke daftar utang',
             'back_to_payments' => 'Kembali ke pembayaran',
             'create' => 'Tambah pembayaran',
+            'edit' => 'Ubah pembayaran',
             'existing' => 'Pakai record yang sudah ada',
             'existing_hint' => 'Pilih record pengeluaran yang belum melunasi utang lain.',
         ],
@@ -19,6 +20,7 @@ return [
             'back' => 'Kembali ke daftar piutang',
             'back_to_payments' => 'Kembali ke penerimaan',
             'create' => 'Tambah penerimaan',
+            'edit' => 'Ubah penerimaan',
             'existing' => 'Pakai record yang sudah ada',
             'existing_hint' => 'Pilih record pemasukan yang belum melunasi piutang lain.',
         ],
@@ -57,6 +59,7 @@ return [
 
     'actions' => [
         'open_record' => 'Buka record',
+        'edit' => 'Ubah pembayaran',
         'remove' => 'Hapus pembayaran',
         'confirm_remove' => 'Hapus pembayaran ini? Record yang tersimpan untuknya tetap ada.',
         'use' => 'Pakai record ini',
@@ -67,6 +70,7 @@ return [
 
     'flash' => [
         'created' => 'Pembayaran berhasil ditambahkan.',
+        'updated' => 'Pembayaran berhasil diperbarui.',
         'used' => 'Record berhasil dijadikan pembayaran.',
         'removed' => 'Pembayaran dihapus. Recordnya, jika ada, tetap ada.',
     ],

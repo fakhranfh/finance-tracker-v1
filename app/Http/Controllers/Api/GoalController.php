@@ -35,6 +35,7 @@ class GoalController extends Controller
             sort: $request->string('sort')->value() ?: null,
             direction: $request->string('direction', 'asc')->value(),
         ))->additional([
+            'summary' => $this->goalManagementService->totals(),
             'deletable_total' => $this->goalManagementService->countMatching($search),
         ]);
     }

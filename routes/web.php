@@ -20,6 +20,20 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => redirect()->route(User::exists() ? 'login' : 'register'))->name('home');
 
+Route::get('/manifest.webmanifest', fn () => response()->json([
+    'name' => config('app.name'),
+    'short_name' => config('app.name'),
+    'start_url' => '/dashboard',
+    'scope' => '/',
+    'display' => 'standalone',
+    'background_color' => '#ffffff',
+    'theme_color' => '#004ac6',
+    'icons' => [
+        ['src' => '/icons/icon-128.png', 'sizes' => '128x128', 'type' => 'image/png', 'purpose' => 'any'],
+        ['src' => '/icons/icon-512.png', 'sizes' => '512x512', 'type' => 'image/png', 'purpose' => 'any'],
+    ],
+], 200, ['Content-Type' => 'application/manifest+json']))->name('manifest');
+
 Route::get('/lang/{locale}', [LocaleController::class, 'switch'])->name('locale.switch');
 
 Route::middleware('guest')->group(function (): void {
@@ -58,48 +72,71 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
 
     Route::get('/profile', [ProfilePageController::class, 'edit'])->name('profile.edit');
 
-    Route::get('/accounts', [AccountPageController::class, 'index'])->name('accounts.index');
-    Route::get('/accounts/create', [AccountPageController::class, 'create'])->name('accounts.create');
-    Route::get('/accounts/{id}/edit', [AccountPageController::class, 'edit'])->name('accounts.edit');
-    Route::get('/accounts/{id}/summary', [AccountPageController::class, 'summary'])->name('accounts.summary');
+    Route::prefix('accounts')->group(function (): void {
+        Route::get('/', [AccountPageController::class, 'index'])->name('accounts.index');
+        Route::get('/create', [AccountPageController::class, 'create'])->name('accounts.create');
+        Route::get('/{id}/edit', [AccountPageController::class, 'edit'])->name('accounts.edit');
+        Route::get('/{id}/summary', [AccountPageController::class, 'summary'])->name('accounts.summary');
+    });
 
-    Route::get('/records', [RecordPageController::class, 'index'])->name('records.index');
-    Route::get('/records/import', [RecordPageController::class, 'import'])->name('records.import');
-    Route::get('/records/create', [RecordPageController::class, 'create'])->name('records.create');
-    Route::get('/records/{id}/edit', [RecordPageController::class, 'edit'])->name('records.edit');
+    Route::prefix('records')->group(function (): void {
+        Route::get('/', [RecordPageController::class, 'index'])->name('records.index');
+        Route::get('/import', [RecordPageController::class, 'import'])->name('records.import');
+        Route::get('/create', [RecordPageController::class, 'create'])->name('records.create');
+        Route::get('/{id}/edit', [RecordPageController::class, 'edit'])->name('records.edit');
+    });
 
-    Route::get('/categories', [CategoryPageController::class, 'index'])->name('categories.index');
-    Route::get('/categories/create', [CategoryPageController::class, 'create'])->name('categories.create');
-    Route::get('/categories/{id}/edit', [CategoryPageController::class, 'edit'])->name('categories.edit');
+    Route::prefix('categories')->group(function (): void {
+        Route::get('/', [CategoryPageController::class, 'index'])->name('categories.index');
+        Route::get('/create', [CategoryPageController::class, 'create'])->name('categories.create');
+        Route::get('/{id}/edit', [CategoryPageController::class, 'edit'])->name('categories.edit');
+    });
 
-    Route::get('/goals', [GoalPageController::class, 'index'])->name('goals.index');
-    Route::get('/goals/create', [GoalPageController::class, 'create'])->name('goals.create');
-    Route::get('/goals/{id}', [GoalPageController::class, 'show'])->whereNumber('id')->name('goals.show');
-    Route::get('/goals/{id}/edit', [GoalPageController::class, 'edit'])->name('goals.edit');
+    Route::prefix('goals')->group(function (): void {
+        Route::get('/', [GoalPageController::class, 'index'])->name('goals.index');
+        Route::get('/create', [GoalPageController::class, 'create'])->name('goals.create');
+        Route::get('/{id}', [GoalPageController::class, 'show'])->whereNumber('id')->name('goals.show');
+        Route::get('/{id}/edit', [GoalPageController::class, 'edit'])->name('goals.edit');
 
-    Route::get('/goals/{goalId}/sub-goals', [SubGoalPageController::class, 'index'])->whereNumber('goalId')->name('goals.sub-goals.index');
-    Route::get('/goals/{goalId}/sub-goals/edit', [SubGoalPageController::class, 'edit'])->whereNumber('goalId')->name('goals.sub-goals.edit');
-    Route::get('/goals/{goalId}/sub-goals/{id}/edit', [SubGoalPageController::class, 'editItem'])->whereNumber(['goalId', 'id'])->name('goals.sub-goals.edit-item');
-    Route::get('/goals/{goalId}/sub-goals/{id}', [SubGoalPageController::class, 'show'])->whereNumber(['goalId', 'id'])->name('goals.sub-goals.show');
+        Route::prefix('{goalId}/sub-goals')->whereNumber('goalId')->group(function (): void {
+            Route::get('/', [SubGoalPageController::class, 'index'])->name('goals.sub-goals.index');
+            Route::get('/edit', [SubGoalPageController::class, 'edit'])->name('goals.sub-goals.edit');
+            Route::get('/{id}/edit', [SubGoalPageController::class, 'editItem'])->whereNumber('id')->name('goals.sub-goals.edit-item');
+            Route::get('/{id}', [SubGoalPageController::class, 'show'])->whereNumber('id')->name('goals.sub-goals.show');
+        });
+    });
 
-    Route::get('/webhooks', [WebhookPageController::class, 'index'])->name('webhooks.index');
-    Route::get('/webhooks/create', [WebhookPageController::class, 'create'])->name('webhooks.create');
-    Route::get('/webhooks/api-docs', [WebhookPageController::class, 'apiDocs'])->name('webhooks.api-docs');
-    Route::get('/webhooks/{id}', [WebhookPageController::class, 'show'])->whereNumber('id')->name('webhooks.show');
-    Route::get('/webhooks/{id}/edit', [WebhookPageController::class, 'edit'])->name('webhooks.edit');
-    Route::get('/webhooks/{id}/test', [WebhookPageController::class, 'test'])->whereNumber('id')->name('webhooks.test');
-    Route::get('/webhooks/{id}/logs', [WebhookPageController::class, 'logs'])->whereNumber('id')->name('webhooks.logs');
+    Route::prefix('webhooks')->group(function (): void {
+        Route::get('/', [WebhookPageController::class, 'index'])->name('webhooks.index');
+        Route::get('/create', [WebhookPageController::class, 'create'])->name('webhooks.create');
+        Route::get('/api-docs', [WebhookPageController::class, 'apiDocs'])->name('webhooks.api-docs');
+        Route::get('/{id}', [WebhookPageController::class, 'show'])->whereNumber('id')->name('webhooks.show');
+        Route::get('/{id}/edit', [WebhookPageController::class, 'edit'])->name('webhooks.edit');
+        Route::get('/{id}/test', [WebhookPageController::class, 'test'])->whereNumber('id')->name('webhooks.test');
+        Route::get('/{id}/logs', [WebhookPageController::class, 'logs'])->whereNumber('id')->name('webhooks.logs');
+    });
 
     foreach (['debts' => 'debt', 'receivables' => 'receivable'] as $path => $type) {
-        Route::get("/{$path}", [DebtPageController::class, 'index'])->defaults('type', $type)->name("{$path}.index");
-        Route::get("/{$path}/create", [DebtPageController::class, 'create'])->defaults('type', $type)->name("{$path}.create");
-        Route::get("/{$path}/{id}/edit", [DebtPageController::class, 'edit'])->defaults('type', $type)->name("{$path}.edit");
-        Route::get("/{$path}/{debtId}/payments", [DebtPaymentPageController::class, 'index'])->whereNumber('debtId')->defaults('type', $type)->name("{$path}.payments.index");
-        Route::get("/{$path}/{debtId}/payments/create", [DebtPaymentPageController::class, 'create'])->whereNumber('debtId')->defaults('type', $type)->name("{$path}.payments.create");
-        Route::get("/{$path}/{debtId}/payments/existing", [DebtPaymentPageController::class, 'existing'])->whereNumber('debtId')->defaults('type', $type)->name("{$path}.payments.existing");
-        Route::get("/{$path}/{debtId}/sub-debts/edit", [SubDebtPageController::class, 'edit'])->whereNumber('debtId')->defaults('type', $type)->name("{$path}.sub-debts.edit");
-        Route::get("/{$path}/{debtId}/sub-debts/create", [SubDebtPageController::class, 'create'])->whereNumber('debtId')->defaults('type', $type)->name("{$path}.sub-debts.create");
-        Route::get("/{$path}/{debtId}/sub-debts/{id}/edit", [SubDebtPageController::class, 'editItem'])->whereNumber(['debtId', 'id'])->defaults('type', $type)->name("{$path}.sub-debts.edit-item");
-        Route::get("/{$path}/{debtId}/sub-debts", [SubDebtPageController::class, 'index'])->whereNumber('debtId')->defaults('type', $type)->name("{$path}.sub-debts.index");
+        Route::prefix($path)->group(function () use ($path, $type): void {
+            Route::get('/', [DebtPageController::class, 'index'])->defaults('type', $type)->name("{$path}.index");
+            Route::get('/create', [DebtPageController::class, 'create'])->defaults('type', $type)->name("{$path}.create");
+            Route::get('/{id}/edit', [DebtPageController::class, 'edit'])->defaults('type', $type)->name("{$path}.edit");
+
+            Route::prefix('{debtId}')->whereNumber('debtId')->group(function () use ($path, $type): void {
+                Route::prefix('payments')->group(function () use ($path, $type): void {
+                    Route::get('/', [DebtPaymentPageController::class, 'index'])->defaults('type', $type)->name("{$path}.payments.index");
+                    Route::get('/create', [DebtPaymentPageController::class, 'create'])->defaults('type', $type)->name("{$path}.payments.create");
+                    Route::get('/existing', [DebtPaymentPageController::class, 'existing'])->defaults('type', $type)->name("{$path}.payments.existing");
+                    Route::get('/{id}/edit', [DebtPaymentPageController::class, 'edit'])->where('id', '-?[0-9]+')->defaults('type', $type)->name("{$path}.payments.edit");
+                });
+
+                Route::prefix('sub-debts')->group(function () use ($path, $type): void {
+                    Route::get('/edit', [SubDebtPageController::class, 'edit'])->defaults('type', $type)->name("{$path}.sub-debts.edit");
+                    Route::get('/create', [SubDebtPageController::class, 'create'])->defaults('type', $type)->name("{$path}.sub-debts.create");
+                    Route::get('/{id}/edit', [SubDebtPageController::class, 'editItem'])->whereNumber('id')->defaults('type', $type)->name("{$path}.sub-debts.edit-item");
+                    Route::get('/', [SubDebtPageController::class, 'index'])->defaults('type', $type)->name("{$path}.sub-debts.index");
+                });
+            });
+        });
     }
 });

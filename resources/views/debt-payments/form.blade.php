@@ -1,6 +1,6 @@
 @extends('layouts.dashboard')
 
-@section('title', __('debt-payments.pages.'.$type.'.create'))
+@section('title', $id ? __('debt-payments.pages.'.$type.'.edit') : __('debt-payments.pages.'.$type.'.create'))
 
 @section('content')
     <div class="mb-6 flex items-end justify-between gap-3">
@@ -9,7 +9,7 @@
                 &larr; {{ __('debt-payments.pages.'.$type.'.back_to_payments') }}
             </a>
             <h1 class="mt-2 font-heading text-headline-md font-bold text-on-surface">
-                {{ __('debt-payments.pages.'.$type.'.create') }}
+                {{ $id ? __('debt-payments.pages.'.$type.'.edit') : __('debt-payments.pages.'.$type.'.create') }}
             </h1>
             <p class="mt-1 font-body text-body-md text-on-surface-variant" data-debt-name></p>
         </div>
@@ -22,13 +22,18 @@
     </div>
 
     <div class="w-full rounded-lg border border-outline-variant bg-surface p-6">
+        @if ($id)
+            <x-organisms.debt-payment-form-skeleton id="debt-payment-form-skeleton" :fields="$hasRecord ? 5 : 3" />
+        @endif
+
         <form
             id="debt-payment-form"
-            class="space-y-5"
+            @class(['space-y-5', 'hidden' => $id])
             novalidate
             data-debt-id="{{ $debtId }}"
             data-type="{{ $type }}"
-            data-success-message="{{ __('debt-payments.flash.created') }}"
+            @if ($id) data-payment-id="{{ $id }}" @endif
+            data-success-message="{{ $id ? __('debt-payments.flash.updated') : __('debt-payments.flash.created') }}"
         >
             @csrf
 
@@ -40,21 +45,24 @@
                 <x-atoms.form-error for="sub_debt_id" />
             </div>
 
-            <div class="space-y-1.5">
-                <x-atoms.label for="account_id">{{ __('debt-payments.fields.account') }}</x-atoms.label>
-                <x-atoms.select name="account_id" id="account_id" required>
-                    <option value="">{{ __('debt-payments.fields.select_account') }}</option>
-                </x-atoms.select>
-                <x-atoms.form-error for="account_id" />
-            </div>
+            {{-- A payment saved without a record has no account or category to change. --}}
+            @if ($hasRecord)
+                <div class="space-y-1.5">
+                    <x-atoms.label for="account_id">{{ __('debt-payments.fields.account') }}</x-atoms.label>
+                    <x-atoms.select name="account_id" id="account_id" required>
+                        <option value="">{{ __('debt-payments.fields.select_account') }}</option>
+                    </x-atoms.select>
+                    <x-atoms.form-error for="account_id" />
+                </div>
 
-            <div class="space-y-1.5">
-                <x-atoms.label for="category_id">{{ __('debt-payments.fields.category') }}</x-atoms.label>
-                <x-atoms.select name="category_id" id="category_id">
-                    <option value="">{{ __('debt-payments.fields.no_category') }}</option>
-                </x-atoms.select>
-                <x-atoms.form-error for="category_id" />
-            </div>
+                <div class="space-y-1.5">
+                    <x-atoms.label for="category_id">{{ __('debt-payments.fields.category') }}</x-atoms.label>
+                    <x-atoms.select name="category_id" id="category_id">
+                        <option value="">{{ __('debt-payments.fields.no_category') }}</option>
+                    </x-atoms.select>
+                    <x-atoms.form-error for="category_id" />
+                </div>
+            @endif
 
             <x-molecules.form-group name="amount" type="text" inputmode="numeric" :label="__('debt-payments.fields.amount')" data-money required />
             <x-molecules.form-group name="recorded_at" type="datetime-local" :label="__('debt-payments.fields.recorded_at')" required />
@@ -71,22 +79,24 @@
         </form>
     </div>
 
-    <x-organisms.modal id="debt-payment-record-modal" :title="__('debt-payments.record_prompt.title')">
-        <p class="mb-6 font-body text-body-md text-on-surface-variant">
-            {{ __('debt-payments.record_prompt.body') }}
-        </p>
-        <div class="flex justify-end gap-3">
-            <x-atoms.button type="button" variant="secondary" data-modal-close>
-                {{ __('debt-payments.actions.cancel') }}
-            </x-atoms.button>
-            <x-atoms.button type="button" variant="secondary" data-record-choice="0">
-                {{ __('debt-payments.record_prompt.no') }}
-            </x-atoms.button>
-            <x-atoms.button type="button" data-record-choice="1">
-                {{ __('debt-payments.record_prompt.yes') }}
-            </x-atoms.button>
-        </div>
-    </x-organisms.modal>
+    @unless ($id)
+        <x-organisms.modal id="debt-payment-record-modal" :title="__('debt-payments.record_prompt.title')">
+            <p class="mb-6 font-body text-body-md text-on-surface-variant">
+                {{ __('debt-payments.record_prompt.body') }}
+            </p>
+            <div class="flex justify-end gap-3">
+                <x-atoms.button type="button" variant="secondary" data-modal-close>
+                    {{ __('debt-payments.actions.cancel') }}
+                </x-atoms.button>
+                <x-atoms.button type="button" variant="secondary" data-record-choice="0">
+                    {{ __('debt-payments.record_prompt.no') }}
+                </x-atoms.button>
+                <x-atoms.button type="button" data-record-choice="1">
+                    {{ __('debt-payments.record_prompt.yes') }}
+                </x-atoms.button>
+            </div>
+        </x-organisms.modal>
+    @endunless
 @endsection
 
 @push('scripts')

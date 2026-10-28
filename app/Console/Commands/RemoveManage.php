@@ -146,16 +146,26 @@ class RemoveManage extends Command
         }
     }
 
+    /**
+     * Match a `Route::prefix('{slug}')->group(...)` block that only holds routes of the given controller.
+     */
+    private function prefixGroupPattern(string $slug, string $controller): string
+    {
+        return "/^[ ]*Route::prefix\\('{$slug}'\\)->group\\(function \\(\\): void \\{\\n(?:(?![ ]*\\}\\);\\n)[^\\n]*{$controller}[^\\n]*\\n|[ ]+->[^\\n]*\\n)*[ ]*\\}\\);\\n/m";
+    }
+
     private function unregisterRoutes(string $model, string $slug): void
     {
         $this->strip('routes/web.php', [
             "/^use App\\\\Http\\\\Controllers\\\\{$model}PageController;\\n/m",
             "/^\\s*Route::get\\('\\/{$slug}[^\\n]*{$model}PageController[^\\n]*\\n/m",
+            $this->prefixGroupPattern($slug, $model.'PageController'),
         ]);
 
         $this->strip('routes/api.php', [
             "/^use App\\\\Http\\\\Controllers\\\\Api\\\\{$model}Controller;\\n/m",
             "/^\\s*Route::delete\\('\\/{$slug}', \\[{$model}Controller::class[^\\n]*\\n/m",
+            $this->prefixGroupPattern($slug, $model.'Controller'),
             "/^\\s*Route::post\\('\\/{$slug}\\/generate', \\[{$model}Controller::class.*?->name\\('{$slug}\\.generate'\\);\\n/ms",
             "/^\\s*Route::resource\\('{$slug}', {$model}Controller::class\\).*?->names\\('{$slug}'\\);\\n/ms",
         ]);

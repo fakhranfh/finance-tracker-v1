@@ -17,6 +17,7 @@ Before planning or editing, find the row whose globs match the file's path and r
 | resources/js/** | .ai/rules/http-client.md |
 | resources/views/components/organisms/table.blade.php,resources/views/**/*index.blade.php,resources/js/**/*index.js | .ai/rules/js.md |
 | ** | .ai/rules/manage-generator.md |
+| routes/web.php, routes/api.php | .ai/rules/routes.md |
 | database/migrations/*_create_users_table.php, database/migrations/** | .ai/rules/migrations.md |
 | app/Models/** | .ai/rules/models.md |
 | app/Http/Requests/**, app/Providers/AppServiceProvider.php | .ai/rules/password-validation.md |

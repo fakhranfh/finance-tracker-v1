@@ -518,9 +518,11 @@ class MakeManage extends Command
 
         $this->insertBefore('routes/web.php', 'use Illuminate\Support\Facades\Route;', "use App\\Http\\Controllers\\{$m}PageController;\n");
 
-        $webRoutes = "\n    Route::get('/{$slug}', [{$m}PageController::class, 'index'])->name('{$slug}.index');\n"
-            ."    Route::get('/{$slug}/create', [{$m}PageController::class, 'create'])->name('{$slug}.create');\n"
-            ."    Route::get('/{$slug}/{id}/edit', [{$m}PageController::class, 'edit'])->name('{$slug}.edit');\n";
+        $webRoutes = "\n    Route::prefix('{$slug}')->group(function (): void {\n"
+            ."        Route::get('/', [{$m}PageController::class, 'index'])->name('{$slug}.index');\n"
+            ."        Route::get('/create', [{$m}PageController::class, 'create'])->name('{$slug}.create');\n"
+            ."        Route::get('/{id}/edit', [{$m}PageController::class, 'edit'])->name('{$slug}.edit');\n"
+            ."    });\n";
 
         $web = $this->files->get(base_path('routes/web.php'));
 
@@ -532,10 +534,12 @@ class MakeManage extends Command
 
         $this->insertBefore('routes/api.php', 'use Illuminate\Support\Facades\Route;', "use App\\Http\\Controllers\\Api\\{$m}Controller;\n");
 
-        $this->insertBefore('routes/api.php', "        Route::post('/logout'", "        Route::delete('/{$slug}', [{$m}Controller::class, 'bulkDestroy'])->name('{$slug}.bulk-destroy');\n"
-            ."        Route::post('/{$slug}/generate', [{$m}Controller::class, 'generate'])\n"
-            ."            ->middleware(EnsureLocalEnvironment::class)\n"
-            ."            ->name('{$slug}.generate');\n"
+        $this->insertBefore('routes/api.php', "        Route::post('/logout'", "        Route::prefix('{$slug}')->group(function (): void {\n"
+            ."            Route::delete('/', [{$m}Controller::class, 'bulkDestroy'])->name('{$slug}.bulk-destroy');\n"
+            ."            Route::post('/generate', [{$m}Controller::class, 'generate'])\n"
+            ."                ->middleware(EnsureLocalEnvironment::class)\n"
+            ."                ->name('{$slug}.generate');\n"
+            ."        });\n"
             ."        Route::resource('{$slug}', {$m}Controller::class)\n"
             ."            ->parameters(['{$slug}' => '{$tokens['__modelVar__']}'])\n"
             ."            ->except('create', 'edit')\n"
