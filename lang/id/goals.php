@@ -8,6 +8,7 @@ return [
     'show' => 'Detail target',
     'locked' => 'Target ini sudah tercapai dan tidak dapat diubah lagi.',
     'back' => 'Kembali ke daftar target',
+    'summary' => 'Total terkumpul :saved dari :target di semua target',
 
     'table' => [
         'name' => 'Nama',

@@ -8,6 +8,7 @@ return [
     'show' => 'Goal details',
     'locked' => 'This goal is already reached and can no longer be changed.',
     'back' => 'Back to goals',
+    'summary' => 'Total saved :saved of :target across all goals',
 
     'table' => [
         'name' => 'Name',
