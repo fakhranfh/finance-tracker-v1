@@ -4,6 +4,7 @@ import { setButtonLoading, hideSkeleton } from '../shared/loading-state.js';
 import { get, put } from '../shared/http.js';
 import { routes } from '../routes.js';
 import '../shared/money-input.js';
+import '../shared/calculator/calculator.js';
 import { wireDevTools } from '../goals/dev-tools.js';
 import { subGoalItemFixture } from './dev-fixtures/item-form.js';
 

@@ -4,6 +4,7 @@ import { setButtonLoading, hideSkeleton } from '../shared/loading-state.js';
 import { get, getAll, put } from '../shared/http.js';
 import { routes } from '../routes.js';
 import { createSubGoalsField } from '../goals/sub-goals-field.js';
+import '../shared/calculator/calculator.js';
 import { subGoalFixtures } from '../goals/dev-fixtures/sub-goals.js';
 
 const form = document.getElementById('sub-goal-form');
