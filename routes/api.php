@@ -52,117 +52,155 @@ Route::middleware('web')->name('api.')->group(function (): void {
     Route::middleware('auth:sanctum')->group(function (): void {
         Route::post('/email/verification-notification', VerificationNotificationController::class)
             ->name('verification.send');
-        Route::put('/accounts/order', [AccountController::class, 'reorder'])->name('accounts.reorder');
-        Route::delete('/accounts', [AccountController::class, 'bulkDestroy'])->name('accounts.bulk-destroy');
-        Route::get('/accounts/{account}/summary', [AccountSummaryController::class, 'show'])->name('accounts.summary');
-        Route::post('/accounts/{account}/records/generate', AccountRecordGenerateController::class)
-            ->middleware(EnsureLocalEnvironment::class)
-            ->name('accounts.records.generate');
-        Route::delete('/accounts/{account}/records', AccountRecordDeleteController::class)
-            ->middleware(EnsureLocalEnvironment::class)
-            ->name('accounts.records.destroy');
-        Route::post('/accounts/generate', [AccountController::class, 'generate'])
-            ->middleware(EnsureLocalEnvironment::class)
-            ->name('accounts.generate');
+
+        Route::prefix('accounts')->group(function (): void {
+            Route::put('/order', [AccountController::class, 'reorder'])->name('accounts.reorder');
+            Route::delete('/', [AccountController::class, 'bulkDestroy'])->name('accounts.bulk-destroy');
+            Route::get('/{account}/summary', [AccountSummaryController::class, 'show'])->name('accounts.summary');
+            Route::post('/{account}/records/generate', AccountRecordGenerateController::class)
+                ->middleware(EnsureLocalEnvironment::class)
+                ->name('accounts.records.generate');
+            Route::delete('/{account}/records', AccountRecordDeleteController::class)
+                ->middleware(EnsureLocalEnvironment::class)
+                ->name('accounts.records.destroy');
+            Route::post('/generate', [AccountController::class, 'generate'])
+                ->middleware(EnsureLocalEnvironment::class)
+                ->name('accounts.generate');
+        });
         Route::resource('accounts', AccountController::class)
             ->parameters(['accounts' => 'account'])
             ->except('create', 'edit')
             ->names('accounts');
-        Route::get('/records/export/{format}', [RecordController::class, 'export'])
-            ->whereIn('format', ['xlsx', 'pdf'])
-            ->name('records.export');
-        Route::get('/records/imports', [RecordImportController::class, 'index'])->name('records.imports.index');
-        Route::post('/records/imports', [RecordImportController::class, 'store'])->name('records.imports.store');
-        Route::get('/records/imports/{import}', [RecordImportController::class, 'show'])->whereNumber('import')->name('records.imports.show');
-        Route::put('/records/imports/{import}', [RecordImportController::class, 'update'])->whereNumber('import')->name('records.imports.update');
-        Route::post('/records/imports/{import}/values', [RecordImportController::class, 'values'])->whereNumber('import')->name('records.imports.values');
-        Route::post('/records/imports/{import}/run', [RecordImportController::class, 'run'])->whereNumber('import')->name('records.imports.run');
-        Route::delete('/records/imports/{import}', [RecordImportController::class, 'destroy'])->whereNumber('import')->name('records.imports.destroy');
-        Route::get('/records/summary', [RecordController::class, 'summary'])->name('records.summary');
-        Route::delete('/records', [RecordController::class, 'bulkDestroy'])->name('records.bulk-destroy');
-        Route::post('/records/generate', [RecordController::class, 'generate'])
-            ->middleware(EnsureLocalEnvironment::class)
-            ->name('records.generate');
+
+        Route::prefix('records')->group(function (): void {
+            Route::get('/export/{format}', [RecordController::class, 'export'])
+                ->whereIn('format', ['xlsx', 'pdf'])
+                ->name('records.export');
+
+            Route::prefix('imports')->group(function (): void {
+                Route::get('/', [RecordImportController::class, 'index'])->name('records.imports.index');
+                Route::post('/', [RecordImportController::class, 'store'])->name('records.imports.store');
+                Route::prefix('{import}')->whereNumber('import')->group(function (): void {
+                    Route::get('/', [RecordImportController::class, 'show'])->name('records.imports.show');
+                    Route::put('/', [RecordImportController::class, 'update'])->name('records.imports.update');
+                    Route::post('/values', [RecordImportController::class, 'values'])->name('records.imports.values');
+                    Route::post('/run', [RecordImportController::class, 'run'])->name('records.imports.run');
+                    Route::delete('/', [RecordImportController::class, 'destroy'])->name('records.imports.destroy');
+                });
+            });
+
+            Route::get('/summary', [RecordController::class, 'summary'])->name('records.summary');
+            Route::delete('/', [RecordController::class, 'bulkDestroy'])->name('records.bulk-destroy');
+            Route::post('/generate', [RecordController::class, 'generate'])
+                ->middleware(EnsureLocalEnvironment::class)
+                ->name('records.generate');
+        });
         Route::resource('records', RecordController::class)
             ->parameters(['records' => 'record'])
             ->except('create', 'edit')
             ->names('records');
-        Route::delete('/categories', [CategoryController::class, 'bulkDestroy'])->name('categories.bulk-destroy');
-        Route::post('/categories/generate', [CategoryController::class, 'generate'])
-            ->middleware(EnsureLocalEnvironment::class)
-            ->name('categories.generate');
+
+        Route::prefix('categories')->group(function (): void {
+            Route::delete('/', [CategoryController::class, 'bulkDestroy'])->name('categories.bulk-destroy');
+            Route::post('/generate', [CategoryController::class, 'generate'])
+                ->middleware(EnsureLocalEnvironment::class)
+                ->name('categories.generate');
+        });
         Route::resource('categories', CategoryController::class)
             ->parameters(['categories' => 'category'])
             ->except('create', 'edit')
             ->names('categories');
-        Route::delete('/goals', [GoalController::class, 'bulkDestroy'])->name('goals.bulk-destroy');
-        Route::post('/goals/generate', [GoalController::class, 'generate'])
-            ->middleware(EnsureLocalEnvironment::class)
-            ->name('goals.generate');
-        Route::get('/goals/{goal}/savings', [GoalSavingController::class, 'index'])->name('goals.savings.index');
-        Route::delete('/goals/{goal}/savings', [GoalSavingController::class, 'bulkDestroy'])->name('goals.savings.bulk-destroy');
-        Route::post('/goals/{goal}/savings/generate', [GoalSavingController::class, 'generate'])
-            ->middleware(EnsureLocalEnvironment::class)
-            ->name('goals.savings.generate');
-        Route::post('/goals/{goal}/savings', [GoalSavingController::class, 'store'])->name('goals.savings.store');
-        Route::put('/goals/{goal}/savings/{saving}', [GoalSavingController::class, 'update'])
-            ->scopeBindings()
-            ->name('goals.savings.update');
-        Route::delete('/goals/{goal}/savings/{saving}', [GoalSavingController::class, 'destroy'])
-            ->scopeBindings()
-            ->name('goals.savings.destroy');
+
+        Route::prefix('goals')->group(function (): void {
+            Route::delete('/', [GoalController::class, 'bulkDestroy'])->name('goals.bulk-destroy');
+            Route::post('/generate', [GoalController::class, 'generate'])
+                ->middleware(EnsureLocalEnvironment::class)
+                ->name('goals.generate');
+
+            Route::prefix('{goal}/savings')->group(function (): void {
+                Route::get('/', [GoalSavingController::class, 'index'])->name('goals.savings.index');
+                Route::delete('/', [GoalSavingController::class, 'bulkDestroy'])->name('goals.savings.bulk-destroy');
+                Route::post('/generate', [GoalSavingController::class, 'generate'])
+                    ->middleware(EnsureLocalEnvironment::class)
+                    ->name('goals.savings.generate');
+                Route::post('/', [GoalSavingController::class, 'store'])->name('goals.savings.store');
+                Route::put('/{saving}', [GoalSavingController::class, 'update'])
+                    ->scopeBindings()
+                    ->name('goals.savings.update');
+                Route::delete('/{saving}', [GoalSavingController::class, 'destroy'])
+                    ->scopeBindings()
+                    ->name('goals.savings.destroy');
+            });
+        });
         Route::resource('goals', GoalController::class)
             ->parameters(['goals' => 'goal'])
             ->except('create', 'edit')
             ->names('goals');
-        Route::get('/goals/{goal}/sub-goals', [SubGoalController::class, 'index'])->name('goals.sub-goals.index');
-        Route::put('/goals/{goal}/sub-goals', [SubGoalController::class, 'sync'])->name('goals.sub-goals.sync');
-        Route::get('/goals/{goal}/sub-goals/{subGoal}', [SubGoalController::class, 'show'])
-            ->scopeBindings()
-            ->name('goals.sub-goals.show');
-        Route::put('/goals/{goal}/sub-goals/{subGoal}', [SubGoalController::class, 'update'])
-            ->scopeBindings()
-            ->name('goals.sub-goals.update');
-        Route::delete('/webhooks', [WebhookController::class, 'bulkDestroy'])->name('webhooks.bulk-destroy');
-        Route::post('/webhooks/generate', [WebhookController::class, 'generate'])
-            ->middleware(EnsureLocalEnvironment::class)
-            ->name('webhooks.generate');
-        Route::get('/webhooks/{webhook}/logs', [WebhookLogController::class, 'index'])->name('webhooks.logs.index');
-        Route::delete('/webhooks/{webhook}/logs', [WebhookLogController::class, 'destroy'])->name('webhooks.logs.destroy');
-        Route::post('/webhooks/{webhook}/test', [WebhookController::class, 'test'])->name('webhooks.test');
-        Route::post('/webhooks/{webhook}/rotate-token', [WebhookController::class, 'rotateToken'])->name('webhooks.rotate-token');
+        Route::prefix('goals/{goal}/sub-goals')->group(function (): void {
+            Route::get('/', [SubGoalController::class, 'index'])->name('goals.sub-goals.index');
+            Route::put('/', [SubGoalController::class, 'sync'])->name('goals.sub-goals.sync');
+            Route::get('/{subGoal}', [SubGoalController::class, 'show'])
+                ->scopeBindings()
+                ->name('goals.sub-goals.show');
+            Route::put('/{subGoal}', [SubGoalController::class, 'update'])
+                ->scopeBindings()
+                ->name('goals.sub-goals.update');
+        });
+
+        Route::prefix('webhooks')->group(function (): void {
+            Route::delete('/', [WebhookController::class, 'bulkDestroy'])->name('webhooks.bulk-destroy');
+            Route::post('/generate', [WebhookController::class, 'generate'])
+                ->middleware(EnsureLocalEnvironment::class)
+                ->name('webhooks.generate');
+            Route::get('/{webhook}/logs', [WebhookLogController::class, 'index'])->name('webhooks.logs.index');
+            Route::delete('/{webhook}/logs', [WebhookLogController::class, 'destroy'])->name('webhooks.logs.destroy');
+            Route::post('/{webhook}/test', [WebhookController::class, 'test'])->name('webhooks.test');
+            Route::post('/{webhook}/rotate-token', [WebhookController::class, 'rotateToken'])->name('webhooks.rotate-token');
+        });
         Route::resource('webhooks', WebhookController::class)
             ->parameters(['webhooks' => 'webhook'])
             ->except('create', 'edit')
             ->names('webhooks');
-        Route::delete('/debts', [DebtController::class, 'bulkDestroy'])->name('debts.bulk-destroy');
-        Route::post('/debts/generate', [DebtController::class, 'generate'])
-            ->middleware(EnsureLocalEnvironment::class)
-            ->name('debts.generate');
-        Route::post('/debts/{debt}/forgive', [DebtController::class, 'forgive'])->name('debts.forgive');
-        Route::get('/debts/{debt}/payments', [DebtPaymentController::class, 'index'])->name('debts.payments.index');
-        Route::get('/debts/{debt}/payments/available', [DebtPaymentController::class, 'available'])->name('debts.payments.available');
-        Route::post('/debts/{debt}/payments', [DebtPaymentController::class, 'store'])->name('debts.payments.store');
-        Route::delete('/debts/{debt}/payments/{payment}', [DebtPaymentController::class, 'destroy'])->where('payment', '-?[0-9]+')->name('debts.payments.destroy');
-        Route::get('/debts/{debt}/sub-debts', [SubDebtController::class, 'index'])->name('debts.sub-debts.index');
-        Route::post('/debts/{debt}/sub-debts', [SubDebtController::class, 'store'])->name('debts.sub-debts.store');
-        Route::delete('/debts/{debt}/sub-debts', [SubDebtController::class, 'bulkDestroy'])->name('debts.sub-debts.bulk-destroy');
-        Route::post('/debts/{debt}/sub-debts/generate', [SubDebtController::class, 'generate'])
-            ->middleware(EnsureLocalEnvironment::class)
-            ->name('debts.sub-debts.generate');
-        Route::delete('/debts/{debt}/sub-debts/{subDebt}', [SubDebtController::class, 'destroy'])
-            ->scopeBindings()
-            ->name('debts.sub-debts.destroy');
-        Route::post('/debts/{debt}/sub-debts/{subDebt}/forgive', [SubDebtController::class, 'forgive'])
-            ->scopeBindings()
-            ->name('debts.sub-debts.forgive');
-        Route::put('/debts/{debt}/sub-debts', [SubDebtController::class, 'sync'])->name('debts.sub-debts.sync');
-        Route::get('/debts/{debt}/sub-debts/{subDebt}', [SubDebtController::class, 'show'])
-            ->scopeBindings()
-            ->name('debts.sub-debts.show');
-        Route::put('/debts/{debt}/sub-debts/{subDebt}', [SubDebtController::class, 'update'])
-            ->scopeBindings()
-            ->name('debts.sub-debts.update');
+
+        Route::prefix('debts')->group(function (): void {
+            Route::delete('/', [DebtController::class, 'bulkDestroy'])->name('debts.bulk-destroy');
+            Route::post('/generate', [DebtController::class, 'generate'])
+                ->middleware(EnsureLocalEnvironment::class)
+                ->name('debts.generate');
+
+            Route::prefix('{debt}')->group(function (): void {
+                Route::post('/forgive', [DebtController::class, 'forgive'])->name('debts.forgive');
+
+                Route::prefix('payments')->group(function (): void {
+                    Route::get('/', [DebtPaymentController::class, 'index'])->name('debts.payments.index');
+                    Route::get('/available', [DebtPaymentController::class, 'available'])->name('debts.payments.available');
+                    Route::post('/', [DebtPaymentController::class, 'store'])->name('debts.payments.store');
+                    Route::delete('/{payment}', [DebtPaymentController::class, 'destroy'])->where('payment', '-?[0-9]+')->name('debts.payments.destroy');
+                });
+
+                Route::prefix('sub-debts')->group(function (): void {
+                    Route::get('/', [SubDebtController::class, 'index'])->name('debts.sub-debts.index');
+                    Route::post('/', [SubDebtController::class, 'store'])->name('debts.sub-debts.store');
+                    Route::delete('/', [SubDebtController::class, 'bulkDestroy'])->name('debts.sub-debts.bulk-destroy');
+                    Route::post('/generate', [SubDebtController::class, 'generate'])
+                        ->middleware(EnsureLocalEnvironment::class)
+                        ->name('debts.sub-debts.generate');
+                    Route::delete('/{subDebt}', [SubDebtController::class, 'destroy'])
+                        ->scopeBindings()
+                        ->name('debts.sub-debts.destroy');
+                    Route::post('/{subDebt}/forgive', [SubDebtController::class, 'forgive'])
+                        ->scopeBindings()
+                        ->name('debts.sub-debts.forgive');
+                    Route::put('/', [SubDebtController::class, 'sync'])->name('debts.sub-debts.sync');
+                    Route::get('/{subDebt}', [SubDebtController::class, 'show'])
+                        ->scopeBindings()
+                        ->name('debts.sub-debts.show');
+                    Route::put('/{subDebt}', [SubDebtController::class, 'update'])
+                        ->scopeBindings()
+                        ->name('debts.sub-debts.update');
+                });
+            });
+        });
         Route::resource('debts', DebtController::class)
             ->parameters(['debts' => 'debt'])
             ->except('create', 'edit')
