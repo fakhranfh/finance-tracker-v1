@@ -60,6 +60,13 @@ class DebtPaymentRepository implements DebtPaymentRepositoryInterface
         return DebtPayment::query()->create($data)->load('subDebt');
     }
 
+    public function update(DebtPayment $payment, array $data): DebtPayment
+    {
+        $payment->update($data);
+
+        return $payment->load('subDebt');
+    }
+
     public function delete(DebtPayment $payment): void
     {
         $payment->delete();

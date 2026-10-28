@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\DebtPayment\StoreDebtPaymentRequest;
+use App\Http\Requests\DebtPayment\UpdateDebtPaymentRequest;
 use App\Http\Resources\DebtPaymentResource;
 use App\Http\Resources\DebtPaymentRowResource;
 use App\Http\Resources\UnrecordedPaymentResource;
@@ -63,6 +64,22 @@ class DebtPaymentController extends Controller
         $resource = $payment instanceof DebtPayment ? new UnrecordedPaymentResource($payment) : new DebtPaymentResource($payment);
 
         return $resource->response()->setStatusCode(201);
+    }
+
+    public function show(Debt $debt, int $payment): DebtPaymentResource|UnrecordedPaymentResource
+    {
+        $found = $this->debtPaymentService->find($debt, $payment);
+        abort_if($found === null, 404);
+
+        return $found instanceof DebtPayment ? new UnrecordedPaymentResource($found) : new DebtPaymentResource($found);
+    }
+
+    public function update(UpdateDebtPaymentRequest $request, Debt $debt, int $payment): DebtPaymentResource|UnrecordedPaymentResource
+    {
+        $updated = $this->debtPaymentService->update($debt, $payment, $request->validated());
+        abort_if($updated === null, 404);
+
+        return $updated instanceof DebtPayment ? new UnrecordedPaymentResource($updated) : new DebtPaymentResource($updated);
     }
 
     public function destroy(Debt $debt, int $payment): Response

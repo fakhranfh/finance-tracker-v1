@@ -35,6 +35,13 @@ interface GoalRepositoryInterface
     public function countMatching(?string $search = null, ?int $exceptId = null): int;
 
     /**
+     * Sum the target and saved amounts of every goal.
+     *
+     * @return array{target_total: float, saved_total: float}
+     */
+    public function totals(): array;
+
+    /**
      * Create a new goal.
      *
      * @param  array<string, mixed>  $data

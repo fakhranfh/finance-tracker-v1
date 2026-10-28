@@ -47,7 +47,7 @@
 
             <div class="space-y-1.5">
                 <x-atoms.label for="saved_amount">{{ __('sub-goals.fields.saved_amount') }}</x-atoms.label>
-                <x-atoms.input type="text" name="saved_amount" id="saved_amount" inputmode="numeric" data-money />
+                <x-atoms.input type="text" name="saved_amount" id="saved_amount" inputmode="numeric" data-money data-calculator />
             </div>
 
             <x-molecules.form-group name="desired_date" type="date" :label="__('sub-goals.fields.desired_date')" />
@@ -67,6 +67,8 @@
             </div>
         </form>
     </div>
+
+    <x-organisms.calculator-modal />
 @endsection
 
 @push('scripts')

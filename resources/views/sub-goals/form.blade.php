@@ -50,6 +50,8 @@
             </div>
         </form>
     </div>
+
+    <x-organisms.calculator-modal />
 @endsection
 
 @push('scripts')

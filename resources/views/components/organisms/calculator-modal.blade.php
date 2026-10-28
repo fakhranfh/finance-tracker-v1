@@ -11,12 +11,19 @@
             </x-atoms.button>
         @endforeach
         <x-atoms.button variant="secondary" class="col-span-2 w-full justify-center" data-calc-key="0">0</x-atoms.button>
-        <x-atoms.button variant="secondary" class="w-full justify-center" data-calc-key=".">.</x-atoms.button>
-        <x-atoms.button variant="secondary" class="w-full justify-center" data-calc-key="00">00</x-atoms.button>
+        <x-atoms.button variant="secondary" class="col-span-2 w-full justify-center" data-calc-key="00">00</x-atoms.button>
     </div>
 
     <div class="mt-4 flex items-center gap-3">
         <x-atoms.button type="button" data-calc-apply>{{ __('calculator.apply') }}</x-atoms.button>
         <x-atoms.button type="button" variant="secondary" data-modal-close>{{ __('calculator.cancel') }}</x-atoms.button>
     </div>
+
+    <details class="mt-4">
+        <summary class="cursor-pointer font-heading text-label-md font-semibold text-on-surface-variant">{{ __('calculator.history') }}</summary>
+        <div class="mt-1 max-h-32 overflow-y-auto">
+            <p class="font-body text-body-md text-on-surface-variant" data-calc-history-empty>{{ __('calculator.history_empty') }}</p>
+            <ul data-calc-history></ul>
+        </div>
+    </details>
 </x-organisms.modal>

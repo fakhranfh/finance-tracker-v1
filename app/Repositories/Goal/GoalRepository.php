@@ -57,6 +57,14 @@ class GoalRepository implements GoalRepositoryInterface
         return $query->count();
     }
 
+    public function totals(): array
+    {
+        return [
+            'target_total' => (float) Goal::query()->sum('target_amount'),
+            'saved_total' => (float) Goal::query()->sum('saved_amount'),
+        ];
+    }
+
     private function applySearch(Builder $query, ?string $search): void
     {
         if (! $search) {

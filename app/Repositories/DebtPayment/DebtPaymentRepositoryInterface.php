@@ -28,6 +28,13 @@ interface DebtPaymentRepositoryInterface
     public function create(array $data): DebtPayment;
 
     /**
+     * Update a payment saved without a record.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public function update(DebtPayment $payment, array $data): DebtPayment;
+
+    /**
      * Delete a payment saved without a record.
      */
     public function delete(DebtPayment $payment): void;

@@ -1,7 +1,7 @@
 import { hideSnackbar } from '../shared/error-snackbar.js';
 import { clearFieldErrors, showFieldErrors, showGenericError, validateForm } from '../shared/field-errors.js';
-import { setButtonLoading } from '../shared/loading-state.js';
-import { get, getAll, post } from '../shared/http.js';
+import { hideSkeleton, setButtonLoading } from '../shared/loading-state.js';
+import { get, getAll, post, put } from '../shared/http.js';
 import { routes } from '../routes.js';
 import { toDateTimeLocal } from '../shared/datetime.js';
 import { formatMoney } from '../shared/money.js';
@@ -14,10 +14,15 @@ import { debtPaymentFormFixture } from './dev-fixtures/form.js';
 const form = document.getElementById('debt-payment-form');
 const debtId = form?.dataset.debtId;
 const type = form?.dataset.type;
+// Editing: the payment as listed, a record id or the negated id of a payment saved without a record (which has no account or category).
+const paymentKey = form?.dataset.paymentId ? Number(form.dataset.paymentId) : null;
+const hasRecordFields = Boolean(form?.elements.namedItem('account_id'));
 const subDebtSelect = form?.elements.namedItem('sub_debt_id');
 const amountInput = form?.elements.namedItem('amount');
 const searchables = form
-    ? ['sub_debt_id', 'account_id', 'category_id'].map((name) => searchableSelect(form.elements.namedItem(name)))
+    ? ['sub_debt_id', 'account_id', 'category_id']
+          .filter((name) => form.elements.namedItem(name))
+          .map((name) => searchableSelect(form.elements.namedItem(name)))
     : [];
 const refreshSearchables = () => searchables.forEach((searchable) => searchable.refresh());
 const subDebts = [];
@@ -46,11 +51,12 @@ function fillOptions(select, items, label) {
 }
 
 async function load() {
-    const [debt, accounts, categories, subs] = await Promise.all([
+    const [debt, accounts, categories, subs, payment] = await Promise.all([
         get(routes.debts.show(debtId)),
-        getAll(`${routes.accounts.index}?sort=name`),
-        getAll(`${routes.categories.index}?sort=name`),
+        hasRecordFields ? getAll(`${routes.accounts.index}?sort=name`) : [],
+        hasRecordFields ? getAll(`${routes.categories.index}?sort=name`) : [],
         getAll(routes.debts.subDebts(debtId)),
+        paymentKey ? get(routes.debts.payment(debtId, paymentKey)) : null,
     ]);
 
     if (debt.ok) {
@@ -58,23 +64,44 @@ async function load() {
         debtRemaining = debt.data.data.remaining_amount;
     }
 
-    fillOptions(form.elements.namedItem('account_id'), accounts ?? [], (account) => account.name);
-    fillOptions(
-        form.elements.namedItem('category_id'),
-        (categories ?? []).filter((category) => category.type === recordType),
-        (category) => category.name,
-    );
+    if (hasRecordFields) {
+        fillOptions(form.elements.namedItem('account_id'), accounts ?? [], (account) => account.name);
+        fillOptions(
+            form.elements.namedItem('category_id'),
+            (categories ?? []).filter((category) => category.type === recordType),
+            (category) => category.name,
+        );
+    }
 
-    subDebts.push(...(subs ?? []).filter((subDebt) => subDebt.remaining_amount > 0));
+    // The sub debt a payment already pays stays choosable even when it has nothing left to pay.
+    const current = payment?.ok ? payment.data.data : null;
+
+    subDebts.push(...(subs ?? []).filter((subDebt) => subDebt.remaining_amount > 0 || subDebt.id === current?.sub_debt_id));
 
     if ((subs ?? []).length > 0) {
         form.querySelector('[data-sub-debt-group]').classList.remove('hidden');
         fillOptions(subDebtSelect, subDebts, (subDebt) => `${subDebt.name} (${formatMoney(subDebt.remaining_amount)})`);
-        subDebtSelect.value = new URLSearchParams(window.location.search).get('sub_debt_id') ?? '';
+        subDebtSelect.value = current ? (current.sub_debt_id ?? '') : (new URLSearchParams(window.location.search).get('sub_debt_id') ?? '');
     }
 
-    amountInput.value = String(remainingOfSelection());
+    if (current) {
+        amountInput.value = String(current.amount);
+        form.elements.namedItem('recorded_at').value = toDateTimeLocal(current.recorded_at);
+        form.elements.namedItem('note').value = current.note ?? '';
+
+        if (hasRecordFields) {
+            form.elements.namedItem('account_id').value = current.account_id ?? '';
+            form.elements.namedItem('category_id').value = current.category_id ?? '';
+        }
+    } else {
+        amountInput.value = String(remainingOfSelection());
+    }
+
     refreshSearchables();
+
+    if (paymentKey) {
+        hideSkeleton('debt-payment-form', 'debt-payment-form-skeleton');
+    }
 }
 
 if (form) {
@@ -85,9 +112,12 @@ if (form) {
 
     load();
 
-    subDebtSelect.addEventListener('change', () => {
-        amountInput.value = String(remainingOfSelection());
-    });
+    // A new payment suggests paying what is left; an edited one keeps its amount.
+    if (!paymentKey) {
+        subDebtSelect.addEventListener('change', () => {
+            amountInput.value = String(remainingOfSelection());
+        });
+    }
 
     form.addEventListener('submit', (event) => {
         event.preventDefault();
@@ -98,6 +128,11 @@ if (form) {
         const clientErrors = validateForm(form);
         if (Object.keys(clientErrors).length > 0) {
             showFieldErrors(form, clientErrors);
+            return;
+        }
+
+        if (paymentKey) {
+            save();
             return;
         }
 
@@ -117,17 +152,25 @@ if (form) {
         setButtonLoading(submitButton, true);
 
         const payload = {
-            create_record: createRecord,
             sub_debt_id: subDebtSelect.value || null,
-            account_id: form.elements.namedItem('account_id').value,
-            category_id: form.elements.namedItem('category_id').value || null,
             amount: amountInput.value,
             note: form.elements.namedItem('note').value || null,
             recorded_at: new Date(form.elements.namedItem('recorded_at').value).toISOString(),
         };
 
+        if (hasRecordFields) {
+            payload.account_id = form.elements.namedItem('account_id').value;
+            payload.category_id = form.elements.namedItem('category_id').value || null;
+        }
+
+        if (!paymentKey) {
+            payload.create_record = createRecord;
+        }
+
         try {
-            const { ok, status, data } = await post(routes.debts.payments(debtId), payload);
+            const { ok, status, data } = await (paymentKey
+                ? put(routes.debts.payment(debtId, paymentKey), payload)
+                : post(routes.debts.payments(debtId), payload));
 
             if (ok) {
                 sessionStorage.setItem('debt-payments-flash-success', form.dataset.successMessage);
