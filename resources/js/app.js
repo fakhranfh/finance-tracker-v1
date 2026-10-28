@@ -3,6 +3,7 @@ import { csrfToken } from './shared/csrf.js';
 import { setButtonLoading } from './shared/loading-state.js';
 import { routes } from './routes';
 import './shared/password-toggle.js';
+import './shared/pwa.js';
 
 document.addEventListener('click', async (event) => {
     const trigger = event.target.closest('[data-logout-trigger]');

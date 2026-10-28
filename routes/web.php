@@ -20,6 +20,20 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => redirect()->route(User::exists() ? 'login' : 'register'))->name('home');
 
+Route::get('/manifest.webmanifest', fn () => response()->json([
+    'name' => config('app.name'),
+    'short_name' => config('app.name'),
+    'start_url' => '/dashboard',
+    'scope' => '/',
+    'display' => 'standalone',
+    'background_color' => '#ffffff',
+    'theme_color' => '#004ac6',
+    'icons' => [
+        ['src' => '/icons/icon-128.png', 'sizes' => '128x128', 'type' => 'image/png', 'purpose' => 'any'],
+        ['src' => '/icons/icon-512.png', 'sizes' => '512x512', 'type' => 'image/png', 'purpose' => 'any'],
+    ],
+], 200, ['Content-Type' => 'application/manifest+json']))->name('manifest');
+
 Route::get('/lang/{locale}', [LocaleController::class, 'switch'])->name('locale.switch');
 
 Route::middleware('guest')->group(function (): void {
