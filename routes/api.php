@@ -175,6 +175,8 @@ Route::middleware('web')->name('api.')->group(function (): void {
                     Route::get('/', [DebtPaymentController::class, 'index'])->name('debts.payments.index');
                     Route::get('/available', [DebtPaymentController::class, 'available'])->name('debts.payments.available');
                     Route::post('/', [DebtPaymentController::class, 'store'])->name('debts.payments.store');
+                    Route::get('/{payment}', [DebtPaymentController::class, 'show'])->where('payment', '-?[0-9]+')->name('debts.payments.show');
+                    Route::put('/{payment}', [DebtPaymentController::class, 'update'])->where('payment', '-?[0-9]+')->name('debts.payments.update');
                     Route::delete('/{payment}', [DebtPaymentController::class, 'destroy'])->where('payment', '-?[0-9]+')->name('debts.payments.destroy');
                 });
 

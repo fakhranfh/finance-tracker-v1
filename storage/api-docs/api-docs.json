@@ -825,6 +825,123 @@
                 }
             }
         },
+        "/debts/{id}/payments/{paymentId}": {
+            "get": {
+                "tags": [
+                    "Debt Payments"
+                ],
+                "summary": "Show a payment: a record that pays the debt off, or one saved without a record",
+                "description": "The payment id is the one listed: a record id, or the negative id of a payment saved without a record.",
+                "operationId": "0f72dca768bf40a0a390bc34ad2f6571",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "paymentId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The payment"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "404": {
+                        "description": "Not found, or the payment does not belong to this debt"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Debt Payments"
+                ],
+                "summary": "Edit a payment: a record that pays the debt off (its account balance follows), or one saved without a record",
+                "description": "account_id is required, and category_id accepted, only for a record (positive id). Same rules as adding a payment: a debt split into sub debts is paid per sub debt, and the amount cannot exceed what is still owed, not counting what this payment already pays.",
+                "operationId": "02542dba7c9efd43f895d3794a09d0bb",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "paymentId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "sub_debt_id": {
+                                        "type": "integer",
+                                        "nullable": true
+                                    },
+                                    "account_id": {
+                                        "description": "Required for a record",
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "category_id": {
+                                        "type": "integer",
+                                        "nullable": true
+                                    },
+                                    "amount": {
+                                        "type": "integer",
+                                        "example": 50000
+                                    },
+                                    "note": {
+                                        "type": "string",
+                                        "example": "Cicilan bulan ini",
+                                        "nullable": true
+                                    },
+                                    "recorded_at": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The updated payment"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "404": {
+                        "description": "Not found, or the payment does not belong to this debt"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                }
+            }
+        },
         "/debts/{id}/payments/{recordId}": {
             "delete": {
                 "tags": [

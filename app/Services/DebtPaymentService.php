@@ -83,6 +83,55 @@ class DebtPaymentService
     }
 
     /**
+     * Find a payment of the debt. `$key` is a record id, or the negated id of a payment saved without a record, as listed.
+     */
+    public function find(Debt $debt, int $key): Record|DebtPayment|null
+    {
+        if ($key < 0) {
+            return $this->paymentRepository->findForDebt($debt->id, -$key);
+        }
+
+        $record = $this->recordRepository->find($key);
+
+        return $record !== null && $record->debt_id === $debt->id ? $record : null;
+    }
+
+    /**
+     * Change a payment: a record keeps paying the debt and its account balance follows, a payment saved without a
+     * record just changes. Null when the debt has no such payment.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public function update(Debt $debt, int $key, array $data): Record|DebtPayment|null
+    {
+        $payment = $this->find($debt, $key);
+
+        if ($payment === null) {
+            return null;
+        }
+
+        if ($payment instanceof Record) {
+            return $this->recordService->update($payment, [
+                'type' => $payment->type->value,
+                'account_id' => $data['account_id'],
+                'category_id' => $data['category_id'] ?? null,
+                'amount' => $data['amount'],
+                'note' => $data['note'] ?? null,
+                'recorded_at' => $data['recorded_at'],
+                'debt_id' => $debt->id,
+                'sub_debt_id' => isset($data['sub_debt_id']) ? (int) $data['sub_debt_id'] : null,
+            ]);
+        }
+
+        return $this->paymentRepository->update($payment, [
+            'sub_debt_id' => isset($data['sub_debt_id']) ? (int) $data['sub_debt_id'] : null,
+            'amount' => $data['amount'],
+            'note' => $data['note'] ?? null,
+            'paid_at' => $data['recorded_at'],
+        ]);
+    }
+
+    /**
      * Take a payment off the debt. `$key` is a record id, or the negated id of a payment saved without a record.
      * A record stays; a payment without a record is deleted. False when the debt has no such payment.
      */

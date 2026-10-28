@@ -10,6 +10,7 @@ return [
             'back' => 'Back to debts',
             'back_to_payments' => 'Back to payments',
             'create' => 'Add payment',
+            'edit' => 'Edit payment',
             'existing' => 'Use an existing record',
             'existing_hint' => 'Pick an expense record that does not repay another debt yet.',
         ],
@@ -19,6 +20,7 @@ return [
             'back' => 'Back to receivables',
             'back_to_payments' => 'Back to payments received',
             'create' => 'Add payment received',
+            'edit' => 'Edit payment received',
             'existing' => 'Use an existing record',
             'existing_hint' => 'Pick an income record that does not settle another receivable yet.',
         ],
@@ -57,6 +59,7 @@ return [
 
     'actions' => [
         'open_record' => 'Open record',
+        'edit' => 'Edit payment',
         'remove' => 'Remove payment',
         'confirm_remove' => 'Remove this payment? A record saved for it is kept.',
         'use' => 'Use this record',
@@ -67,6 +70,7 @@ return [
 
     'flash' => [
         'created' => 'Payment added successfully.',
+        'updated' => 'Payment updated successfully.',
         'used' => 'Record added as a payment.',
         'removed' => 'Payment removed. Its record, if any, is kept.',
     ],

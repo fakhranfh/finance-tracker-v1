@@ -25,6 +25,8 @@ it('rejects a guest from the payments endpoints', function () {
     $this->getJson("/api/debts/{$debt->id}/payments")->assertStatus(401);
     $this->getJson("/api/debts/{$debt->id}/payments/available")->assertStatus(401);
     $this->postJson("/api/debts/{$debt->id}/payments", [])->assertStatus(401);
+    $this->getJson("/api/debts/{$debt->id}/payments/-1")->assertStatus(401);
+    $this->putJson("/api/debts/{$debt->id}/payments/-1", [])->assertStatus(401);
 });
 
 it('derives what was paid from the linked records', function () {
@@ -307,6 +309,98 @@ it('deletes a payment without a record', function () {
     $this->actingAs($actor)->getJson("/api/debts/{$debt->id}")->assertJsonPath('data.paid_amount', 0);
 });
 
+it('shows a payment without a record', function () {
+    $actor = User::factory()->create();
+    $debt = Debt::factory()->create(['amount' => 100000]);
+    $payment = DebtPayment::query()->create(['debt_id' => $debt->id, 'amount' => 40000, 'note' => 'Tunai', 'paid_at' => now()]);
+    $foreign = DebtPayment::query()->create(['debt_id' => Debt::factory()->create()->id, 'amount' => 1000, 'paid_at' => now()]);
+    $record = Record::factory()->payingOff($debt)->create();
+
+    $this->actingAs($actor)->getJson("/api/debts/{$debt->id}/payments/-{$payment->id}")
+        ->assertOk()->assertJsonPath('data.id', -$payment->id)->assertJsonPath('data.amount', 40000)->assertJsonPath('data.note', 'Tunai');
+    $this->actingAs($actor)->getJson("/api/debts/{$debt->id}/payments/-{$foreign->id}")->assertNotFound();
+    $this->actingAs($actor)->getJson("/api/debts/{$debt->id}/payments/{$record->id}")
+        ->assertOk()->assertJsonPath('data.id', $record->id)->assertJsonPath('data.account_id', $record->account_id);
+    $this->actingAs($actor)->getJson('/api/debts/'.$debt->id.'/payments/'.Record::factory()->create()->id)->assertNotFound();
+});
+
+it('edits a record that pays a debt and follows it on the account', function () {
+    $actor = User::factory()->create();
+    $account = Account::factory()->create();
+    $debt = Debt::factory()->create(['type' => 'debt', 'amount' => 100000]);
+    $record = Record::factory()->payingOff($debt)->create(['type' => 'expense', 'amount' => 30000]);
+
+    $this->actingAs($actor)->putJson("/api/debts/{$debt->id}/payments/{$record->id}", [
+        'account_id' => $account->id,
+        'amount' => 60000,
+        'note' => 'Diralat',
+        'recorded_at' => '2026-10-21T10:00:00+07:00',
+    ])->assertOk()->assertJsonPath('data.amount', 60000)->assertJsonPath('data.account_id', $account->id);
+
+    $this->assertDatabaseHas('records', ['id' => $record->id, 'debt_id' => $debt->id, 'type' => 'expense', 'account_id' => $account->id, 'amount' => 60000]);
+    $this->actingAs($actor)->getJson("/api/debts/{$debt->id}")->assertJsonPath('data.paid_amount', 60000);
+    $this->actingAs($actor)->putJson("/api/debts/{$debt->id}/payments/{$record->id}", ['amount' => 100001, 'recorded_at' => now()->toIso8601String()])
+        ->assertStatus(422)->assertJsonValidationErrors(['account_id']);
+    $this->actingAs($actor)->putJson("/api/debts/{$debt->id}/payments/{$record->id}", ['account_id' => $account->id, 'amount' => 100001, 'recorded_at' => now()->toIso8601String()])
+        ->assertStatus(422)->assertJsonValidationErrors(['amount']);
+});
+
+it('edits a payment without a record', function () {
+    $actor = User::factory()->create();
+    $debt = Debt::factory()->create(['amount' => 100000]);
+    $sub = SubDebt::factory()->for($debt)->create(['amount' => 100000]);
+    $other = SubDebt::factory()->for($debt)->create(['amount' => 50000]);
+    $payment = DebtPayment::query()->create(['debt_id' => $debt->id, 'sub_debt_id' => $sub->id, 'amount' => 40000, 'paid_at' => now()]);
+
+    $this->actingAs($actor)->putJson("/api/debts/{$debt->id}/payments/-{$payment->id}", [
+        'sub_debt_id' => $other->id,
+        'amount' => 50000,
+        'note' => 'Diralat',
+        'recorded_at' => '2026-10-21T10:00:00+07:00',
+    ])->assertOk()->assertJsonPath('data.amount', 50000)->assertJsonPath('data.sub_debt', $other->name);
+
+    $this->assertDatabaseHas('debt_payments', ['id' => $payment->id, 'sub_debt_id' => $other->id, 'amount' => 50000, 'note' => 'Diralat']);
+    $this->actingAs($actor)->getJson("/api/debts/{$debt->id}")->assertJsonPath('data.paid_amount', 50000);
+});
+
+it('lets a payment be raised up to what is still owed counting its own amount', function () {
+    $actor = User::factory()->create();
+    $debt = Debt::factory()->create(['amount' => 100000]);
+    Record::factory()->payingOff($debt)->create(['amount' => 30000]);
+    $payment = DebtPayment::query()->create(['debt_id' => $debt->id, 'amount' => 20000, 'paid_at' => now()]);
+    $body = fn (int $amount) => ['amount' => $amount, 'recorded_at' => now()->toIso8601String()];
+
+    $this->actingAs($actor)->putJson("/api/debts/{$debt->id}/payments/-{$payment->id}", $body(70001))
+        ->assertStatus(422)->assertJsonValidationErrors(['amount']);
+    $this->actingAs($actor)->putJson("/api/debts/{$debt->id}/payments/-{$payment->id}", $body(70000))->assertOk();
+});
+
+it('validates an edited payment and requires a sub debt when the debt has them', function () {
+    $actor = User::factory()->create();
+    $debt = Debt::factory()->create(['amount' => 100000]);
+    $sub = SubDebt::factory()->for($debt)->create(['amount' => 100000]);
+    $payment = DebtPayment::query()->create(['debt_id' => $debt->id, 'sub_debt_id' => $sub->id, 'amount' => 10000, 'paid_at' => now()]);
+
+    $this->actingAs($actor)->putJson("/api/debts/{$debt->id}/payments/-{$payment->id}", [])
+        ->assertStatus(422)->assertJsonValidationErrors(['amount', 'recorded_at']);
+    $this->actingAs($actor)->putJson("/api/debts/{$debt->id}/payments/-{$payment->id}", ['amount' => 10000, 'recorded_at' => now()->toIso8601String()])
+        ->assertStatus(422)->assertJsonValidationErrors(['sub_debt_id']);
+    $this->actingAs($actor)->putJson("/api/debts/{$debt->id}/payments/-{$payment->id}", ['sub_debt_id' => SubDebt::factory()->create()->id, 'amount' => 10000, 'recorded_at' => now()->toIso8601String()])
+        ->assertStatus(422)->assertJsonValidationErrors(['sub_debt_id']);
+});
+
+it('does not edit a payment of another debt', function () {
+    $actor = User::factory()->create();
+    $debt = Debt::factory()->create(['amount' => 100000]);
+    $foreign = DebtPayment::query()->create(['debt_id' => Debt::factory()->create()->id, 'amount' => 1000, 'paid_at' => now()]);
+    $foreignRecord = Record::factory()->payingOff(Debt::factory()->create())->create();
+    $body = ['account_id' => Account::factory()->create()->id, 'amount' => 5000, 'recorded_at' => now()->toIso8601String()];
+
+    $this->actingAs($actor)->putJson("/api/debts/{$debt->id}/payments/-{$foreign->id}", $body)->assertNotFound();
+    $this->actingAs($actor)->putJson("/api/debts/{$debt->id}/payments/{$foreignRecord->id}", $body)->assertNotFound();
+    $this->assertDatabaseHas('debt_payments', ['id' => $foreign->id, 'amount' => 1000]);
+});
+
 it('forgives the sub debts that are not paid off by payments without a record', function () {
     $actor = User::factory()->create();
     $debt = Debt::factory()->create(['amount' => 300000]);
@@ -366,6 +460,9 @@ it('renders the payments pages of debts and receivables', function () {
     $this->actingAs($actor)->get('/debts/1/payments')->assertOk()->assertSee('Payments');
     $this->actingAs($actor)->get('/debts/1/payments/create')->assertOk()->assertSee('Add payment');
     $this->actingAs($actor)->get('/debts/1/payments/existing')->assertOk()->assertSee('Use an existing record');
+    $this->actingAs($actor)->get('/debts/1/payments/2/edit')->assertOk()->assertSee('Edit payment');
+    $this->actingAs($actor)->get('/debts/1/payments/-2/edit')->assertOk()->assertSee('Edit payment');
+    $this->actingAs($actor)->get('/receivables/1/payments/2/edit')->assertOk()->assertSee('Edit payment received');
     $this->actingAs($actor)->get('/receivables/1/payments')->assertOk()->assertSee('Payments received');
     $this->actingAs($actor)->get('/receivables/1/payments/create')->assertOk()->assertSee('Add payment received');
     $this->actingAs($actor)->get('/receivables/1/payments/existing')->assertOk()->assertSee('Use an existing record');

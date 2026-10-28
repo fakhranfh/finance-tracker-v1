@@ -113,6 +113,7 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
                     Route::get('/', [DebtPaymentPageController::class, 'index'])->defaults('type', $type)->name("{$path}.payments.index");
                     Route::get('/create', [DebtPaymentPageController::class, 'create'])->defaults('type', $type)->name("{$path}.payments.create");
                     Route::get('/existing', [DebtPaymentPageController::class, 'existing'])->defaults('type', $type)->name("{$path}.payments.existing");
+                    Route::get('/{id}/edit', [DebtPaymentPageController::class, 'edit'])->where('id', '-?[0-9]+')->defaults('type', $type)->name("{$path}.payments.edit");
                 });
 
                 Route::prefix('sub-debts')->group(function () use ($path, $type): void {

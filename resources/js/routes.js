@@ -143,6 +143,7 @@ export const routes = {
         receivableCreate: '/receivables/create',
         debtPayments: (id, type = 'debt') => `/${type === 'receivable' ? 'receivables' : 'debts'}/${id}/payments`,
         debtPaymentCreate: (id, type = 'debt') => `/${type === 'receivable' ? 'receivables' : 'debts'}/${id}/payments/create`,
+        debtPaymentEdit: (id, paymentId, type = 'debt') => `/${type === 'receivable' ? 'receivables' : 'debts'}/${id}/payments/${paymentId}/edit`,
         debtPaymentExisting: (id, type = 'debt') => `/${type === 'receivable' ? 'receivables' : 'debts'}/${id}/payments/existing`,
         debtSubDebtCreate: (id, type = 'debt') => `/${type === 'receivable' ? 'receivables' : 'debts'}/${id}/sub-debts/create`,
         debtSubDebtEdit: (id, subDebtId, type = 'debt') => `/${type === 'receivable' ? 'receivables' : 'debts'}/${id}/sub-debts/${subDebtId}/edit`,
