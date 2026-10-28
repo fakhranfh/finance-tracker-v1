@@ -42,8 +42,18 @@ function renderHistory() {
 
             button.type = 'button';
             button.dataset.calcHistory = index;
-            button.className = 'w-full rounded-md px-3 py-2 text-right font-body text-body-md text-on-surface hover:bg-surface-container';
-            button.textContent = `${prettify(source)} = ${group(String(result))}`;
+            button.className = 'flex w-full cursor-pointer items-center justify-between gap-3 rounded-md border border-outline-variant px-3 py-2 text-right font-body text-body-md text-on-surface transition-colors hover:border-primary hover:bg-surface-container focus-visible:outline-2 focus-visible:outline-primary';
+            item.className = 'mb-1.5';
+
+            const icon = document.createElement('span');
+            const text = document.createElement('span');
+
+            icon.className = 'text-primary';
+            icon.setAttribute('aria-hidden', 'true');
+            icon.textContent = '↺';
+            text.className = 'break-all';
+            text.textContent = `${prettify(source)} = ${group(String(result))}`;
+            button.append(icon, text);
             item.append(button);
 
             return item;
@@ -165,7 +175,7 @@ if (modal) {
         if (key) {
             press(key);
         } else if (entry) {
-            expression = String(history[entry.dataset.calcHistory].result);
+            expression = history[entry.dataset.calcHistory].source;
             render();
         } else if (event.target.closest('[data-calc-apply]')) {
             apply();
