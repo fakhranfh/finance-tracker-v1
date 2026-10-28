@@ -10,6 +10,46 @@ const resultEl = modal?.querySelector('[data-calc-result]');
 
 let target = null;
 let expression = '';
+const history = [];
+const HISTORY_LIMIT = 10;
+const historyEl = modal?.querySelector('[data-calc-history]');
+const historyEmptyEl = modal?.querySelector('[data-calc-history-empty]');
+
+/** "1250000" to "1.250.000", keeping a leading minus. */
+function group(digits) {
+    return digits.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+
+function prettify(source) {
+    return source
+        .replace(/\d+/g, group)
+        .replace(/[-+*/]/g, (operator) => ` ${symbols[operator]} `)
+        .trim();
+}
+
+function remember(source, result) {
+    history.unshift({ source, result });
+    history.length = Math.min(history.length, HISTORY_LIMIT);
+    renderHistory();
+}
+
+function renderHistory() {
+    historyEmptyEl.hidden = history.length > 0;
+    historyEl.replaceChildren(
+        ...history.map(({ source, result }, index) => {
+            const item = document.createElement('li');
+            const button = document.createElement('button');
+
+            button.type = 'button';
+            button.dataset.calcHistory = index;
+            button.className = 'w-full rounded-md px-3 py-2 text-right font-body text-body-md text-on-surface hover:bg-surface-container';
+            button.textContent = `${prettify(source)} = ${group(String(result))}`;
+            item.append(button);
+
+            return item;
+        }),
+    );
+}
 
 /**
  * Evaluate "12+3*4" without eval(). Returns null for an incomplete expression
@@ -60,27 +100,29 @@ export function evaluate(source) {
 function render() {
     const result = evaluate(expression);
 
-    expressionEl.textContent = expression.replace(/[-+*/]/g, (operator) => ` ${symbols[operator]} `).trim() || '0';
-    resultEl.textContent = result === null ? '' : Number.isNaN(result) ? '—' : `= ${result}`;
+    expressionEl.textContent = prettify(expression) || '0';
+    resultEl.textContent = result === null ? '' : Number.isNaN(result) ? '—' : `= ${group(String(result))}`;
 }
 
 function press(key) {
-    const lastNumber = expression.split(/[-+*/]/).pop();
-
     if (key === 'clear') {
         expression = '';
     } else if (key === 'back') {
         expression = expression.slice(0, -1);
     } else if (key === 'equals') {
         const result = evaluate(expression);
-        expression = result === null || Number.isNaN(result) ? expression : String(result);
+
+        if (result !== null && !Number.isNaN(result)) {
+            if (/[-+*/]/.test(expression.slice(1))) {
+                remember(expression, result);
+            }
+            expression = String(result);
+        }
     } else if (/^[-+*/]$/.test(key)) {
         if (expression === '' && key !== '-') {
             return;
         }
         expression = /[-+*/]$/.test(expression) && expression.length > 1 ? expression.slice(0, -1) + key : expression + key;
-    } else if (key === '.') {
-        expression += lastNumber.includes('.') ? '' : lastNumber === '' ? '0.' : '.';
     } else {
         expression += key;
     }
@@ -95,6 +137,10 @@ function apply() {
         return;
     }
 
+    if (/[-+*/]/.test(expression.slice(1))) {
+        remember(expression, result);
+    }
+
     target.value = String(result);
     target.dispatchEvent(new Event('input', { bubbles: true }));
     target.dispatchEvent(new Event('change', { bubbles: true }));
@@ -106,6 +152,7 @@ function openFor(input) {
     expression = input.value;
     input.blur();
     render();
+    renderHistory();
     openModal(MODAL_ID);
 }
 
@@ -113,8 +160,13 @@ if (modal) {
     modal.addEventListener('click', (event) => {
         const key = event.target.closest('[data-calc-key]')?.dataset.calcKey;
 
+        const entry = event.target.closest('[data-calc-history]');
+
         if (key) {
             press(key);
+        } else if (entry) {
+            expression = String(history[entry.dataset.calcHistory].result);
+            render();
         } else if (event.target.closest('[data-calc-apply]')) {
             apply();
         }

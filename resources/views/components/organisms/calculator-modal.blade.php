@@ -11,8 +11,13 @@
             </x-atoms.button>
         @endforeach
         <x-atoms.button variant="secondary" class="col-span-2 w-full justify-center" data-calc-key="0">0</x-atoms.button>
-        <x-atoms.button variant="secondary" class="w-full justify-center" data-calc-key=".">.</x-atoms.button>
-        <x-atoms.button variant="secondary" class="w-full justify-center" data-calc-key="00">00</x-atoms.button>
+        <x-atoms.button variant="secondary" class="col-span-2 w-full justify-center" data-calc-key="00">00</x-atoms.button>
+    </div>
+
+    <div class="mt-4">
+        <h3 class="mb-1 font-heading text-label-md font-semibold text-on-surface-variant">{{ __('calculator.history') }}</h3>
+        <p class="font-body text-body-md text-on-surface-variant" data-calc-history-empty>{{ __('calculator.history_empty') }}</p>
+        <ul class="max-h-32 overflow-y-auto" data-calc-history></ul>
     </div>
 
     <div class="mt-4 flex items-center gap-3">
