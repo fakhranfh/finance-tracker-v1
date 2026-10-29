@@ -114,6 +114,15 @@ export const routes = {
         bulkDestroy: endpoint('/users'),
         generate: endpoint('/users/generate'),
     },
+    terminal: {
+        show: endpoint('/terminal'),
+        unlock: endpoint('/terminal/unlock'),
+        password: endpoint('/terminal/password'),
+        forgot: endpoint('/terminal/forgot'),
+        reset: endpoint('/terminal/reset'),
+        run: endpoint('/terminal/run'),
+        lock: endpoint('/terminal'),
+    },
     pages: {
         home: '/',
         login: '/login',

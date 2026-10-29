@@ -11,6 +11,7 @@ use App\Http\Controllers\ProfilePageController;
 use App\Http\Controllers\RecordPageController;
 use App\Http\Controllers\SubDebtPageController;
 use App\Http\Controllers\SubGoalPageController;
+use App\Http\Controllers\TerminalPageController;
 use App\Http\Controllers\UserPageController;
 use App\Http\Controllers\WebhookPageController;
 use App\Http\Middleware\EnsureNoUsersExist;
@@ -148,4 +149,6 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
         Route::get('/create', [UserPageController::class, 'create'])->name('users.create');
         Route::get('/{id}/edit', [UserPageController::class, 'edit'])->name('users.edit');
     });
+
+    Route::get('/terminal', [TerminalPageController::class, 'index'])->middleware('role:admin')->name('terminal.index');
 });

@@ -11,6 +11,7 @@ return [
         'webhooks' => 'Manage Webhooks',
         'debts' => 'Debts & Receivables',
         'users' => 'Manage Users',
+        'terminal' => 'Terminal',
     ],
     'welcome' => [
         'greeting' => 'Welcome, :name!',
@@ -24,6 +25,7 @@ return [
             'goals' => 'Set savings goals with a target amount or a list of sub goals, track your progress and see your saving history.',
             'webhooks' => 'Create webhook URLs that let other apps or automations add records to your finance tracker.',
             'debts' => 'Track money you owe and money owed to you, with due dates and payment progress.',
+            'terminal' => 'Run shell commands (including php artisan) from the browser. Protected by an extra password kept in the server .env file.',
             'users' => 'Add the people who use the app and choose whether each one is an admin or a regular user. Everyone only sees their own finances.',
         ],
     ],

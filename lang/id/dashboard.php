@@ -11,6 +11,7 @@ return [
         'webhooks' => 'Kelola Webhook',
         'debts' => 'Utang & Piutang',
         'users' => 'Kelola Pengguna',
+        'terminal' => 'Terminal',
     ],
     'welcome' => [
         'greeting' => 'Selamat datang, :name!',
@@ -24,6 +25,7 @@ return [
             'goals' => 'Buat target tabungan dengan jumlah target atau daftar sub target, pantau progres, dan lihat riwayat menabung.',
             'webhooks' => 'Buat URL webhook agar aplikasi atau otomasi lain dapat menambahkan catatan ke finance tracker Anda.',
             'users' => 'Tambahkan pengguna aplikasi dan tentukan apakah masing-masing admin atau pengguna biasa. Setiap orang hanya melihat keuangannya sendiri.',
+            'terminal' => 'Jalankan perintah shell (termasuk php artisan) dari browser. Dilindungi kata sandi tambahan yang disimpan di file .env server.',
             'debts' => 'Catat uang yang Anda pinjam dan yang dipinjam orang lain dari Anda, lengkap dengan jatuh tempo dan progres pembayaran.',
         ],
     ],

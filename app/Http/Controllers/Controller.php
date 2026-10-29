@@ -15,6 +15,7 @@ use OpenApi\Attributes as OA;
 )]
 #[OA\Tag(name: 'Auth', description: 'Authentication endpoints')]
 #[OA\Tag(name: 'Profile', description: 'Authenticated user profile endpoints')]
+#[OA\Tag(name: 'Terminal', description: 'Admin-only web terminal for running shell commands')]
 #[OA\Tag(name: 'Accounts', description: 'Account endpoints')]
 #[OA\Tag(name: 'Categories', description: 'Record category endpoints')]
 #[OA\Tag(name: 'Webhooks', description: 'Webhook management and public record intake endpoints')]

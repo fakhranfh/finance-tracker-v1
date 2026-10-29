@@ -21,6 +21,7 @@ use App\Http\Controllers\Api\RecordController;
 use App\Http\Controllers\Api\RecordImportController;
 use App\Http\Controllers\Api\SubDebtController;
 use App\Http\Controllers\Api\SubGoalController;
+use App\Http\Controllers\Api\TerminalController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\WebhookController;
 use App\Http\Controllers\Api\WebhookLogController;
@@ -221,6 +222,16 @@ Route::middleware('web')->name('api.')->group(function (): void {
                 ->parameters(['users' => 'user'])
                 ->except('create', 'edit')
                 ->names('users');
+
+            Route::prefix('terminal')->group(function (): void {
+                Route::get('/', [TerminalController::class, 'show'])->name('terminal.show');
+                Route::post('/unlock', [TerminalController::class, 'unlock'])->middleware('throttle:5,1')->name('terminal.unlock');
+                Route::put('/password', [TerminalController::class, 'password'])->middleware('throttle:5,1')->name('terminal.password');
+                Route::post('/forgot', [TerminalController::class, 'forgot'])->middleware('throttle:3,1')->name('terminal.forgot');
+                Route::post('/reset', [TerminalController::class, 'reset'])->middleware('throttle:5,1')->name('terminal.reset');
+                Route::post('/run', [TerminalController::class, 'run'])->middleware('throttle:120,1')->name('terminal.run');
+                Route::delete('/', [TerminalController::class, 'lock'])->name('terminal.lock');
+            });
         });
         Route::post('/logout', LogoutController::class)->name('logout');
     });
