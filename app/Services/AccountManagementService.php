@@ -136,6 +136,14 @@ class AccountManagementService
     }
 
     /**
+     * Total balance across all accounts.
+     */
+    public function totalBalance(): int
+    {
+        return $this->accountRepository->totalBalance();
+    }
+
+    /**
      * Snapshots and the balances in the monthly and yearly totals go stale when an account's balance is set directly.
      */
     private function refreshSnapshotIfBalanceChanged(Account $account): Account

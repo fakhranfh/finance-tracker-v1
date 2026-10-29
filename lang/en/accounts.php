@@ -6,6 +6,7 @@ return [
     'create' => 'Add account',
     'edit' => 'Edit account',
     'back' => 'Back to accounts',
+    'total_balance' => 'Total balance across all accounts: :total',
 
     'table' => [
         'name' => 'Name',

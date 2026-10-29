@@ -20,7 +20,7 @@ trait DocumentsApi
             new OA\Parameter(name: 'direction', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['asc', 'desc'])),
             new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 10)),
         ],
-        responses: [new OA\Response(response: 200, description: 'Paginated list of accounts')]
+        responses: [new OA\Response(response: 200, description: 'Paginated list of accounts, with summary.balance_total (sum of every account balance)')]
     )]
     private function documentIndexEndpoint(): void {}
 

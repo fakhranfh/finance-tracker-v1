@@ -35,6 +35,7 @@ class AccountController extends Controller
             sort: $request->string('sort')->value() ?: null,
             direction: $request->string('direction', 'asc')->value(),
         ))->additional([
+            'summary' => ['balance_total' => $this->accountManagementService->totalBalance()],
             'deletable_total' => $this->accountManagementService->countMatching($search),
         ]);
     }
