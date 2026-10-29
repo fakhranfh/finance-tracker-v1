@@ -7,7 +7,7 @@ import { testEnv } from './env';
  * "Generate data" button — per .ai/rules/dev-autofill.md that dev-UI feature
  * is scoped to pages that display a table/list of data.
  */
-function seed(kind: 'user' | 'reset-token'): Record<string, string> {
+function seed(kind: 'user' | 'admin' | 'reset-token'): Record<string, string> {
     const output = execSync(`php artisan test:seed-e2e-fixture ${kind}`, { env: testEnv }).toString().trim();
 
     return JSON.parse(output);
@@ -15,6 +15,10 @@ function seed(kind: 'user' | 'reset-token'): Record<string, string> {
 
 export function seedUser(): { email: string; password: string } {
     return seed('user') as { email: string; password: string };
+}
+
+export function seedAdmin(): { email: string; password: string } {
+    return seed('admin') as { email: string; password: string };
 }
 
 export function seedResetToken(): { email: string; token: string } {

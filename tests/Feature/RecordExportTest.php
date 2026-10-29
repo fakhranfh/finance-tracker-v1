@@ -33,8 +33,8 @@ it('rejects an unknown export format', function () {
 });
 
 it('writes xlsx dates in the user timezone', function () {
-    Record::factory()->create(['recorded_at' => '2026-10-01 20:00:00']);
     $user = User::factory()->create(['timezone' => 'Asia/Jakarta']);
+    Record::factory()->create(['recorded_at' => '2026-10-01 20:00:00']);
 
     $content = $this->actingAs($user)->get('/api/records/export/xlsx')->streamedContent();
     $path = tempnam(sys_get_temp_dir(), 'x');

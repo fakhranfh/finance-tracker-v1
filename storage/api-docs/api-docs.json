@@ -3930,6 +3930,564 @@
                 }
             }
         },
+        "/terminal": {
+            "get": {
+                "tags": [
+                    "Terminal"
+                ],
+                "summary": "Show whether a terminal password is set and unlocked for this session",
+                "operationId": "ff723090ddc2a668ff8cba69aa4f3a38",
+                "responses": {
+                    "200": {
+                        "description": "Terminal state",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "configured": {
+                                                    "description": "False until an admin has set a terminal password.",
+                                                    "type": "boolean"
+                                                },
+                                                "unlocked": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Not an admin"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Terminal"
+                ],
+                "summary": "Lock the terminal again",
+                "operationId": "da85d6f1085e77e78aa50c6efad8d323",
+                "responses": {
+                    "200": {
+                        "description": "Terminal locked"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Not an admin"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/terminal/unlock": {
+            "post": {
+                "tags": [
+                    "Terminal"
+                ],
+                "summary": "Unlock the terminal with the terminal password",
+                "operationId": "df66e2d72a48a2c3996535878dfd179d",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "password"
+                                ],
+                                "properties": {
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Terminal unlocked for this session"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Not an admin"
+                    },
+                    "422": {
+                        "description": "Wrong password, or no terminal password is set yet"
+                    },
+                    "429": {
+                        "description": "Too many attempts"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/terminal/run": {
+            "post": {
+                "tags": [
+                    "Terminal"
+                ],
+                "summary": "Run a command through bash in the project root (e.g. \"php artisan migrate:status\" or \"git status\")",
+                "operationId": "4b3cb90e260458ac5057d10577d6e2f3",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "command"
+                                ],
+                                "properties": {
+                                    "command": {
+                                        "type": "string",
+                                        "example": "php artisan migrate:status",
+                                        "maxLength": 1000
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Command finished (a non-zero exit_code means it failed)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "command": {
+                                                    "type": "string"
+                                                },
+                                                "output": {
+                                                    "type": "string"
+                                                },
+                                                "exit_code": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Not an admin"
+                    },
+                    "422": {
+                        "description": "Missing command"
+                    },
+                    "423": {
+                        "description": "Terminal is locked"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/terminal/password": {
+            "put": {
+                "tags": [
+                    "Terminal"
+                ],
+                "summary": "Set or change the terminal password (stored hashed in the database)",
+                "operationId": "b7119972c30f77de2d6a56f633241d37",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "password",
+                                    "password_confirmation"
+                                ],
+                                "properties": {
+                                    "current_password": {
+                                        "description": "Required once a password is already set.",
+                                        "type": "string",
+                                        "format": "password"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password"
+                                    },
+                                    "password_confirmation": {
+                                        "type": "string",
+                                        "format": "password"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Password saved; the terminal is unlocked for this session"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Not an admin"
+                    },
+                    "422": {
+                        "description": "Validation error or wrong current password"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/terminal/forgot": {
+            "post": {
+                "tags": [
+                    "Terminal"
+                ],
+                "summary": "Email the signed-in admin a link to reset the terminal password",
+                "operationId": "98dc9f39c29c30bac986d19b758f7a4a",
+                "responses": {
+                    "200": {
+                        "description": "Reset link emailed (valid for 60 minutes)"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Not an admin"
+                    },
+                    "422": {
+                        "description": "No terminal password is set yet"
+                    },
+                    "429": {
+                        "description": "Too many requests"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/terminal/reset": {
+            "post": {
+                "tags": [
+                    "Terminal"
+                ],
+                "summary": "Set a new terminal password with the token from the reset email",
+                "operationId": "f798f506e81b089e32874421776d8855",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "token",
+                                    "password",
+                                    "password_confirmation"
+                                ],
+                                "properties": {
+                                    "token": {
+                                        "type": "string"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password"
+                                    },
+                                    "password_confirmation": {
+                                        "type": "string",
+                                        "format": "password"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Password reset; the terminal is unlocked for this session"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Not an admin"
+                    },
+                    "422": {
+                        "description": "Validation error, or the token is invalid or expired"
+                    },
+                    "429": {
+                        "description": "Too many attempts"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/users": {
+            "get": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "List users",
+                "operationId": "128236555c4521bb4787302451a6eb8f",
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "direction",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "asc",
+                                "desc"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 10
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated list of users"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Create a user",
+                "operationId": "7a045e4f5b614adf9ccb22a45f3c312b",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Sample name"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "example": "Sample email"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "User created"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Bulk delete users",
+                "operationId": "7f36e4e169bac38d2ba6549bdffb30ba",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "ids": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "all": {
+                                        "type": "boolean"
+                                    },
+                                    "search": {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "Users deleted"
+                    }
+                }
+            }
+        },
+        "/users/{id}": {
+            "get": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Show a user",
+                "operationId": "8b63484b8af47a6f7c6a6e36b45d5bd8",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The user"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Update a user",
+                "operationId": "1f4d6fcc34963fa3af407de64a1bef84",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Sample name"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "example": "Sample email"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "User updated"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Delete a user",
+                "operationId": "6c73a37e905619f15faef429117accc9",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "User deleted"
+                    }
+                }
+            }
+        },
         "/webhooks/{id}/logs": {
             "get": {
                 "tags": [
@@ -4655,6 +5213,10 @@
             "description": "Authenticated user profile endpoints"
         },
         {
+            "name": "Terminal",
+            "description": "Admin-only web terminal for running shell commands"
+        },
+        {
             "name": "Accounts",
             "description": "Account endpoints"
         },
@@ -4693,6 +5255,10 @@
         {
             "name": "Sub debts",
             "description": "Sub debts"
+        },
+        {
+            "name": "Users",
+            "description": "Users"
         }
     ]
 }

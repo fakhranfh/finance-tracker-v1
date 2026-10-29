@@ -17,7 +17,7 @@ class FeatureGuide extends Component
     {
         $this->features = array_values(array_filter(
             config('sidebar.nav'),
-            fn (array $item) => isset($item['description']),
+            fn (array $item) => isset($item['description']) && (! isset($item['role']) || auth()->user()->hasRole($item['role'])),
         ));
         $this->icons = config('sidebar.icons');
         $this->name = auth()->user()->name;

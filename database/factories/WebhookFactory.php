@@ -19,6 +19,7 @@ class WebhookFactory extends Factory
     public function definition(): array
     {
         return [
+            'user_id' => fn () => UserFactory::ownerId(),
             'name' => fake()->words(3, true),
             'token' => Str::random(40),
             'is_active' => true,

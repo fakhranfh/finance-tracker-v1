@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\RecordType;
+use App\Models\Concerns\BelongsToOwnerThrough;
 use App\Observers\RecordObserver;
 use Database\Factories\RecordFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -20,7 +21,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Record extends Model
 {
     /** @use HasFactory<RecordFactory> */
-    use HasFactory;
+    use BelongsToOwnerThrough, HasFactory;
 
     /**
      * Get the attributes that should be cast.
@@ -78,5 +79,13 @@ class Record extends Model
     public function toAccount(): BelongsTo
     {
         return $this->belongsTo(Account::class, 'to_account_id');
+    }
+
+    /**
+     * @return array{0: class-string<Model>, 1: string}
+     */
+    protected static function ownerParent(): array
+    {
+        return [Account::class, 'account_id'];
     }
 }

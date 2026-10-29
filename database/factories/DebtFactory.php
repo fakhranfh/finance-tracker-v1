@@ -29,6 +29,7 @@ class DebtFactory extends Factory
         $amount = fake()->numberBetween(5, 500) * 10_000;
 
         return [
+            'user_id' => fn () => UserFactory::ownerId(),
             'type' => $type,
             'name' => fake()->randomElement(self::NAMES),
             'amount' => $amount,

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\GoalStatus;
+use App\Models\Concerns\BelongsToUser;
 use App\Models\Concerns\HasUserTimezone;
 use Database\Factories\GoalFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -17,7 +18,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Goal extends Model
 {
     /** @use HasFactory<GoalFactory> */
-    use HasFactory, HasUserTimezone;
+    use BelongsToUser, HasFactory, HasUserTimezone;
 
     /**
      * Get the attributes that should be cast.

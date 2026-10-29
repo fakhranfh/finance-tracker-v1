@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Debt;
 
 use App\Enums\DebtType;
+use App\Rules\Owned;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -28,7 +29,7 @@ class StoreDebtRequest extends FormRequest
     {
         return [
             'type' => ['required', Rule::enum(DebtType::class)],
-            'account_id' => ['required', 'integer', 'exists:accounts,id'],
+            'account_id' => ['required', 'integer', Owned::exists('accounts')],
             'name' => ['required', 'string', 'max:255'],
             'amount' => ['required', 'integer', 'gt:0', 'max:999999999999'],
             'due_date' => ['nullable', 'date'],

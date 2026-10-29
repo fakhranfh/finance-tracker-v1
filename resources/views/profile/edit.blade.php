@@ -23,7 +23,7 @@
     <div class="w-full rounded-lg border border-outline-variant bg-surface p-6">
         <x-organisms.user-form-skeleton id="profile-form-skeleton" />
 
-        <form id="profile-form" class="hidden space-y-5" novalidate data-success-message="{{ __('profile.flash.updated') }}">
+        <form id="profile-form" class="hidden space-y-5" novalidate data-verify-url="{{ route('verification.notice') }}" data-success-message="{{ __('profile.flash.updated') }}">
             @csrf
 
             <x-molecules.form-group name="name" type="text" :label="__('users.fields.name')" autocomplete="name" required autofocus />

@@ -8,6 +8,7 @@ use App\Services\AccountSampleRecordService;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Support\Facades\Auth;
 
 /**
  * Dev-only: creates sample records on an account in the background, so large
@@ -40,6 +41,20 @@ class GenerateAccountRecords implements ShouldQueue
             return;
         }
 
-        $service->generate($account, $this->count, $this->start, $this->end, $this->type, $this->amount);
+        // Act as the owner so the sample records only meet the owner's accounts and categories. A worker
+        // keeps its process between jobs, so the user is dropped again; inside a signed-in request (sync queue) it stays.
+        $signedIn = Auth::check();
+
+        if (! $signedIn) {
+            Auth::setUser($account->user);
+        }
+
+        try {
+            $service->generate($account, $this->count, $this->start, $this->end, $this->type, $this->amount);
+        } finally {
+            if (! $signedIn) {
+                Auth::forgetUser();
+            }
+        }
     }
 }

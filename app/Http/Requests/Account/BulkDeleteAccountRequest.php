@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Account;
 
+use App\Rules\Owned;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -26,7 +27,7 @@ class BulkDeleteAccountRequest extends FormRequest
             'all' => ['sometimes', 'boolean'],
             'search' => ['nullable', 'string'],
             'ids' => ['required_without:all', 'array', 'min:1'],
-            'ids.*' => ['integer', 'exists:accounts,id'],
+            'ids.*' => ['integer', Owned::exists('accounts')],
         ];
     }
 }

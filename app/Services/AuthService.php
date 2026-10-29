@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\RoleName;
 use App\Jobs\SyncRecordEffects;
 use App\Models\User;
 use App\Repositories\Account\AccountRepositoryInterface;
@@ -28,11 +29,20 @@ class AuthService
      */
     public function register(array $data): User
     {
-        return $this->userRepository->create([
+        $isFirst = $this->userRepository->first() === null;
+
+        $user = $this->userRepository->create([
             'name' => $data['name'],
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
         ]);
+
+        // Nobody else can create users yet, so the first one to register runs the place.
+        if ($isFirst) {
+            $user->syncRoles(RoleName::Admin->value);
+        }
+
+        return $user;
     }
 
     /**
@@ -102,18 +112,23 @@ class AuthService
 
     /**
      * Local-dev only: log in as the oldest user, creating one first when
-     * no user exists.
+     * no user exists. With $admin, log in as the oldest admin instead,
+     * creating one first when none exists.
      *
      * @return array{0: User, 1: string} The user and a Sanctum API token.
      */
-    public function devAutoLogin(Request $request): array
+    public function devAutoLogin(Request $request, bool $admin = false): array
     {
-        $user = $this->userRepository->first()
-            ?? $this->register([
-                'name' => 'Dev User',
-                'email' => 'dev@example.com',
-                'password' => 'password',
-            ]);
+        if ($admin) {
+            $user = $this->userRepository->firstAdmin() ?? $this->createDevAdmin();
+        } else {
+            $user = $this->userRepository->first()
+                ?? $this->register([
+                    'name' => 'Dev User',
+                    'email' => 'dev@example.com',
+                    'password' => 'password',
+                ]);
+        }
 
         if (! $user->hasVerifiedEmail()) {
             $user->markEmailAsVerified();
@@ -126,6 +141,19 @@ class AuthService
         $this->storeDetectedTimezone($request);
 
         return [$user, $this->issueToken($user)];
+    }
+
+    private function createDevAdmin(): User
+    {
+        $user = $this->register([
+            'name' => 'Admin',
+            'email' => 'admin@example.com',
+            'password' => 'password',
+        ]);
+
+        $this->userRepository->syncRole($user, RoleName::Admin->value);
+
+        return $user;
     }
 
     /**
@@ -150,10 +178,8 @@ class AuthService
         if ($timezone !== null && $timezone !== $user->timezone) {
             $this->userRepository->update($user, ['timezone' => $timezone]);
 
-            // The totals are bucketed in the first user's timezone, so a change there moves their months.
-            if ($user->id === $this->userRepository->first()?->id) {
-                SyncRecordEffects::request($this->accountRepository->allIds(), null, null, true);
-            }
+            // The totals are bucketed in the owner's timezone, so a change moves their months.
+            SyncRecordEffects::request($this->accountRepository->allIds(), null, null, true);
         }
     }
 

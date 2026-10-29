@@ -1,7 +1,9 @@
 <?php
 
 use App\Models\User;
+use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Notification;
 
 it('redirects a guest away from the profile page', function () {
     $this->get('/profile')->assertRedirect('/login');
@@ -36,6 +38,31 @@ it('updates name and email without touching the password', function () {
     $user->refresh();
     expect($user->email)->toBe('new@example.com')
         ->and(Hash::check('OldPassword1!', $user->password))->toBeTrue();
+});
+
+it('requires the new email to be verified again', function () {
+    Notification::fake();
+    $user = User::factory()->create();
+
+    $this->actingAs($user)->putJson('/api/profile', [
+        'name' => $user->name,
+        'email' => 'changed@example.com',
+    ])->assertOk()->assertJsonPath('data.email_verified', false);
+
+    expect($user->refresh()->hasVerifiedEmail())->toBeFalse();
+    Notification::assertSentTo($user, VerifyEmail::class);
+});
+
+it('keeps the email verified when it is unchanged', function () {
+    Notification::fake();
+    $user = User::factory()->create();
+
+    $this->actingAs($user)->putJson('/api/profile', [
+        'name' => 'Other Name',
+        'email' => $user->email,
+    ])->assertOk()->assertJsonPath('data.email_verified', true);
+
+    Notification::assertNothingSent();
 });
 
 it('changes the password when the current password is correct', function () {

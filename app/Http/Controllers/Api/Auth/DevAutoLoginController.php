@@ -20,7 +20,7 @@ class DevAutoLoginController extends Controller
 
     public function __invoke(Request $request): JsonResponse
     {
-        [$user, $token] = $this->authService->devAutoLogin($request);
+        [$user, $token] = $this->authService->devAutoLogin($request, $request->boolean('admin'));
 
         return (new UserResource($user))
             ->additional(['token' => $token])

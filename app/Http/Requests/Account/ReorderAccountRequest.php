@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Account;
 
+use App\Rules\Owned;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -24,7 +25,7 @@ class ReorderAccountRequest extends FormRequest
     {
         return [
             'ids' => ['required', 'array', 'min:1'],
-            'ids.*' => ['integer', 'distinct', 'exists:accounts,id'],
+            'ids.*' => ['integer', 'distinct', Owned::exists('accounts')],
         ];
     }
 }

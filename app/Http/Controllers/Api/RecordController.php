@@ -9,6 +9,7 @@ use App\Http\Requests\Record\StoreRecordRequest;
 use App\Http\Requests\Record\UpdateRecordRequest;
 use App\Http\Resources\RecordResource;
 use App\Models\Record;
+use App\Rules\Owned;
 use App\Services\RecordManagementService;
 use App\Traits\Record\DocumentsApi;
 use App\Traits\Record\GeneratesSampleData;
@@ -84,7 +85,7 @@ class RecordController extends Controller
         $validated = $request->validate([
             'count' => ['required', 'integer', 'min:1', 'max:50'],
             'account_ids' => ['sometimes', 'array'],
-            'account_ids.*' => ['integer', 'exists:accounts,id'],
+            'account_ids.*' => ['integer', Owned::exists('accounts')],
         ]);
 
         return RecordResource::collection($this->generateSampleRecords(

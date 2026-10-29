@@ -4,6 +4,7 @@ namespace App\Http\Requests\Category;
 
 use App\Enums\CategoryType;
 use App\Models\Category;
+use App\Rules\Owned;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -35,7 +36,7 @@ class UpdateCategoryRequest extends FormRequest
         return [
             'name' => [
                 'required', 'string', 'max:255',
-                Rule::unique('categories', 'name')->where('type', $this->input('type'))->ignore($category),
+                Owned::unique('categories', 'name')->where('type', $this->input('type'))->ignore($category),
             ],
             'type' => ['required', Rule::enum(CategoryType::class), Rule::in($types)],
             'color' => ['required', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],

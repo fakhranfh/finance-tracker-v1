@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\CategoryType;
 use App\Enums\RecordType;
+use App\Models\Concerns\BelongsToUser;
 use App\Models\Concerns\HasUserTimezone;
 use Database\Factories\CategoryFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -18,7 +19,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Category extends Model
 {
     /** @use HasFactory<CategoryFactory> */
-    use HasFactory, HasUserTimezone;
+    use BelongsToUser, HasFactory, HasUserTimezone;
 
     /**
      * Get the attributes that should be cast.
