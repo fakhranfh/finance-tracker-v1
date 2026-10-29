@@ -55,6 +55,12 @@
 
     <div data-flash-success class="mb-6 hidden rounded-lg border border-success/20 bg-success/10 px-4 py-3 font-body text-sm text-success"></div>
 
+    <p
+        class="mb-4 hidden font-body text-body-md font-medium text-on-surface"
+        data-accounts-summary
+        data-summary-template="{{ __('accounts.total_balance', ['total' => ':total']) }}"
+    ></p>
+
     <x-molecules.table-toolbar
         id="accounts-table-toolbar"
         :search-placeholder="__('accounts.table.search')"

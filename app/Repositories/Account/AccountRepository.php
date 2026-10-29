@@ -81,6 +81,11 @@ class AccountRepository implements AccountRepositoryInterface
         return $query->count();
     }
 
+    public function totalBalance(): int
+    {
+        return (int) Account::query()->sum('last_balance');
+    }
+
     private function applySearch(Builder $query, ?string $search): void
     {
         if (! $search) {

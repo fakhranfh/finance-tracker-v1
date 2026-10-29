@@ -19,6 +19,17 @@ it('lists accounts via the api', function () {
     expect($response->json('data'))->toHaveCount(3);
 });
 
+it('returns the total balance of every account, ignoring the search', function () {
+    $actor = User::factory()->create();
+    Account::factory()->create(['name' => 'Findable entry', 'last_balance' => 1000]);
+    Account::factory()->create(['name' => 'Other', 'last_balance' => 2500]);
+
+    $response = $this->actingAs($actor)->getJson('/api/accounts?search=Findable');
+
+    $response->assertOk();
+    expect($response->json('summary.balance_total'))->toBe(3500);
+});
+
 it('searches accounts via the api', function () {
     $actor = User::factory()->create();
     Account::factory()->create(['name' => 'Findable entry']);

@@ -50,6 +50,11 @@ interface AccountRepositoryInterface
     public function countMatching(?string $search = null, ?int $exceptId = null): int;
 
     /**
+     * Sum the balance of every account.
+     */
+    public function totalBalance(): int;
+
+    /**
      * Create a new account.
      *
      * @param  array<string, mixed>  $data
