@@ -2,7 +2,20 @@ import { createTable } from '../shared/table/table.js';
 import { routes } from '../routes.js';
 import { formatDateTime } from '../shared/datetime.js';
 import { formatMoney } from '../shared/money.js';
+import { get } from '../shared/http.js';
 import { createAccountOrder } from './reorder.js';
+
+const summaryNode = document.querySelector('[data-accounts-summary]');
+
+async function refreshSummary() {
+    const { ok, data } = await get(`${routes.accounts.index}?per_page=1`);
+
+    if (ok && summaryNode) {
+        summaryNode.textContent = summaryNode.dataset.summaryTemplate
+            .replace(':total', formatMoney(data.summary.balance_total));
+        summaryNode.classList.remove('hidden');
+    }
+}
 
 createTable({
     ids: {
@@ -19,6 +32,7 @@ createTable({
     deleteModalId: 'delete-account-modal',
     bulkDeleteModalId: 'bulk-delete-accounts-modal',
     defaultSort: { key: 'name', direction: 'asc' },
+    onLoaded: refreshSummary,
     routes: {
         index: routes.accounts.index,
         destroy: routes.accounts.destroy,

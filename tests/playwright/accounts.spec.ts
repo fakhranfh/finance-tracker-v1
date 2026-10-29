@@ -19,6 +19,7 @@ test.describe('Manage Accounts', () => {
         await expect(page).toHaveURL('/accounts');
         await expect(page.getByRole('heading', { name: 'Manage Accounts' })).toBeVisible();
         await expect(page.getByRole('table')).toBeVisible();
+        await expect(page.getByText('Total balance across all accounts: Rp')).toBeVisible();
 
         await page.getByRole('link', { name: 'Add account' }).click();
         await expect(page).toHaveURL('/accounts/create');

@@ -6,6 +6,7 @@ return [
     'create' => 'Tambah akun',
     'edit' => 'Ubah akun',
     'back' => 'Kembali ke daftar akun',
+    'total_balance' => 'Total saldo di semua akun: :total',
 
     'table' => [
         'name' => 'Nama',
