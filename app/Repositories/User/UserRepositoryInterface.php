@@ -23,6 +23,11 @@ interface UserRepositoryInterface
     public function first(): ?User;
 
     /**
+     * Get the oldest user with the admin role, if any.
+     */
+    public function firstAdmin(): ?User;
+
+    /**
      * Paginate users, optionally filtered by search and sorted by column.
      */
     public function paginate(int $perPage, ?string $search = null, ?string $sort = null, string $direction = 'asc'): LengthAwarePaginator;
@@ -57,6 +62,11 @@ interface UserRepositoryInterface
      * @param  array<string, mixed>  $data
      */
     public function update(User $user, array $data): User;
+
+    /**
+     * Give the user exactly this role.
+     */
+    public function syncRole(User $user, string $role): void;
 
     /**
      * Delete a user.

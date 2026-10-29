@@ -9,6 +9,7 @@ it('rejects a guest from the records summary', function () {
 });
 
 it('sums income, expense and transfers of all records from the stored totals', function () {
+    $user = User::factory()->create();
     $a = Account::factory()->create();
     $b = Account::factory()->create();
     Record::factory()->create(['account_id' => $a->id, 'type' => 'income', 'amount' => 5000]);
@@ -16,7 +17,7 @@ it('sums income, expense and transfers of all records from the stored totals', f
     Record::factory()->create(['account_id' => $a->id, 'type' => 'expense', 'amount' => 3000]);
     Record::factory()->create(['account_id' => $a->id, 'to_account_id' => $b->id, 'type' => 'transfer', 'amount' => 1000]);
 
-    $this->actingAs(User::factory()->create())->getJson('/api/records/summary')
+    $this->actingAs($user)->getJson('/api/records/summary')
         ->assertOk()->assertJson(['data' => [
             'income' => 7500,
             'expense' => 3000,
@@ -28,6 +29,7 @@ it('sums income, expense and transfers of all records from the stored totals', f
 });
 
 it('summarizes a date range and accounts like the account summary', function () {
+    $user = User::factory()->create();
     $a = Account::factory()->create();
     $b = Account::factory()->create();
     Record::factory()->create(['account_id' => $a->id, 'type' => 'income', 'amount' => 5000, 'recorded_at' => '2026-03-10 05:00:00']);
@@ -36,7 +38,7 @@ it('summarizes a date range and accounts like the account summary', function () 
     Record::factory()->create(['account_id' => $b->id, 'type' => 'income', 'amount' => 777, 'recorded_at' => '2026-03-11 05:00:00']);
     Record::factory()->create(['account_id' => $b->id, 'to_account_id' => $a->id, 'type' => 'transfer', 'amount' => 300, 'recorded_at' => '2026-03-15 05:00:00']);
 
-    $this->actingAs(User::factory()->create())
+    $this->actingAs($user)
         ->getJson("/api/records/summary?account_ids[]={$a->id}&date_from=2026-03-01&date_to=2026-03-31")
         ->assertOk()->assertJson(['data' => [
             'income' => 5000,
@@ -49,10 +51,9 @@ it('summarizes a date range and accounts like the account summary', function () 
 });
 
 it('reads the records themselves for type, search and amount filters', function () {
+    $user = User::factory()->create();
     Record::factory()->create(['type' => 'income', 'amount' => 5000, 'note' => 'Gaji']);
     Record::factory()->create(['type' => 'expense', 'amount' => 3000, 'note' => 'Kopi']);
-
-    $user = User::factory()->create();
 
     $this->actingAs($user)->getJson('/api/records/summary?type[]=expense')
         ->assertOk()->assertJson(['data' => ['income' => 0, 'expense' => 3000, 'net' => -3000, 'record_count' => 1]]);

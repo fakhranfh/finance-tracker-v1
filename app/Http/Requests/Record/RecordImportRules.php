@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Record;
 
 use App\Enums\RecordImportStep;
+use App\Rules\Owned;
 use Illuminate\Validation\Rule;
 
 /**
@@ -66,12 +67,12 @@ final class RecordImportRules
             'accounts' => ['present', 'array'],
             'accounts.*.value' => ['required', 'string', 'max:255'],
             'accounts.*.action' => ['required', Rule::in(['existing', 'create', 'unmapped'])],
-            'accounts.*.id' => ['required_if:accounts.*.action,existing', 'nullable', 'integer', 'exists:accounts,id'],
+            'accounts.*.id' => ['required_if:accounts.*.action,existing', 'nullable', 'integer', Owned::exists('accounts')],
             'accounts.*.name' => ['nullable', 'string', 'max:255'],
             'categories' => ['present', 'array'],
             'categories.*.value' => ['required', 'string', 'max:255'],
             'categories.*.action' => ['required', Rule::in(['existing', 'create', 'none'])],
-            'categories.*.id' => ['required_if:categories.*.action,existing', 'nullable', 'integer', 'exists:categories,id'],
+            'categories.*.id' => ['required_if:categories.*.action,existing', 'nullable', 'integer', Owned::exists('categories')],
             'categories.*.name' => ['nullable', 'string', 'max:255'],
         ];
     }

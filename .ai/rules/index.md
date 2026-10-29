@@ -20,6 +20,7 @@ Before planning or editing, find the row whose globs match the file's path and r
 | routes/web.php, routes/api.php | .ai/rules/routes.md |
 | database/migrations/*_create_users_table.php, database/migrations/** | .ai/rules/migrations.md |
 | app/Models/** | .ai/rules/models.md |
+| app/Models/**, app/Http/Requests/**, database/migrations/** | .ai/rules/multi-user.md |
 | app/Http/Requests/**, app/Providers/AppServiceProvider.php | .ai/rules/password-validation.md |
 | app/Http/Controllers/**, app/Services/**, app/Repositories/** | .ai/rules/repository-pattern.md |
 | resources/views/**, resources/js/**, resources/css/** | .ai/rules/responsive-testing.md |

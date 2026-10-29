@@ -57,6 +57,11 @@ if (form) {
             const { ok, status, data } = await put(routes.profile.update, payload);
 
             if (ok) {
+                if (!data.data.email_verified) {
+                    window.location.href = form.dataset.verifyUrl;
+                    return;
+                }
+
                 form.name.value = data.data.name;
                 form.email.value = data.data.email;
                 form.current_password.value = '';

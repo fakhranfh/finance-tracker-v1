@@ -10,6 +10,7 @@ return [
     'table' => [
         'name' => 'Nama',
         'email' => 'Email',
+        'role' => 'Peran',
         'created_at' => 'Bergabung',
         'actions' => 'Aksi',
         'empty' => 'Belum ada pengguna.',
@@ -26,9 +27,19 @@ return [
     'fields' => [
         'name' => 'Nama',
         'email' => 'Email',
+        'role' => 'Peran',
         'password' => 'Kata sandi',
         'password_confirmation' => 'Konfirmasi kata sandi',
         'password_hint' => 'Biarkan kosong untuk mempertahankan kata sandi saat ini.',
+    ],
+
+    'roles' => [
+        'admin' => 'Admin',
+        'user' => 'Pengguna',
+    ],
+
+    'errors' => [
+        'delete_self' => 'Anda tidak dapat menghapus akun Anda sendiri.',
     ],
 
     'actions' => [

@@ -22,6 +22,8 @@ use App\Repositories\Record\RecordRepository;
 use App\Repositories\Record\RecordRepositoryInterface;
 use App\Repositories\RecordImport\RecordImportRepository;
 use App\Repositories\RecordImport\RecordImportRepositoryInterface;
+use App\Repositories\Setting\SettingRepository;
+use App\Repositories\Setting\SettingRepositoryInterface;
 use App\Repositories\SubDebt\SubDebtRepository;
 use App\Repositories\SubDebt\SubDebtRepositoryInterface;
 use App\Repositories\SubGoal\SubGoalRepository;
@@ -61,6 +63,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(AccountBalanceRepositoryInterface::class, AccountBalanceRepository::class);
         $this->app->bind(AccountSummaryRepositoryInterface::class, AccountSummaryRepository::class);
         $this->app->bind(UserRepositoryInterface::class, UserRepository::class);
+        $this->app->bind(SettingRepositoryInterface::class, SettingRepository::class);
     }
 
     /**

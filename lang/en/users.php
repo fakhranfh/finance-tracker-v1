@@ -10,6 +10,7 @@ return [
     'table' => [
         'name' => 'Name',
         'email' => 'Email',
+        'role' => 'Role',
         'created_at' => 'Joined',
         'actions' => 'Actions',
         'empty' => 'No users found.',
@@ -26,9 +27,19 @@ return [
     'fields' => [
         'name' => 'Name',
         'email' => 'Email',
+        'role' => 'Role',
         'password' => 'Password',
         'password_confirmation' => 'Confirm password',
         'password_hint' => 'Leave blank to keep the current password.',
+    ],
+
+    'roles' => [
+        'admin' => 'Admin',
+        'user' => 'User',
+    ],
+
+    'errors' => [
+        'delete_self' => 'You cannot delete your own account.',
     ],
 
     'actions' => [

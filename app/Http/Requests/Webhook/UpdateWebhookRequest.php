@@ -4,6 +4,7 @@ namespace App\Http\Requests\Webhook;
 
 use App\Enums\RecordType;
 use App\Rules\IpList;
+use App\Rules\Owned;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -32,7 +33,7 @@ class UpdateWebhookRequest extends FormRequest
             'can_create_categories' => ['sometimes', 'boolean'],
             'allowed_ips' => ['nullable', 'string', 'max:2000', new IpList],
             'allowed_account_ids' => ['nullable', 'array'],
-            'allowed_account_ids.*' => ['integer', Rule::exists('accounts', 'id')],
+            'allowed_account_ids.*' => ['integer', Owned::exists('accounts')],
             'allowed_types' => ['nullable', 'array'],
             'allowed_types.*' => [Rule::enum(RecordType::class)],
         ];

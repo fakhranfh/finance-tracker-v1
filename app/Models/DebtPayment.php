@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToOwnerThrough;
 use App\Models\Concerns\HasUserTimezone;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
@@ -14,7 +15,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Fillable(['debt_id', 'sub_debt_id', 'amount', 'note', 'paid_at'])]
 class DebtPayment extends Model
 {
-    use HasUserTimezone;
+    use BelongsToOwnerThrough, HasUserTimezone;
 
     /**
      * Get the attributes that should be cast.
@@ -43,5 +44,13 @@ class DebtPayment extends Model
     public function subDebt(): BelongsTo
     {
         return $this->belongsTo(SubDebt::class);
+    }
+
+    /**
+     * @return array{0: class-string<Model>, 1: string}
+     */
+    protected static function ownerParent(): array
+    {
+        return [Debt::class, 'debt_id'];
     }
 }

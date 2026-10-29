@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToOwnerThrough;
 use App\Models\Concerns\HasUserTimezone;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
@@ -14,7 +15,7 @@ use Illuminate\Database\Eloquent\Model;
 #[Fillable(['webhook_id', 'status_code', 'ip', 'origin', 'message', 'payload', 'record_id'])]
 class WebhookLog extends Model
 {
-    use HasUserTimezone;
+    use BelongsToOwnerThrough, HasUserTimezone;
 
     /**
      * Get the attributes that should be cast.
@@ -26,5 +27,13 @@ class WebhookLog extends Model
         return [
             'payload' => 'array',
         ];
+    }
+
+    /**
+     * @return array{0: class-string<Model>, 1: string}
+     */
+    protected static function ownerParent(): array
+    {
+        return [Webhook::class, 'webhook_id'];
     }
 }

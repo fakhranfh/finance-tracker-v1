@@ -148,6 +148,7 @@ it('refreshes the balance in the yearly totals when the balance is set directly'
 });
 
 it('sums the monthly totals for the all-time range', function () {
+    $this->actingAs(User::factory()->create());
     $account = app(AccountRepositoryInterface::class)->create(['name' => 'Tunai', 'last_balance' => 0]);
     Record::factory()->create(['account_id' => $account->id, 'type' => RecordType::Income, 'amount' => 300, 'recorded_at' => '2025-06-10 12:00:00']);
     Record::factory()->create(['account_id' => $account->id, 'type' => RecordType::Expense, 'amount' => 40, 'recorded_at' => '2026-02-10 12:00:00']);

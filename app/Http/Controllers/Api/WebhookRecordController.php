@@ -11,6 +11,7 @@ use App\Services\WebhookManagementService;
 use App\Traits\WebhookRecord\DocumentsApi;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
@@ -34,6 +35,9 @@ class WebhookRecordController extends Controller
             : null;
 
         abort_if($webhook === null, 401, __('webhooks.errors.invalid_signature'));
+
+        // The caller is the webhook's owner from here on, so only their accounts and categories are in reach.
+        Auth::onceUsingId($webhook->user_id);
 
         $origin = $request->headers->get('Origin') ?: $request->headers->get('Referer');
 

@@ -2,8 +2,10 @@
 
 namespace Database\Factories;
 
+use App\Enums\RoleName;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
@@ -31,6 +33,20 @@ class UserFactory extends Factory
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
         ];
+    }
+
+    /**
+     * The user a factory-made row belongs to unless told otherwise: whoever is signed in, else the
+     * oldest user, else a new one. Keeps tests that make one actor and then their data working.
+     */
+    public static function ownerId(): int
+    {
+        return Auth::id() ?? User::query()->oldest('id')->value('id') ?? static::new()->create()->id;
+    }
+
+    public function admin(): static
+    {
+        return $this->afterCreating(fn (User $user) => $user->syncRoles(RoleName::Admin->value));
     }
 
     /**

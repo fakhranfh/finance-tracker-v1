@@ -4,6 +4,7 @@ use App\Enums\RecordType;
 use App\Jobs\RefreshAccountBalanceSnapshot;
 use App\Models\Account;
 use App\Models\Record;
+use App\Models\User;
 use App\Repositories\Account\AccountRepositoryInterface;
 use App\Services\AccountManagementService;
 use App\Services\AccountSummaryService;
@@ -130,6 +131,7 @@ it('appends a new snapshot instead of overwriting the previous one', function ()
 });
 
 it('keeps accounts.last_balance in step with the newest snapshot', function () {
+    $this->actingAs(User::factory()->create());
     $account = app(AccountRepositoryInterface::class)->create(['name' => 'Tunai', 'last_balance' => 1000]);
     expect($account->fresh()->last_balance)->toEqual(1000);
 

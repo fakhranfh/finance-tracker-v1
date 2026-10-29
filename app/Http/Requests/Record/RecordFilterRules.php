@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Record;
 
 use App\Enums\RecordType;
+use App\Rules\Owned;
 use Illuminate\Validation\Rule;
 
 /**
@@ -20,7 +21,7 @@ final class RecordFilterRules
             'type' => ['sometimes', 'array'],
             'type.*' => [Rule::enum(RecordType::class)],
             'account_ids' => ['sometimes', 'array'],
-            'account_ids.*' => ['integer', 'exists:accounts,id'],
+            'account_ids.*' => ['integer', Owned::exists('accounts')],
             'category_ids' => ['sometimes', 'array'],
             'category_ids.*' => ['string', 'regex:/^(\d+|none)$/'],
             'date_from' => ['sometimes', 'nullable', 'date'],
