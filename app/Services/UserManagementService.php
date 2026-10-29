@@ -12,6 +12,7 @@ class UserManagementService
 {
     public function __construct(
         protected UserRepositoryInterface $userRepository,
+        protected AuthService $authService,
     ) {}
 
     /**
@@ -72,6 +73,25 @@ class UserManagementService
         }
 
         return $this->userRepository->update($user, $payload);
+    }
+
+    /**
+     * Update the signed-in user's own profile. A changed email must be verified again.
+     *
+     * @param  array{name: string, email: string, password?: string}  $data
+     */
+    public function updateProfile(User $user, array $data): User
+    {
+        $emailChanged = $data['email'] !== $user->email;
+
+        $user = $this->update($user, $data);
+
+        if ($emailChanged) {
+            $user->forceFill(['email_verified_at' => null])->save();
+            $this->authService->sendVerificationEmail($user);
+        }
+
+        return $user;
     }
 
     /**

@@ -27,6 +27,7 @@ class UserResource extends JsonResource
             'id' => $user->id,
             'name' => $user->name,
             'email' => $user->email,
+            'email_verified' => $user->hasVerifiedEmail(),
             'timezone' => $user->timezone,
             'role' => $role?->value,
             'role_label' => $role?->label(),
