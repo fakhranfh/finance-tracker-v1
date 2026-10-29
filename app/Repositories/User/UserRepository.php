@@ -2,6 +2,7 @@
 
 namespace App\Repositories\User;
 
+use App\Enums\RoleName;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -23,9 +24,14 @@ class UserRepository implements UserRepositoryInterface
         return User::query()->oldest('id')->first();
     }
 
+    public function firstAdmin(): ?User
+    {
+        return User::role(RoleName::Admin->value)->oldest('id')->first();
+    }
+
     public function paginate(int $perPage, ?string $search = null, ?string $sort = null, string $direction = 'asc'): LengthAwarePaginator
     {
-        $query = User::query();
+        $query = User::query()->with('roles');
 
         $this->applySearch($query, $search);
 
@@ -86,6 +92,11 @@ class UserRepository implements UserRepositoryInterface
         $user->update($data);
 
         return $user;
+    }
+
+    public function syncRole(User $user, string $role): void
+    {
+        $user->syncRoles($role);
     }
 
     public function delete(User $user): void

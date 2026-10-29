@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToUser;
 use App\Models\Concerns\HasUserTimezone;
 use Database\Factories\WebhookFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -20,7 +21,7 @@ use Symfony\Component\HttpFoundation\IpUtils;
 class Webhook extends Model
 {
     /** @use HasFactory<WebhookFactory> */
-    use HasFactory, HasUserTimezone;
+    use BelongsToUser, HasFactory, HasUserTimezone;
 
     /**
      * Get the attributes that should be cast.

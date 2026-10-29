@@ -19,7 +19,7 @@ use Symfony\Component\Console\Attribute\AsCommand;
 #[AsCommand(name: 'test:seed-e2e-fixture')]
 class SeedE2eFixture extends Command
 {
-    protected $signature = 'test:seed-e2e-fixture {kind : "user" or "reset-token"}';
+    protected $signature = 'test:seed-e2e-fixture {kind : "user", "admin" or "reset-token"}';
 
     protected $description = 'Seed a fixture record for Playwright E2E specs and print it as JSON (local/testing only).';
 
@@ -32,12 +32,12 @@ class SeedE2eFixture extends Command
         }
 
         $plainPassword = 'Password123!';
-        $user = User::factory()->create([
+        $user = User::factory()->when($this->argument('kind') === 'admin', fn ($factory) => $factory->admin())->create([
             'password' => bcrypt($plainPassword),
         ]);
 
         $payload = match ($this->argument('kind')) {
-            'user' => [
+            'user', 'admin' => [
                 'email' => $user->email,
                 'password' => $plainPassword,
             ],
@@ -49,7 +49,7 @@ class SeedE2eFixture extends Command
         };
 
         if ($payload === null) {
-            $this->error('Unknown fixture kind. Use "user" or "reset-token".');
+            $this->error('Unknown fixture kind. Use "user", "admin" or "reset-token".');
 
             return self::FAILURE;
         }

@@ -46,6 +46,8 @@ export default defineConfig({
                 'resources/js/debt-payments/index.js',
                 'resources/js/debt-payments/form.js',
                 'resources/js/debt-payments/existing.js',
+                'resources/js/users/index.js',
+                'resources/js/users/form.js',
             ],
             refresh: true,
             fonts: [

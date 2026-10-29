@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\DebtType;
+use App\Models\Concerns\BelongsToUser;
 use App\Models\Concerns\HasUserTimezone;
 use Database\Factories\DebtFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -20,7 +21,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Debt extends Model
 {
     /** @use HasFactory<DebtFactory> */
-    use HasFactory, HasUserTimezone;
+    use BelongsToUser, HasFactory, HasUserTimezone;
 
     /**
      * Get the attributes that should be cast.

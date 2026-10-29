@@ -3,12 +3,13 @@
 return [
     'nav' => [
         ['label' => 'dashboard.nav.dashboard', 'route' => 'dashboard', 'icon' => 'home'],
-        ['label' => 'dashboard.nav.accounts', 'route' => 'accounts.index', 'active' => 'accounts.*', 'icon' => 'cube', 'description' => 'dashboard.welcome.features.accounts'],
-        ['label' => 'dashboard.nav.records', 'route' => 'records.index', 'active' => 'records.*', 'icon' => 'cube', 'description' => 'dashboard.welcome.features.records'],
-        ['label' => 'dashboard.nav.categories', 'route' => 'categories.index', 'active' => 'categories.*', 'icon' => 'tag', 'description' => 'dashboard.welcome.features.categories'],
-        ['label' => 'dashboard.nav.goals', 'route' => 'goals.index', 'active' => 'goals.*', 'icon' => 'cube', 'description' => 'dashboard.welcome.features.goals'],
-        ['label' => 'dashboard.nav.webhooks', 'route' => 'webhooks.index', 'active' => 'webhooks.*', 'icon' => 'cube', 'description' => 'dashboard.welcome.features.webhooks'],
-        ['label' => 'dashboard.nav.debts', 'route' => 'debts.index', 'active' => ['debts.*', 'receivables.*'], 'icon' => 'cube', 'description' => 'dashboard.welcome.features.debts'],
+        ['label' => 'dashboard.nav.accounts', 'route' => 'accounts.index', 'active' => 'accounts.*', 'icon' => 'cube', 'role' => 'user', 'description' => 'dashboard.welcome.features.accounts'],
+        ['label' => 'dashboard.nav.records', 'route' => 'records.index', 'active' => 'records.*', 'icon' => 'cube', 'role' => 'user', 'description' => 'dashboard.welcome.features.records'],
+        ['label' => 'dashboard.nav.categories', 'route' => 'categories.index', 'active' => 'categories.*', 'icon' => 'tag', 'role' => 'user', 'description' => 'dashboard.welcome.features.categories'],
+        ['label' => 'dashboard.nav.goals', 'route' => 'goals.index', 'active' => 'goals.*', 'icon' => 'cube', 'role' => 'user', 'description' => 'dashboard.welcome.features.goals'],
+        ['label' => 'dashboard.nav.webhooks', 'route' => 'webhooks.index', 'active' => 'webhooks.*', 'icon' => 'cube', 'role' => 'user', 'description' => 'dashboard.welcome.features.webhooks'],
+        ['label' => 'dashboard.nav.debts', 'route' => 'debts.index', 'active' => ['debts.*', 'receivables.*'], 'icon' => 'cube', 'role' => 'user', 'description' => 'dashboard.welcome.features.debts'],
+        ['label' => 'dashboard.nav.users', 'route' => 'users.index', 'active' => 'users.*', 'icon' => 'users', 'role' => 'admin', 'description' => 'dashboard.welcome.features.users'],
     ],
 
     'icons' => [

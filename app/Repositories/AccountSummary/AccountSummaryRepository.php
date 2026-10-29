@@ -4,6 +4,7 @@ namespace App\Repositories\AccountSummary;
 
 use App\Enums\RecordType;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class AccountSummaryRepository implements AccountSummaryRepositoryInterface
@@ -223,7 +224,7 @@ class AccountSummaryRepository implements AccountSummaryRepositoryInterface
         $accountIds = array_values(array_unique($accountIds));
 
         // Whole months are those of the totals timezone, so the range is cut along its month borders.
-        $timezone = $this->totalsTimezone();
+        $timezone = $this->totalsTimezone($accountIds[0] ?? null);
         $start = $start->setTimezone($timezone);
         $end = $end->setTimezone($timezone);
 
@@ -271,7 +272,7 @@ class AccountSummaryRepository implements AccountSummaryRepositoryInterface
     {
         foreach (array_unique($accountIds) as $accountId) {
             $months = [];
-            $timezone = $this->totalsTimezone();
+            $timezone = $this->totalsTimezone($accountId);
 
             $records = DB::table('records')
                 ->where(fn ($query) => $query->where('account_id', $accountId)->orWhere('to_account_id', $accountId))
@@ -338,9 +339,17 @@ class AccountSummaryRepository implements AccountSummaryRepositoryInterface
         }
     }
 
-    public function totalsTimezone(): string
+    public function totalsTimezone(?int $accountId = null): string
     {
-        return (string) (DB::table('users')->orderBy('id')->value('timezone') ?: config('account.totals_timezone', 'UTC'));
+        $users = DB::table('users');
+
+        match (true) {
+            $accountId !== null => $users->join('accounts', 'accounts.user_id', '=', 'users.id')->where('accounts.id', $accountId),
+            Auth::id() !== null => $users->where('users.id', Auth::id()),
+            default => $users->orderBy('users.id'),
+        };
+
+        return (string) ($users->value('users.timezone') ?: config('account.totals_timezone', 'UTC'));
     }
 
     /**

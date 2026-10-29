@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\RoleName;
 use App\Models\User;
 use App\Repositories\User\UserRepositoryInterface;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -32,24 +33,35 @@ class UserManagementService
     /**
      * Create a new user.
      *
-     * @param  array{name: string, email: string, password: string}  $data
+     * @param  array{name: string, email: string, password: string, role?: string}  $data
      */
     public function create(array $data): User
     {
-        return $this->userRepository->create([
+        $user = $this->userRepository->create([
             'name' => $data['name'],
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
         ]);
+
+        // Added by an admin, who vouches for the address.
+        $user->markEmailAsVerified();
+
+        $this->userRepository->syncRole($user, $data['role'] ?? RoleName::User->value);
+
+        return $user;
     }
 
     /**
      * Update an existing user. The password is only rehashed when provided.
      *
-     * @param  array{name: string, email: string, password?: string}  $data
+     * @param  array{name: string, email: string, password?: string, role?: string}  $data
      */
     public function update(User $user, array $data): User
     {
+        if (! empty($data['role'])) {
+            $this->userRepository->syncRole($user, $data['role']);
+        }
+
         $payload = [
             'name' => $data['name'],
             'email' => $data['email'],

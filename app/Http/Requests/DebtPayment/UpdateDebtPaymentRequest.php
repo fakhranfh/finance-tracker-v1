@@ -6,6 +6,7 @@ use App\Models\Debt;
 use App\Models\DebtPayment;
 use App\Models\Record;
 use App\Models\SubDebt;
+use App\Rules\Owned;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -35,8 +36,8 @@ class UpdateDebtPaymentRequest extends FormRequest
         /** @var Debt $debt */
         $debt = $this->route('debt');
         $recordRules = $this->paysWithRecord() ? [
-            'account_id' => ['required', 'integer', 'exists:accounts,id'],
-            'category_id' => ['nullable', 'integer', Rule::exists('categories', 'id')->where('type', $debt->type->recordType()->value)],
+            'account_id' => ['required', 'integer', Owned::exists('accounts')],
+            'category_id' => ['nullable', 'integer', Owned::exists('categories')->where('type', $debt->type->recordType()->value)],
         ] : [];
 
         return [

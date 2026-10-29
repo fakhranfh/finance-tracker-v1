@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Debt;
 
+use App\Rules\Owned;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -27,7 +28,7 @@ class BulkDeleteDebtRequest extends FormRequest
             'search' => ['nullable', 'string'],
             ...DebtFilterRules::rules(),
             'ids' => ['required_without:all', 'array', 'min:1'],
-            'ids.*' => ['integer', 'exists:debts,id'],
+            'ids.*' => ['integer', Owned::exists('debts')],
         ];
     }
 }

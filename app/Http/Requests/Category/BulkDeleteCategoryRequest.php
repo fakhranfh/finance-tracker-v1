@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Category;
 
+use App\Rules\Owned;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -26,7 +27,7 @@ class BulkDeleteCategoryRequest extends FormRequest
             'all' => ['sometimes', 'boolean'],
             'search' => ['nullable', 'string'],
             'ids' => ['required_without:all', 'array', 'min:1'],
-            'ids.*' => ['integer', 'exists:categories,id'],
+            'ids.*' => ['integer', Owned::exists('categories')],
         ];
     }
 }

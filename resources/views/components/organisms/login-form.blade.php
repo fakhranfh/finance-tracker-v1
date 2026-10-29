@@ -26,6 +26,7 @@
             <div class="flex items-center justify-center gap-3">
                 <x-atoms.button type="button" variant="secondary" data-dev-autofill>Autofill</x-atoms.button>
                 <x-atoms.button type="button" variant="secondary" data-dev-auto-login>Auto login</x-atoms.button>
+                <x-atoms.button type="button" variant="secondary" data-dev-auto-login data-admin="1">Auto login admin</x-atoms.button>
             </div>
         @endif
     </form>

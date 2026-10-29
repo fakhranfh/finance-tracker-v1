@@ -11,12 +11,11 @@ const form = document.getElementById('login-form');
 
 wireDevTools(form, loginFixture);
 
-form?.querySelector('[data-dev-auto-login]')?.addEventListener('click', async (event) => {
-    const button = event.currentTarget;
+form?.querySelectorAll('[data-dev-auto-login]').forEach((button) => button.addEventListener('click', async () => {
     setButtonLoading(button, true);
 
     try {
-        const { ok, data } = await post(routes.auth.devAutoLogin, {});
+        const { ok, data } = await post(routes.auth.devAutoLogin, { admin: button.dataset.admin === '1' });
 
         if (ok) {
             storeApiToken(data.token);
@@ -30,7 +29,7 @@ form?.querySelector('[data-dev-auto-login]')?.addEventListener('click', async (e
     } finally {
         setButtonLoading(button, false);
     }
-});
+}));
 
 if (form) {
     form.addEventListener('submit', async (event) => {

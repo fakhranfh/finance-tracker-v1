@@ -93,8 +93,8 @@ interface AccountSummaryRepositoryInterface
     public function rebuild(array $accountIds, array $openings = []): void;
 
     /**
-     * The timezone the monthly totals are bucketed in: the first user's, since accounts are not tied
-     * to a user, or the configured one when there is none. Whole months are those of this timezone.
+     * The timezone the monthly totals are bucketed in: that of the account's owner (or of the signed-in
+     * user, or the oldest one, without an account), else the configured one. Whole months are those of this timezone.
      */
-    public function totalsTimezone(): string;
+    public function totalsTimezone(?int $accountId = null): string;
 }

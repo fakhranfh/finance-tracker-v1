@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToOwnerThrough;
 use App\Models\Concerns\HasUserTimezone;
 use Database\Factories\SubDebtFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -19,7 +20,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class SubDebt extends Model
 {
     /** @use HasFactory<SubDebtFactory> */
-    use HasFactory, HasUserTimezone;
+    use BelongsToOwnerThrough, HasFactory, HasUserTimezone;
 
     /**
      * Get the attributes that should be cast.
@@ -88,5 +89,13 @@ class SubDebt extends Model
     public function unrecordedPayments(): HasMany
     {
         return $this->hasMany(DebtPayment::class);
+    }
+
+    /**
+     * @return array{0: class-string<Model>, 1: string}
+     */
+    protected static function ownerParent(): array
+    {
+        return [Debt::class, 'debt_id'];
     }
 }

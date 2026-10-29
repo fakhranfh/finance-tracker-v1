@@ -21,6 +21,7 @@ class CategoryFactory extends Factory
         $sample = fake()->randomElement(config('category.samples'));
 
         return [
+            'user_id' => fn () => UserFactory::ownerId(),
             'name' => $sample['name'].' '.fake()->unique()->numberBetween(1, 99999),
             'type' => CategoryType::Expense,
             'color' => $sample['color'],

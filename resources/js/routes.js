@@ -105,6 +105,15 @@ export const routes = {
         payment: (id, recordId) => endpoint(`/debts/${id}/payments/${recordId}`),
         generateSubDebts: (id) => endpoint(`/debts/${id}/sub-debts/generate`),
     },
+    users: {
+        index: endpoint('/users'),
+        show: (id) => endpoint(`/users/${id}`),
+        store: endpoint('/users'),
+        update: (id) => endpoint(`/users/${id}`),
+        destroy: (id) => endpoint(`/users/${id}`),
+        bulkDestroy: endpoint('/users'),
+        generate: endpoint('/users/generate'),
+    },
     pages: {
         home: '/',
         login: '/login',
@@ -148,5 +157,8 @@ export const routes = {
         debtSubDebtCreate: (id, type = 'debt') => `/${type === 'receivable' ? 'receivables' : 'debts'}/${id}/sub-debts/create`,
         debtSubDebtEdit: (id, subDebtId, type = 'debt') => `/${type === 'receivable' ? 'receivables' : 'debts'}/${id}/sub-debts/${subDebtId}/edit`,
         debtSubDebts: (id, type = 'debt') => `/${type === 'receivable' ? 'receivables' : 'debts'}/${id}/sub-debts`,
+        users: '/users',
+        userCreate: '/users/create',
+        userEdit: (id) => `/users/${id}/edit`,
     },
 };

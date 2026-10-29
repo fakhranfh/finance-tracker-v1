@@ -5,6 +5,7 @@ namespace App\Http\Requests\DebtPayment;
 use App\Models\Debt;
 use App\Models\Record;
 use App\Models\SubDebt;
+use App\Rules\Owned;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -37,11 +38,11 @@ class StoreDebtPaymentRequest extends FormRequest
         $type = $debt->type->recordType()->value;
 
         return [
-            'record_id' => ['nullable', 'integer', Rule::exists('records', 'id')->where('type', $type)->whereNull('debt_id')],
+            'record_id' => ['nullable', 'integer', Owned::record()->where('type', $type)->whereNull('debt_id')],
             'sub_debt_id' => ['nullable', 'integer', Rule::exists('sub_debts', 'id')->where('debt_id', $debt->id)],
             'create_record' => ['sometimes', 'boolean'],
-            'account_id' => [Rule::requiredIf(fn (): bool => ! $this->filled('record_id') && $this->boolean('create_record', true)), 'nullable', 'integer', 'exists:accounts,id'],
-            'category_id' => ['nullable', 'integer', Rule::exists('categories', 'id')->where('type', $type)],
+            'account_id' => [Rule::requiredIf(fn (): bool => ! $this->filled('record_id') && $this->boolean('create_record', true)), 'nullable', 'integer', Owned::exists('accounts')],
+            'category_id' => ['nullable', 'integer', Owned::exists('categories')->where('type', $type)],
             'amount' => ['required_without:record_id', 'integer', 'gt:0', 'max:999999999999'],
             'note' => ['nullable', 'string'],
             'recorded_at' => ['required_without:record_id', 'date'],

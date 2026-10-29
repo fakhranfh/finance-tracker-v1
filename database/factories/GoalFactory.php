@@ -22,6 +22,7 @@ class GoalFactory extends Factory
         $target = $sample['target'];
 
         return [
+            'user_id' => fn () => UserFactory::ownerId(),
             'name' => $sample['name'].' '.fake()->unique()->numberBetween(1, 99999),
             'target_amount' => $target,
             'saved_amount' => fake()->numberBetween(0, $target / 1000) * 1000,

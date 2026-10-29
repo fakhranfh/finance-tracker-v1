@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Record;
 
+use App\Rules\Owned;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -27,7 +28,7 @@ class BulkDeleteRecordRequest extends FormRequest
             'search' => ['nullable', 'string'],
             ...RecordFilterRules::rules(),
             'ids' => ['required_without:all', 'array', 'min:1'],
-            'ids.*' => ['integer', 'exists:records,id'],
+            'ids.*' => ['integer', Owned::record()],
         ];
     }
 }

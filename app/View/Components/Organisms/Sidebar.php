@@ -13,7 +13,10 @@ class Sidebar extends Component
 
     public function __construct()
     {
-        $this->navItems = config('sidebar.nav');
+        $this->navItems = array_values(array_filter(
+            config('sidebar.nav'),
+            fn (array $item) => ! isset($item['role']) || auth()->user()?->hasRole($item['role']),
+        ));
         $this->icons = config('sidebar.icons');
     }
 
