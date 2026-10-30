@@ -49,6 +49,7 @@ return [
         'period' => 'Periode',
         'all_time' => 'Semua waktu',
         'periods' => [
+            'today' => 'Hari ini',
             'this_month' => 'Bulan ini',
             'last_month' => 'Bulan lalu',
             'last_30_days' => '30 hari terakhir',

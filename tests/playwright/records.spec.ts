@@ -73,7 +73,7 @@ test.describe('Manage Records', () => {
         await page.getByLabel('Account', { exact: true }).selectOption({ label: 'E2E Cash' });
         await page.getByLabel('Amount', { exact: true }).fill('12500');
         await page.getByLabel('Note', { exact: true }).fill(mainValue);
-        await page.getByLabel('Date', { exact: true }).fill('2026-01-15T10:30');
+        await page.getByLabel('Date', { exact: true }).fill(`${new Date().toLocaleDateString('sv')}T10:30`);
         await page.getByRole('button', { name: 'Save' }).click();
 
         await expect(page).toHaveURL('/records');

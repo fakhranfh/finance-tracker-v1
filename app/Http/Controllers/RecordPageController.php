@@ -135,7 +135,7 @@ class RecordPageController extends Controller
                 'key' => 'period',
                 'label' => __('records.filters.period'),
                 'allLabel' => __('records.filters.all_time'),
-                'options' => collect(['this_month', 'last_month', 'last_30_days', 'this_year'])
+                'options' => collect(['today', 'this_month', 'last_month', 'last_30_days', 'this_year'])
                     ->map(fn (string $preset) => ['value' => $preset, 'label' => __("records.filters.periods.{$preset}")])
                     ->all(),
             ],
