@@ -25,6 +25,7 @@ test.describe('Import records', () => {
     test('imports a file after mapping columns, accounts and categories', async ({ page }) => {
         const { email, password } = seedUser();
         const stamp = Date.now();
+        const today = new Date().toLocaleDateString('sv');
 
         await login(page, email, password);
         await createAccount(page, `E2E Cash ${stamp}`);
@@ -36,8 +37,8 @@ test.describe('Import records', () => {
 
         await page.locator('#file').setInputFiles(csvFile([
             'Date,Type,Account,Category,Amount,Note',
-            `2026-10-01 08:00:00,expense,E2E Cash ${stamp},Imported Food,25000,e2e import lunch ${stamp}`,
-            `2026-10-02 09:00:00,income,Imported Bank ${stamp},,1000000,e2e import salary ${stamp}`,
+            `${today} 08:00:00,expense,E2E Cash ${stamp},Imported Food,25000,e2e import lunch ${stamp}`,
+            `${today} 09:00:00,income,Imported Bank ${stamp},,1000000,e2e import salary ${stamp}`,
         ]));
         await page.getByRole('button', { name: 'Upload and continue' }).click();
 
@@ -79,13 +80,14 @@ test.describe('Import records', () => {
     test('sends records to the Unmapped account when no account column is mapped', async ({ page }) => {
         const { email, password } = seedUser();
         const stamp = Date.now();
+        const today = new Date().toLocaleDateString('sv');
 
         await login(page, email, password);
         await page.goto('/records/import');
 
         await page.locator('#file').setInputFiles(csvFile([
             'Date,Amount,Note',
-            `2026-10-03,-5000,e2e unmapped ${stamp}`,
+            `${today} 12:00:00,-5000,e2e unmapped ${stamp}`,
         ]));
         await page.getByRole('button', { name: 'Upload and continue' }).click();
         await page.getByRole('button', { name: 'Continue', exact: true }).click();
@@ -158,6 +160,7 @@ test.describe('Import records', () => {
     test('shows a progress circle explaining what each step is doing', async ({ page }) => {
         const { email, password } = seedUser();
         const stamp = Date.now();
+        const today = new Date().toLocaleDateString('sv');
 
         await login(page, email, password);
         await page.goto('/records/import');
@@ -170,7 +173,7 @@ test.describe('Import records', () => {
             });
         }
 
-        await page.locator('#file').setInputFiles(csvFile(['Date,Amount,Note', `2026-10-03,-5000,e2e progress ${stamp}`]));
+        await page.locator('#file').setInputFiles(csvFile(['Date,Amount,Note', `${today} 12:00:00,-5000,e2e progress ${stamp}`]));
         await page.getByRole('button', { name: 'Upload and continue' }).click();
         await expect(page.getByText('Step 2 of 4')).toBeVisible();
 

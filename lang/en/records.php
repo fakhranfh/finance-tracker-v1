@@ -49,6 +49,7 @@ return [
         'period' => 'Period',
         'all_time' => 'All time',
         'periods' => [
+            'today' => 'Today',
             'this_month' => 'This month',
             'last_month' => 'Last month',
             'last_30_days' => 'Last 30 days',
