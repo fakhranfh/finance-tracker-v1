@@ -46,4 +46,12 @@ class Category extends Model
     {
         return $this->hasMany(Record::class);
     }
+
+    /**
+     * @return HasMany<CycleType, $this>
+     */
+    public function cycleTypes(): HasMany
+    {
+        return $this->hasMany(CycleType::class);
+    }
 }

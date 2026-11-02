@@ -73,4 +73,9 @@ interface CategoryRepositoryInterface
      * @return Collection<int, Category>
      */
     public function allNamed(): Collection;
+
+    /**
+     * Paginate the expense categories (what the user pays for), by name, optionally filtered by search.
+     */
+    public function paginateExpense(int $perPage, ?string $search = null): LengthAwarePaginator;
 }
