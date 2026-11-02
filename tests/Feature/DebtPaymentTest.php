@@ -277,7 +277,7 @@ it('lists records and payments without a record together', function () {
     $debt = Debt::factory()->create(['amount' => 300000]);
     $sub = SubDebt::factory()->for($debt)->create(['amount' => 300000]);
     $record = Record::factory()->payingOff($debt)->create(['amount' => 10000, 'note' => 'Lewat rekening', 'recorded_at' => '2026-10-10 10:00:00']);
-    $payment = DebtPayment::query()->create(['debt_id' => $debt->id, 'sub_debt_id' => $sub->id, 'amount' => 20000, 'note' => 'Tunai', 'paid_at' => '2026-10-12 10:00:00']);
+    $payment = DebtPayment::query()->create(['debt_id' => $debt->id, 'sub_debt_id' => $sub->id, 'amount' => 20000, 'note' => 'Setoran kas', 'paid_at' => '2026-10-12 10:00:00']);
     DebtPayment::query()->create(['debt_id' => Debt::factory()->create()->id, 'amount' => 5000, 'paid_at' => now()]);
 
     $all = $this->actingAs($actor)->getJson("/api/debts/{$debt->id}/payments");
@@ -291,7 +291,7 @@ it('lists records and payments without a record together', function () {
     expect($all->json('summary.paid'))->toBe(30000);
 
     expect($this->actingAs($actor)->getJson("/api/debts/{$debt->id}/payments?sub_debt_id={$sub->id}")->json('data'))->toHaveCount(1);
-    expect($this->actingAs($actor)->getJson("/api/debts/{$debt->id}/payments?search=Tunai")->json('data'))->toHaveCount(1);
+    expect($this->actingAs($actor)->getJson("/api/debts/{$debt->id}/payments?search=Setoran")->json('data'))->toHaveCount(1);
     expect($this->actingAs($actor)->getJson("/api/debts/{$debt->id}/payments?sort=amount&direction=asc")->json('data.0.amount'))->toBe(10000);
 });
 

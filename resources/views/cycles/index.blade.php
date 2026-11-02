@@ -84,6 +84,9 @@
                     {{ __('cycles.entries.select_all') }}
                 </label>
                 <div class="flex items-center gap-3">
+                    <x-atoms.button type="button" id="cycles-select-all-matching" variant="secondary" class="!hidden" data-template="{{ __('cycles.entries.select_all_matching', ['total' => ':total']) }}">
+                        {{ __('cycles.entries.select_all_matching', ['total' => '']) }}
+                    </x-atoms.button>
                     <span id="cycles-selected-count" class="hidden font-body text-body-sm text-on-surface-variant" data-template="{{ __('cycles.entries.selected', ['n' => ':n']) }}"></span>
                     <x-atoms.button type="button" id="cycles-bulk-delete" variant="danger" class="hidden">
                         {{ __('cycles.entries.delete_selected') }}
