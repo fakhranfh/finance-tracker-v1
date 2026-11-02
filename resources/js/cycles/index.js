@@ -187,7 +187,35 @@ function render() {
     document.querySelector('[data-summary="monthly"]').textContent = formatMoney(current.monthly);
 }
 
-/** Shows how many items are ticked, the bulk delete button and the state of the select-all box. */
+/** Ids of every item matching the current search across all pages, fetched at the API's largest page size. */
+async function fetchAllIds() {
+    const ids = [];
+    const query = search.value.trim();
+    let pageNumber = 1;
+    let lastPage = 1;
+
+    do {
+        const params = new URLSearchParams({ page: pageNumber, per_page: 100 });
+
+        if (query) {
+            params.set('search', query);
+        }
+
+        const response = await get(`${listUrl()}?${params}`);
+
+        if (!response.ok) {
+            throw new Error('select all failed');
+        }
+
+        response.data.data.forEach((item) => ids.push(item.id));
+        lastPage = response.data.meta.last_page;
+        pageNumber += 1;
+    } while (pageNumber <= lastPage);
+
+    return ids;
+}
+
+/** Shows how many items are ticked,the bulk delete button and the state of the select-all box. */
 function syncSelection() {
     const count = selected.size;
     const countLabel = document.getElementById('cycles-selected-count');
@@ -200,6 +228,12 @@ function syncSelection() {
     selectAll.checked = pageIds.length > 0 && onPage === pageIds.length;
     selectAll.indeterminate = onPage > 0 && onPage < pageIds.length;
     selectAll.disabled = pageIds.length === 0;
+
+    const selectMatching = document.getElementById('cycles-select-all-matching');
+    const total = state.meta?.total ?? 0;
+
+    selectMatching.querySelector('[data-button-label]').textContent = selectMatching.dataset.template.replace(':total', total);
+    selectMatching.classList.toggle('!hidden', total <= pageIds.length || count >= total);
 }
 
 /** The item (category, item name or purchase) a card or row belongs to. */
@@ -227,6 +261,23 @@ function setupSelection(openBulkDelete) {
         pageIds.forEach((id) => (event.target.checked ? selected.add(id) : selected.delete(id)));
         container.querySelectorAll('[data-select]').forEach((box) => (box.checked = event.target.checked));
         syncSelection();
+    });
+
+    // Ticks every item matching the search on all pages, not only the ones shown.
+    const selectMatching = document.getElementById('cycles-select-all-matching');
+
+    selectMatching.addEventListener('click', async () => {
+        setButtonLoading(selectMatching, true);
+
+        try {
+            (await fetchAllIds()).forEach((id) => selected.add(id));
+            container.querySelectorAll('[data-select]').forEach((box) => (box.checked = true));
+        } catch {
+            showError(labels.error_generic);
+        } finally {
+            setButtonLoading(selectMatching, false);
+            syncSelection();
+        }
     });
 
     document.getElementById('cycles-bulk-delete').addEventListener('click', openBulkDelete);

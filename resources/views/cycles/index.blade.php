@@ -84,6 +84,9 @@
                     {{ __('cycles.entries.select_all') }}
                 </label>
                 <div class="flex items-center gap-3">
+                    <x-atoms.button type="button" id="cycles-select-all-matching" variant="secondary" class="!hidden" data-template="{{ __('cycles.entries.select_all_matching', ['total' => ':total']) }}">
+                        {{ __('cycles.entries.select_all_matching', ['total' => '']) }}
+                    </x-atoms.button>
                     <span id="cycles-selected-count" class="hidden font-body text-body-sm text-on-surface-variant" data-template="{{ __('cycles.entries.selected', ['n' => ':n']) }}"></span>
                     <x-atoms.button type="button" id="cycles-bulk-delete" variant="danger" class="hidden">
                         {{ __('cycles.entries.delete_selected') }}
@@ -94,7 +97,7 @@
             @if ($level === 'entries')
                 <ol id="cycles-timeline" class="space-y-4"></ol>
             @else
-                <div id="cycles-grid" class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4"></div>
+                <div id="cycles-grid" class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"></div>
             @endif
 
             <p id="cycles-empty" class="mt-6 hidden rounded-lg border border-dashed border-outline-variant bg-surface px-6 py-10 text-center font-body text-body-md text-on-surface-variant"></p>

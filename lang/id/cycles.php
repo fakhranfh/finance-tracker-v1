@@ -20,6 +20,7 @@ return [
     'entries' => [
         'add' => 'Tambah pembelian',
         'select_all' => 'Pilih semua di halaman ini',
+        'select_all_matching' => 'Pilih semua :total',
         'selected' => ':n dipilih',
         'delete_selected' => 'Hapus yang dipilih',
     ],
