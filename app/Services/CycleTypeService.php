@@ -25,6 +25,31 @@ class CycleTypeService
     }
 
     /**
+     * Rename an item type or change its icon.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public function update(CycleType $type, array $data): CycleType
+    {
+        return $this->detail($this->cycleTypeRepository->update($type, $data));
+    }
+
+    public function delete(CycleType $type): void
+    {
+        $this->cycleTypeRepository->delete($type);
+    }
+
+    /**
+     * Delete several item types of the category at once.
+     *
+     * @param  array<int, int>  $ids
+     */
+    public function deleteMany(Category $category, array $ids): void
+    {
+        $this->cycleTypeRepository->deleteMany($category->id, $ids);
+    }
+
+    /**
      * A page of the category's item types, each carrying `avg_days` and `monthly`.
      *
      * @return LengthAwarePaginator<int, CycleType>

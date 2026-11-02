@@ -35,6 +35,25 @@ interface CycleTypeRepositoryInterface
     public function create(int $categoryId, array $data): CycleType;
 
     /**
+     * Update an item type.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public function update(CycleType $type, array $data): CycleType;
+
+    /**
+     * Delete an item type (its purchases go with it).
+     */
+    public function delete(CycleType $type): void;
+
+    /**
+     * Delete the given item types of the category.
+     *
+     * @param  array<int, int>  $ids
+     */
+    public function deleteMany(int $categoryId, array $ids): void;
+
+    /**
      * Load the item type's category (id and name) and its purchases, oldest first.
      */
     public function loadDetail(CycleType $type): CycleType;

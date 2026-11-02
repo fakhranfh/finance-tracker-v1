@@ -1,11 +1,18 @@
 <template id="cycle-tile-template">
-    <a href="#" class="flex min-h-36 flex-col items-center justify-center gap-2 rounded-lg border border-outline-variant bg-surface p-4 text-center transition-colors hover:border-primary hover:bg-primary-fixed/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40" data-tile>
-        <span class="flex size-14 items-center justify-center rounded-full bg-primary-fixed text-primary">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="size-7" aria-hidden="true" data-field="icon"></svg>
-        </span>
-        <span class="font-body text-body-md font-medium text-on-surface" data-field="name"></span>
-        <span class="font-body text-body-sm text-on-surface-variant" data-field="meta"></span>
-    </a>
+    <div class="relative flex flex-col rounded-lg border border-outline-variant bg-surface transition-colors hover:border-primary">
+        <input type="checkbox" class="absolute left-3 top-3 z-10 size-5 cursor-pointer rounded border-outline-variant text-primary focus:outline-none focus:ring-2 focus:ring-primary/20" data-select>
+        <a href="#" class="flex min-h-36 flex-1 flex-col items-center justify-center gap-2 rounded-t-lg p-4 text-center hover:bg-primary-fixed/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40" data-tile>
+            <span class="flex size-14 items-center justify-center rounded-full bg-primary-fixed text-primary">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="size-7" aria-hidden="true" data-field="icon"></svg>
+            </span>
+            <span class="font-body text-body-md font-medium text-on-surface" data-field="name"></span>
+            <span class="font-body text-body-sm text-on-surface-variant" data-field="meta"></span>
+        </a>
+        <div class="flex items-center justify-center gap-4 border-t border-outline-variant px-2 font-body text-body-sm">
+            <button type="button" class="min-h-11 cursor-pointer text-primary hover:underline" data-edit>{{ __('cycles.detail.edit') }}</button>
+            <button type="button" class="min-h-11 cursor-pointer text-error hover:underline" data-delete>{{ __('cycles.detail.delete') }}</button>
+        </div>
+    </div>
 </template>
 
 <template id="cycle-add-tile-template">

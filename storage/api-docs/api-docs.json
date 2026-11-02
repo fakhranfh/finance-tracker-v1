@@ -1192,6 +1192,60 @@
                         "description": "Validation error (the name must be unique within the category)"
                     }
                 }
+            },
+            "delete": {
+                "tags": [
+                    "Usage Cycle"
+                ],
+                "summary": "Delete several item names of a category at once, with their purchases",
+                "operationId": "b2683620900ce1c708c53a6b234c9d19",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "ids"
+                                ],
+                                "properties": {
+                                    "ids": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        },
+                                        "example": [
+                                            1,
+                                            2,
+                                            3
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "Item names deleted"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "422": {
+                        "description": "Validation error (every id must be an item name of this category)"
+                    }
+                }
             }
         },
         "/cycle-categories/{id}/types/generate": {
@@ -1266,6 +1320,83 @@
                 "responses": {
                     "200": {
                         "description": "The item type with category, avg_days and monthly"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Usage Cycle"
+                ],
+                "summary": "Rename an item name or change its icon",
+                "operationId": "a149d4ace69c01733a878ee820bf64c7",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Sabun Mandi",
+                                        "maxLength": 40
+                                    },
+                                    "icon": {
+                                        "type": "string",
+                                        "example": "sparkles"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Item name updated"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "422": {
+                        "description": "Validation error (the name must be unique within the category)"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Usage Cycle"
+                ],
+                "summary": "Delete an item name together with all of its purchases",
+                "operationId": "ac78b0fa8a5f951042205ffca2216ff0",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Item name deleted"
                     },
                     "404": {
                         "description": "Not found"

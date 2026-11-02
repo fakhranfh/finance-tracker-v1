@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Api;
 
 use App\Enums\CategoryType;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\CycleType\BulkDeleteCycleTypeRequest;
 use App\Http\Requests\CycleType\StoreCycleTypeRequest;
+use App\Http\Requests\CycleType\UpdateCycleTypeRequest;
 use App\Http\Resources\CycleTypeResource;
 use App\Models\Category;
 use App\Models\CycleType;
@@ -15,6 +17,7 @@ use App\Traits\CycleType\GeneratesSampleData;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Http\Response;
 
 class CycleTypeController extends Controller
 {
@@ -57,6 +60,25 @@ class CycleTypeController extends Controller
         $type = $this->cycleTypeService->create($category, $request->validated());
 
         return (new CycleTypeResource($this->cycleTypeService->detail($type)))->response()->setStatusCode(201);
+    }
+
+    public function update(UpdateCycleTypeRequest $request, CycleType $type): CycleTypeResource
+    {
+        return new CycleTypeResource($this->cycleTypeService->update($type, $request->validated()));
+    }
+
+    public function destroy(CycleType $type): Response
+    {
+        $this->cycleTypeService->delete($type);
+
+        return response()->noContent();
+    }
+
+    public function bulkDestroy(BulkDeleteCycleTypeRequest $request, Category $category): Response
+    {
+        $this->cycleTypeService->deleteMany($category, $request->validated('ids'));
+
+        return response()->noContent();
     }
 
     public function show(CycleType $type): CycleTypeResource

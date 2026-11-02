@@ -77,6 +77,7 @@ export const routes = {
     },
     cycles: {
         categories: endpoint('/cycle-categories'),
+        type: (id) => endpoint(`/cycle-types/${id}`),
         categoryTypes: (id) => endpoint(`/cycle-categories/${id}/types`),
         typeEntries: (id) => endpoint(`/cycle-types/${id}/entries`),
         generateCategories: endpoint('/cycle-categories/generate'),

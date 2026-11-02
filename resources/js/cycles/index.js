@@ -28,7 +28,7 @@ const entryTemplate = document.getElementById('cycle-entry-template');
 
 /** Ids of the purchases ticked for a bulk delete; they stay ticked while paging. */
 const selected = new Set();
-let pageEntryIds = [];
+let pageIds = [];
 
 const state = { items: [], meta: null, monthlyTotal: 0, category: null, type: null };
 
@@ -113,8 +113,16 @@ function scope() {
 const fieldOf = (node, name) => node.querySelector(`[data-field="${name}"]`);
 
 function tileNode(item) {
-    const tile = tileTemplate.content.firstElementChild.cloneNode(true);
-    const icon = fieldOf(tile, 'icon');
+    const card = tileTemplate.content.firstElementChild.cloneNode(true);
+    const tile = card.querySelector('[data-tile]');
+    const icon = fieldOf(card, 'icon');
+    const select = card.querySelector('[data-select]');
+
+    card.dataset.id = item.id;
+    select.checked = selected.has(item.id);
+    select.setAttribute('aria-label', item.name);
+    card.querySelector('[data-edit]').setAttribute('aria-label', `${card.querySelector('[data-edit]').textContent.trim()} ${item.name}`);
+    card.querySelector('[data-delete]').setAttribute('aria-label', `${card.querySelector('[data-delete]').textContent.trim()} ${item.name}`);
 
     tile.href = level === 'groups' ? routes.pages.cycleGroup(item.id) : routes.pages.cycleType(state.category.id, item.id);
     icon.innerHTML = icons[item.icon] ?? icons[page.dataset.defaultIcon];
@@ -123,10 +131,10 @@ function tileNode(item) {
         icon.style.color = item.color;
     }
 
-    fieldOf(tile, 'name').textContent = item.name;
-    fieldOf(tile, 'meta').textContent = item.monthly ? t('monthly_short', { amount: formatMoney(item.monthly) }) : '';
+    fieldOf(card, 'name').textContent = item.name;
+    fieldOf(card, 'meta').textContent = item.monthly ? t('monthly_short', { amount: formatMoney(item.monthly) }) : '';
 
-    return tile;
+    return card;
 }
 
 function entryNode(entry) {
@@ -167,11 +175,11 @@ function render() {
     if (level !== 'entries' && !query && isLast) {
         const addTile = addTileTemplate.content.firstElementChild.cloneNode(true);
 
-        fieldOf(addTile, 'label').textContent = document.getElementById('cycle-tile-modal-title').textContent;
+        fieldOf(addTile, 'label').textContent = document.getElementById('cycle-tile-form').dataset.addTitle;
         nodes.push(addTile);
     }
 
-    pageEntryIds = level === 'entries' ? state.items.map((entry) => entry.id) : [];
+    pageIds = state.items.map((item) => item.id);
     container.replaceChildren(...nodes);
     syncSelection();
     emptyState.textContent = labels[query ? 'no_results' : `empty_${level}`];
@@ -179,23 +187,49 @@ function render() {
     document.querySelector('[data-summary="monthly"]').textContent = formatMoney(current.monthly);
 }
 
-/** Shows how many purchases are ticked, the bulk delete button and the state of the select-all box. */
+/** Shows how many items are ticked, the bulk delete button and the state of the select-all box. */
 function syncSelection() {
-    if (level !== 'entries') {
-        return;
-    }
-
     const count = selected.size;
     const countLabel = document.getElementById('cycles-selected-count');
     const selectAll = document.getElementById('cycles-select-all');
-    const onPage = pageEntryIds.filter((id) => selected.has(id)).length;
+    const onPage = pageIds.filter((id) => selected.has(id)).length;
 
     countLabel.textContent = countLabel.dataset.template.replace(':n', count);
     countLabel.classList.toggle('hidden', count === 0);
     document.getElementById('cycles-bulk-delete').classList.toggle('hidden', count === 0);
-    selectAll.checked = pageEntryIds.length > 0 && onPage === pageEntryIds.length;
-    selectAll.indeterminate = onPage > 0 && onPage < pageEntryIds.length;
-    selectAll.disabled = pageEntryIds.length === 0;
+    selectAll.checked = pageIds.length > 0 && onPage === pageIds.length;
+    selectAll.indeterminate = onPage > 0 && onPage < pageIds.length;
+    selectAll.disabled = pageIds.length === 0;
+}
+
+/** The item (category, item name or purchase) a card or row belongs to. */
+const itemOf = (node) => state.items.find((item) => item.id === Number(node.closest('[data-id]').dataset.id));
+
+/** Ticking items, select-all on the page and the bulk delete button; `openBulkDelete` asks for the confirmation. */
+function setupSelection(openBulkDelete) {
+    container.addEventListener('change', (event) => {
+        const box = event.target.closest('[data-select]');
+
+        if (box) {
+            const id = itemOf(box).id;
+
+            if (box.checked) {
+                selected.add(id);
+            } else {
+                selected.delete(id);
+            }
+
+            syncSelection();
+        }
+    });
+
+    document.getElementById('cycles-select-all').addEventListener('change', (event) => {
+        pageIds.forEach((id) => (event.target.checked ? selected.add(id) : selected.delete(id)));
+        container.querySelectorAll('[data-select]').forEach((box) => (box.checked = event.target.checked));
+        syncSelection();
+    });
+
+    document.getElementById('cycles-bulk-delete').addEventListener('click', openBulkDelete);
 }
 
 async function refresh(message) {
@@ -206,19 +240,96 @@ async function refresh(message) {
 
 function setupTileModal() {
     const form = document.getElementById('cycle-tile-form');
+    const deleteButton = document.getElementById('confirm-delete-tile');
+    const bulkButton = document.getElementById('confirm-bulk-delete-tiles');
+    let editing = null;
+    let target = null;
 
-    const open = () => {
+    const open = (item = null) => {
+        editing = item;
         clearFieldErrors(form);
         form.reset();
+
+        if (item) {
+            form.elements.namedItem('tile_name').value = item.name;
+            form.elements.namedItem('icon').value = item.icon;
+        }
+
+        document.getElementById('cycle-tile-modal-title').textContent = item ? form.dataset.editTitle : form.dataset.addTitle;
         openModal('cycle-tile-modal');
     };
 
     container.addEventListener('click', (event) => {
+        const edit = event.target.closest('[data-edit]');
+        const remove = event.target.closest('[data-delete]');
+
         if (event.target.closest('[data-add-tile]')) {
             open();
+        } else if (edit) {
+            open(itemOf(edit));
+        } else if (remove) {
+            target = itemOf(remove);
+            openModal('cycle-tile-delete-modal');
         }
     });
-    document.getElementById('cycles-add-category')?.addEventListener('click', open);
+    document.getElementById('cycles-add-category')?.addEventListener('click', () => open());
+    setupSelection(() => openModal('cycle-tile-bulk-delete-modal'));
+
+    /** Runs a delete request behind the confirm button's loading state, then reloads the list. */
+    async function destroy(button, modalId, request, message) {
+        setButtonLoading(button, true);
+
+        try {
+            const { ok, data } = await request();
+
+            if (ok) {
+                await refresh(message);
+            } else {
+                showError(data.message ?? labels.error_generic);
+            }
+        } catch {
+            showError(labels.error_generic);
+        } finally {
+            setButtonLoading(button, false);
+            closeModal(modalId);
+        }
+    }
+
+    // A category is a normal expense category, so deleting it here deletes it everywhere; an item name only here.
+    deleteButton.addEventListener('click', () =>
+        destroy(
+            deleteButton,
+            'cycle-tile-delete-modal',
+            async () => {
+                const response = await del(level === 'groups' ? routes.categories.destroy(target.id) : routes.cycles.type(target.id));
+
+                if (response.ok) {
+                    selected.delete(target.id);
+                }
+
+                return response;
+            },
+            level === 'groups' ? labels.flash_group_deleted : labels.flash_type_deleted,
+        ),
+    );
+
+    bulkButton.addEventListener('click', () =>
+        destroy(
+            bulkButton,
+            'cycle-tile-bulk-delete-modal',
+            async () => {
+                const ids = [...selected];
+                const response = await del(level === 'groups' ? routes.categories.bulkDestroy : routes.cycles.categoryTypes(state.category.id), { ids });
+
+                if (response.ok) {
+                    selected.clear();
+                }
+
+                return response;
+            },
+            level === 'groups' ? labels.flash_groups_deleted : labels.flash_types_deleted,
+        ),
+    );
 
     form.addEventListener('submit', async (event) => {
         event.preventDefault();
@@ -246,15 +357,11 @@ function setupTileModal() {
         setButtonLoading(submit, true);
 
         try {
-            // A new category is a normal expense category, so it also shows up in Manage Categories.
-            const { ok, status, data } =
-                level === 'groups'
-                    ? await post(routes.categories.store, { name, type: 'expense', color: '#2563EB', icon })
-                    : await post(routes.cycles.categoryTypes(state.category.id), { name, icon });
+            const { ok, status, data } = await saveRequest(editing, name, icon);
 
             if (ok) {
                 closeModal('cycle-tile-modal');
-                await refresh(level === 'groups' ? labels.flash_group : labels.flash_type);
+                await refresh(saveMessage(editing));
             } else if (status === 422 && data.errors) {
                 showFieldErrors(form, { tile_name: data.errors.name ?? Object.values(data.errors)[0] });
             } else {
@@ -266,6 +373,25 @@ function setupTileModal() {
             setButtonLoading(submit, false);
         }
     });
+}
+
+/** Creates or updates a category (a normal expense category, also shown in Manage Categories) or an item name. */
+function saveRequest(editing, name, icon) {
+    if (level === 'groups') {
+        return editing
+            ? put(routes.categories.update(editing.id), { name, type: 'expense', color: editing.color, icon })
+            : post(routes.categories.store, { name, type: 'expense', color: '#2563EB', icon });
+    }
+
+    return editing ? put(routes.cycles.type(editing.id), { name, icon }) : post(routes.cycles.categoryTypes(state.category.id), { name, icon });
+}
+
+function saveMessage(editing) {
+    if (level === 'groups') {
+        return editing ? labels.flash_group_updated : labels.flash_group;
+    }
+
+    return editing ? labels.flash_type_updated : labels.flash_type;
 }
 
 function setupEntries() {
@@ -312,8 +438,6 @@ function setupEntries() {
     });
 
     document.getElementById('cycle-fab-add').addEventListener('click', () => modals.openAdd(state.type.last_entry));
-    const entryOf = (node) => state.items.find((entry) => entry.id === Number(node.closest('li').dataset.id));
-
     container.addEventListener('click', (event) => {
         const actions = { '[data-finish]': modals.openFinish, '[data-edit]': modals.openEdit, '[data-delete]': modals.openDelete };
 
@@ -321,34 +445,12 @@ function setupEntries() {
             const button = event.target.closest(selector);
 
             if (button) {
-                open(entryOf(button));
+                open(itemOf(button));
             }
         });
     });
 
-    container.addEventListener('change', (event) => {
-        const box = event.target.closest('[data-select]');
-
-        if (box) {
-            const id = entryOf(box).id;
-
-            if (box.checked) {
-                selected.add(id);
-            } else {
-                selected.delete(id);
-            }
-
-            syncSelection();
-        }
-    });
-
-    document.getElementById('cycles-select-all').addEventListener('change', (event) => {
-        pageEntryIds.forEach((id) => (event.target.checked ? selected.add(id) : selected.delete(id)));
-        container.querySelectorAll('[data-select]').forEach((box) => (box.checked = event.target.checked));
-        syncSelection();
-    });
-
-    document.getElementById('cycles-bulk-delete').addEventListener('click', () => modals.openBulkDelete([...selected]));
+    setupSelection(() => modals.openBulkDelete([...selected]));
 }
 
 /** Loads the page the pager and search ask for, behind the skeleton, and ignores an answer that a newer request replaced. */
