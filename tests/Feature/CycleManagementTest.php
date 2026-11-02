@@ -364,6 +364,76 @@ it('validates a bulk delete of purchases', function () {
     $this->assertDatabaseHas('cycle_entries', ['id' => $elsewhere->id]);
 });
 
+it('renames an item name and changes its icon', function () {
+    $this->withoutMiddleware(PreventRequestForgery::class);
+    $actor = User::factory()->create();
+    $type = cycleTypeWithHistory();
+
+    $this->actingAs($actor)->putJson("/api/cycle-types/{$type->id}", ['name' => 'Sabun Muka', 'icon' => 'sun'])
+        ->assertOk()
+        ->assertJsonPath('data.name', 'Sabun Muka')
+        ->assertJsonPath('data.icon', 'sun')
+        ->assertJsonPath('data.monthly', 60000);
+
+    $this->assertDatabaseHas('cycle_types', ['id' => $type->id, 'name' => 'Sabun Muka', 'icon' => 'sun']);
+    $this->actingAs($actor)->putJson("/api/cycle-types/{$type->id}", ['name' => 'Sabun Muka'])->assertOk();
+});
+
+it('validates an item name update', function () {
+    $this->withoutMiddleware(PreventRequestForgery::class);
+    $actor = User::factory()->create();
+    $type = CycleType::factory()->create(['name' => 'Serum']);
+    $sibling = CycleType::factory()->create(['category_id' => $type->category_id, 'name' => 'Toner']);
+    $url = "/api/cycle-types/{$sibling->id}";
+
+    $this->actingAs($actor)->putJson($url, [])->assertUnprocessable()->assertJsonValidationErrors('name');
+    $this->actingAs($actor)->putJson($url, ['name' => str_repeat('a', 41)])->assertUnprocessable()->assertJsonValidationErrors('name');
+    $this->actingAs($actor)->putJson($url, ['name' => 'Serum'])->assertUnprocessable()->assertJsonValidationErrors('name');
+    $this->actingAs($actor)->putJson($url, ['name' => 'Toner', 'icon' => 'nope'])->assertUnprocessable()->assertJsonValidationErrors('icon');
+    $this->actingAs($actor)->putJson($url, ['name' => 'Toner'])->assertOk();
+});
+
+it('deletes an item name with its purchases', function () {
+    $this->withoutMiddleware(PreventRequestForgery::class);
+    $actor = User::factory()->create();
+    $type = cycleTypeWithHistory();
+
+    $this->actingAs($actor)->deleteJson("/api/cycle-types/{$type->id}")->assertNoContent();
+
+    $this->assertDatabaseMissing('cycle_types', ['id' => $type->id]);
+    $this->assertDatabaseMissing('cycle_entries', ['cycle_type_id' => $type->id]);
+});
+
+it('deletes several item names of a category at once', function () {
+    $this->withoutMiddleware(PreventRequestForgery::class);
+    $actor = User::factory()->create();
+    $category = Category::factory()->create();
+    $first = cycleTypeWithHistory($category);
+    $second = cycleTypeWithHistory($category);
+    $third = cycleTypeWithHistory($category);
+
+    $this->actingAs($actor)->deleteJson("/api/cycle-categories/{$category->id}/types", ['ids' => [$first->id, $third->id]])->assertNoContent();
+
+    $this->assertDatabaseMissing('cycle_types', ['id' => $first->id]);
+    $this->assertDatabaseMissing('cycle_types', ['id' => $third->id]);
+    $this->assertDatabaseMissing('cycle_entries', ['cycle_type_id' => $first->id]);
+    $this->assertDatabaseHas('cycle_types', ['id' => $second->id]);
+    $this->assertDatabaseHas('cycle_entries', ['cycle_type_id' => $second->id]);
+});
+
+it('validates a bulk delete of item names', function () {
+    $this->withoutMiddleware(PreventRequestForgery::class);
+    $actor = User::factory()->create();
+    $type = cycleTypeWithHistory();
+    $elsewhere = CycleType::factory()->create();
+    $url = "/api/cycle-categories/{$type->category_id}/types";
+
+    $this->actingAs($actor)->deleteJson($url, [])->assertUnprocessable()->assertJsonValidationErrors('ids');
+    $this->actingAs($actor)->deleteJson($url, ['ids' => []])->assertUnprocessable()->assertJsonValidationErrors('ids');
+    $this->actingAs($actor)->deleteJson($url, ['ids' => [$elsewhere->id]])->assertUnprocessable()->assertJsonValidationErrors('ids.0');
+    $this->assertDatabaseHas('cycle_types', ['id' => $elsewhere->id]);
+});
+
 it('removes the item types and purchases of a deleted category', function () {
     $actor = User::factory()->create();
     $type = cycleTypeWithHistory();
@@ -396,6 +466,9 @@ it('keeps the usage cycle data of each user apart', function () {
     $this->getJson("/api/cycle-types/{$bobType->id}")->assertNotFound();
     $this->getJson("/api/cycle-types/{$bobType->id}/entries")->assertNotFound();
     $this->getJson("/api/cycle-categories/{$bobCategory->id}/types")->assertNotFound();
+    $this->putJson("/api/cycle-types/{$bobType->id}", ['name' => 'Hijack'])->assertNotFound();
+    $this->deleteJson("/api/cycle-types/{$bobType->id}")->assertNotFound();
+    $this->deleteJson("/api/cycle-categories/{$bobCategory->id}/types", ['ids' => [$bobType->id]])->assertNotFound();
     $this->postJson("/api/cycle-types/{$bobType->id}/entries", ['name' => 'X', 'price' => 1000, 'bought_at' => '2026-10-08'])->assertNotFound();
     $this->getJson("/api/cycle-entries/{$bobEntry->id}")->assertNotFound();
     $this->putJson("/api/cycle-entries/{$bobEntry->id}", ['name' => 'X', 'price' => 1000, 'bought_at' => '2026-10-08'])->assertNotFound();

@@ -437,6 +437,119 @@ test.describe('Usage Cycle', () => {
         await expect(page.locator('[data-tile]')).toContainText('Type 07');
     });
 
+    test('edits, deletes and bulk deletes categories', async ({ page }) => {
+        const { email, password } = seedUser();
+        const stamp = Date.now();
+
+        await login(page, email, password);
+        await page.goto('/cycles');
+        await expect(page.locator('#cycles-content')).toBeVisible();
+
+        await page.evaluate(async (prefix) => {
+            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';
+
+            for (const name of ['Alpha', 'Bravo', 'Charlie']) {
+                await fetch('/api/categories', {
+                    method: 'POST',
+                    headers: { Accept: 'application/json', 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token },
+                    body: JSON.stringify({ name: `${prefix} ${name}`, type: 'expense', color: '#2563EB', icon: 'tag' }),
+                });
+            }
+        }, `E2E ${stamp}`);
+        await page.reload();
+
+        const card = (name: string) => page.locator('[data-id]', { hasText: name });
+
+        await expect(page.locator('[data-tile]')).toHaveCount(3);
+
+        // Edit one: rename it and pick another icon.
+        await card('Bravo').getByRole('button', { name: /^Edit/ }).click();
+        await expect(page.getByRole('dialog', { name: 'Edit category' })).toBeVisible();
+        await expect(page.getByLabel('Name', { exact: true })).toHaveValue(`E2E ${stamp} Bravo`);
+        await page.getByLabel('Name', { exact: true }).fill(`E2E ${stamp} Bravo Edited`);
+        await page.getByTitle('Gift').click();
+        await page.locator('#cycle-tile-form').getByRole('button', { name: 'Save' }).click();
+        await expect(page.getByText('Category updated.')).toBeVisible();
+        await expect(card('Bravo Edited')).toBeVisible();
+
+        // Delete one.
+        await card('Alpha').getByRole('button', { name: /^Delete/ }).click();
+        await expect(page.getByRole('dialog', { name: 'Delete this category?' })).toBeVisible();
+        await page.locator('#confirm-delete-tile').click();
+        await expect(page.getByText('Category deleted.')).toBeVisible();
+        await expect(page.locator('[data-tile]')).toHaveCount(2);
+
+        // Bulk delete the rest.
+        await page.getByLabel(`E2E ${stamp} Bravo Edited`, { exact: true }).check();
+        await page.getByLabel(`E2E ${stamp} Charlie`, { exact: true }).check();
+        await expect(page.getByText('2 selected')).toBeVisible();
+        await page.getByRole('button', { name: 'Delete selected' }).click();
+        await page.locator('#confirm-bulk-delete-tiles').click();
+        await expect(page.getByText('Selected categories deleted.')).toBeVisible();
+        await expect(page.locator('[data-tile]')).toHaveCount(0);
+        await expect(page.getByText('No categories yet.')).toBeVisible();
+    });
+
+    test('edits, deletes and bulk deletes item names', async ({ page }) => {
+        const { email, password } = seedUser();
+        const category = `E2E Names ${Date.now()}`;
+
+        await login(page, email, password);
+        await page.goto('/cycles');
+        await expect(page.locator('#cycles-content')).toBeVisible();
+
+        const categoryId = await page.evaluate(async (name) => {
+            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';
+            const headers = { Accept: 'application/json', 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token };
+            const created = await fetch('/api/categories', { method: 'POST', headers, body: JSON.stringify({ name, type: 'expense', color: '#2563EB', icon: 'tag' }) });
+            const id = (await created.json()).data.id;
+
+            for (const type of ['Serum', 'Toner', 'Lotion']) {
+                await fetch(`/api/cycle-categories/${id}/types`, { method: 'POST', headers, body: JSON.stringify({ name: type }) });
+            }
+
+            return id;
+        }, category);
+
+        await page.goto(`/cycles/${categoryId}`);
+        await expect(page.getByRole('heading', { name: category })).toBeVisible();
+        await expect(page.locator('[data-tile]')).toHaveCount(3);
+
+        const card = (name: string) => page.locator('[data-id]', { hasText: name });
+
+        // Edit one.
+        await card('Toner').getByRole('button', { name: /^Edit/ }).click();
+        await expect(page.getByRole('dialog', { name: 'Edit item name' })).toBeVisible();
+        await page.getByLabel('Name', { exact: true }).fill('Toner Pro');
+        await page.getByTitle('Sun').click();
+        await page.locator('#cycle-tile-form').getByRole('button', { name: 'Save' }).click();
+        await expect(page.getByText('Item name updated.')).toBeVisible();
+        await expect(card('Toner Pro')).toBeVisible();
+
+        // A name already used in the category is rejected where it is typed.
+        await card('Serum').getByRole('button', { name: /^Edit/ }).click();
+        await page.getByLabel('Name', { exact: true }).fill('Lotion');
+        await page.locator('#cycle-tile-form').getByRole('button', { name: 'Save' }).click();
+        await expect(page.getByText(/already been taken/)).toBeVisible();
+        await page.getByRole('button', { name: 'Cancel' }).click();
+
+        // Delete one.
+        await card('Serum').getByRole('button', { name: /^Delete/ }).click();
+        await expect(page.getByRole('dialog', { name: 'Delete this item name?' })).toBeVisible();
+        await page.locator('#confirm-delete-tile').click();
+        await expect(page.getByText('Item name deleted.')).toBeVisible();
+        await expect(page.locator('[data-tile]')).toHaveCount(2);
+
+        // Select all on the page, then bulk delete.
+        await page.locator('#cycles-select-all').check();
+        await expect(page.getByText('2 selected')).toBeVisible();
+        await page.getByRole('button', { name: 'Delete selected' }).click();
+        await page.locator('#confirm-bulk-delete-tiles').click();
+        await expect(page.getByText('Selected item names deleted.')).toBeVisible();
+        await expect(page.locator('[data-tile]')).toHaveCount(0);
+        await expect(page.getByText('No item names in this category yet.')).toBeVisible();
+    });
+
     test('redirects a guest to login', async ({ page }) => {
         await page.goto('/cycles');
 
