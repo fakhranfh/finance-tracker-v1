@@ -12,6 +12,9 @@ use App\Http\Controllers\Api\Auth\RegisterController;
 use App\Http\Controllers\Api\Auth\ResetPasswordController;
 use App\Http\Controllers\Api\Auth\VerificationNotificationController;
 use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\Api\CycleCategoryController;
+use App\Http\Controllers\Api\CycleEntryController;
+use App\Http\Controllers\Api\CycleTypeController;
 use App\Http\Controllers\Api\DebtController;
 use App\Http\Controllers\Api\DebtPaymentController;
 use App\Http\Controllers\Api\GoalController;
@@ -148,6 +151,35 @@ Route::middleware('web')->name('api.')->group(function (): void {
                 Route::put('/{subGoal}', [SubGoalController::class, 'update'])
                     ->scopeBindings()
                     ->name('goals.sub-goals.update');
+            });
+
+            Route::prefix('cycle-categories')->group(function (): void {
+                Route::post('/generate', [CycleCategoryController::class, 'generate'])
+                    ->middleware(EnsureLocalEnvironment::class)
+                    ->name('cycle-categories.generate');
+                Route::post('/{category}/types/generate', [CycleTypeController::class, 'generate'])
+                    ->whereNumber('category')
+                    ->middleware(EnsureLocalEnvironment::class)
+                    ->name('cycle-categories.types.generate');
+                Route::get('/', [CycleCategoryController::class, 'index'])->name('cycle-categories.index');
+                Route::get('/{category}', [CycleCategoryController::class, 'show'])->whereNumber('category')->name('cycle-categories.show');
+                Route::get('/{category}/types', [CycleTypeController::class, 'index'])->whereNumber('category')->name('cycle-categories.types.index');
+                Route::post('/{category}/types', [CycleTypeController::class, 'store'])->whereNumber('category')->name('cycle-categories.types.store');
+            });
+            Route::prefix('cycle-types/{type}')->whereNumber('type')->group(function (): void {
+                Route::get('/', [CycleTypeController::class, 'show'])->name('cycle-types.show');
+                Route::post('/entries/generate', [CycleEntryController::class, 'generate'])
+                    ->middleware(EnsureLocalEnvironment::class)
+                    ->name('cycle-types.entries.generate');
+                Route::get('/entries', [CycleEntryController::class, 'index'])->name('cycle-types.entries.index');
+                Route::post('/entries', [CycleEntryController::class, 'store'])->name('cycle-types.entries.store');
+                Route::delete('/entries', [CycleEntryController::class, 'bulkDestroy'])->name('cycle-types.entries.bulk-destroy');
+            });
+            Route::prefix('cycle-entries/{entry}')->whereNumber('entry')->group(function (): void {
+                Route::get('/', [CycleEntryController::class, 'show'])->name('cycle-entries.show');
+                Route::put('/', [CycleEntryController::class, 'update'])->name('cycle-entries.update');
+                Route::put('/finish', [CycleEntryController::class, 'finish'])->name('cycle-entries.finish');
+                Route::delete('/', [CycleEntryController::class, 'destroy'])->name('cycle-entries.destroy');
             });
 
             Route::prefix('webhooks')->group(function (): void {

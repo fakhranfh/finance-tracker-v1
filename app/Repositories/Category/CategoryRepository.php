@@ -2,6 +2,7 @@
 
 namespace App\Repositories\Category;
 
+use App\Enums\CategoryType;
 use App\Models\Category;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -94,5 +95,16 @@ class CategoryRepository implements CategoryRepositoryInterface
     public function allNamed(): Collection
     {
         return Category::query()->orderBy('name')->get(['id', 'name', 'type']);
+    }
+
+    public function paginateExpense(int $perPage, ?string $search = null): LengthAwarePaginator
+    {
+        $query = Category::query()->where('type', CategoryType::Expense->value);
+
+        if ($search) {
+            $query->whereRaw('lower(name) like ?', ['%'.mb_strtolower($search).'%']);
+        }
+
+        return $query->orderBy('name')->orderBy('id')->paginate($perPage)->withQueryString();
     }
 }
