@@ -20,6 +20,7 @@ return [
     'entries' => [
         'add' => 'Add purchase',
         'select_all' => 'Select all on this page',
+        'select_all_matching' => 'Select all :total',
         'selected' => ':n selected',
         'delete_selected' => 'Delete selected',
     ],

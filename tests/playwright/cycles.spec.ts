@@ -294,6 +294,19 @@ test.describe('Usage Cycle', () => {
         await expect(page.locator('[data-tile]')).toHaveCount(12);
         await expect(page.locator('[data-add-tile]')).toHaveCount(0);
 
+        // The checkbox ticks the 12 on this page; its own button ticks all 13 across pages.
+        await page.locator('#cycles-select-all').check();
+        await expect(page.locator('#cycles-selected-count')).toContainText('12');
+        await page.locator('#cycles-select-all-matching').click();
+        await expect(page.locator('#cycles-selected-count')).toContainText('13');
+        await expect(page.locator('#cycles-select-all-matching')).toBeHidden();
+        await page.locator('#cycles-select-all').uncheck();
+        await expect(page.locator('#cycles-selected-count')).toContainText('1 selected');
+        await page.locator('#cycles-select-all-matching').click();
+        await expect(page.locator('#cycles-selected-count')).toContainText('13');
+        await page.locator('#cycles-select-all').uncheck();
+        await expect(page.locator('#cycles-selected-count')).toContainText('1 selected');
+
         const pageTwo = page.waitForResponse((response) => response.url().includes('/api/cycle-categories') && response.url().includes('page=2'));
         await page.getByRole('button', { name: '2', exact: true }).first().click();
         expect((await pageTwo).ok()).toBe(true);
