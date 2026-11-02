@@ -1,8 +1,8 @@
 {
     "openapi": "3.0.0",
     "info": {
-        "title": "Laravel 13 Boilerplate API",
-        "description": "Session-based JSON API covering the application's auth flows (Register, Login, Logout, Forgot Password, Reset Password).",
+        "title": "Finance Tracker API",
+        "description": "Session-based JSON API of the Finance Tracker app: auth, accounts, records, categories, goals, debts, webhooks and Usage Cycle.",
         "version": "1.0.0"
     },
     "servers": [
@@ -60,7 +60,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Paginated list of accounts"
+                        "description": "Paginated list of accounts, with summary.balance_total (sum of every account balance)"
                     }
                 }
             },
@@ -586,6 +586,689 @@
                     },
                     "422": {
                         "description": "Validation error"
+                    }
+                }
+            }
+        },
+        "/cycle-categories": {
+            "get": {
+                "tags": [
+                    "Usage Cycle"
+                ],
+                "summary": "List the expense categories with the monthly cost of their item types, paginated and searchable by name",
+                "description": "Categories are created and edited through the category endpoints. `monthly` is the sum of the monthly cost of the category item types (0 until a purchase has finished). `summary.monthly_total` covers all categories, not only the page or the search.",
+                "operationId": "076d50be1b0ef57b264a7c2f2c32347b",
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 12,
+                            "maximum": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A page of expense categories in data (id, name, color, icon, monthly) with links and meta, plus summary.monthly_total"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                }
+            }
+        },
+        "/cycle-categories/generate": {
+            "post": {
+                "tags": [
+                    "Usage Cycle"
+                ],
+                "summary": "Generate sample expense categories with item names and purchase histories (local environment only)",
+                "operationId": "e69ab23c13bc8d0a9dd810422f619f94",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "count"
+                                ],
+                                "properties": {
+                                    "count": {
+                                        "type": "integer",
+                                        "example": 3,
+                                        "maximum": 50,
+                                        "minimum": 1
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The generated categories in data"
+                    },
+                    "404": {
+                        "description": "Not found (outside the local environment)"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                }
+            }
+        },
+        "/cycle-categories/{id}": {
+            "get": {
+                "tags": [
+                    "Usage Cycle"
+                ],
+                "summary": "Show an expense category with its monthly cost (the item types are listed by GET /cycle-categories/{id}/types)",
+                "operationId": "94e8c45d69c9d1ad48b1cbb220139e00",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The category (id, name, color, icon, monthly)"
+                    },
+                    "404": {
+                        "description": "Not found, or not an expense category"
+                    }
+                }
+            }
+        },
+        "/cycle-types/{id}/entries": {
+            "get": {
+                "tags": [
+                    "Usage Cycle"
+                ],
+                "summary": "List the purchases of an item type, oldest first, paginated and searchable by product name",
+                "description": "`type` describes the whole item type: avg_days, monthly and last_entry (name and price of the latest purchase), worked out from every purchase, not only this page.",
+                "operationId": "175281d740a8a100351d8f9c0173a2b0",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 10,
+                            "maximum": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A page of purchases in data with links and meta, plus type"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Usage Cycle"
+                ],
+                "summary": "Log a purchase of an item type",
+                "operationId": "5df9b69ed08b81887a3421ad1c85dd9a",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "price",
+                                    "bought_at"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Shinzui",
+                                        "maxLength": 80
+                                    },
+                                    "price": {
+                                        "type": "integer",
+                                        "example": 35000
+                                    },
+                                    "bought_at": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-10-08"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Purchase created"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Usage Cycle"
+                ],
+                "summary": "Delete several purchases of an item type at once",
+                "operationId": "cba1183c419c41525924b52de8196d74",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "ids"
+                                ],
+                                "properties": {
+                                    "ids": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        },
+                                        "example": [
+                                            1,
+                                            2,
+                                            3
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "Purchases deleted"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "422": {
+                        "description": "Validation error (every id must be a purchase of this item type)"
+                    }
+                }
+            }
+        },
+        "/cycle-types/{id}/entries/generate": {
+            "post": {
+                "tags": [
+                    "Usage Cycle"
+                ],
+                "summary": "Generate sample purchases for an item name: one product bought again and again, the newest still in use (local environment only)",
+                "operationId": "9345b36a85c7ab203470d2a03811261b",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "count"
+                                ],
+                                "properties": {
+                                    "count": {
+                                        "type": "integer",
+                                        "example": 6,
+                                        "maximum": 50,
+                                        "minimum": 1
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The generated purchases in data"
+                    },
+                    "404": {
+                        "description": "Not found (outside the local environment)"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                }
+            }
+        },
+        "/cycle-entries/{id}": {
+            "get": {
+                "tags": [
+                    "Usage Cycle"
+                ],
+                "summary": "Show a purchase with its item type (including the average days a product of that type lasts)",
+                "operationId": "8e6517393e0c3a10db1a4284fd503105",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The purchase, with type (id, name, category_id, avg_days)"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Usage Cycle"
+                ],
+                "summary": "Update a purchase (product name, price and date bought)",
+                "operationId": "896440a8063ec0c96357328085615f86",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "price",
+                                    "bought_at"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Shinzui",
+                                        "maxLength": 80
+                                    },
+                                    "price": {
+                                        "type": "integer",
+                                        "example": 35000
+                                    },
+                                    "bought_at": {
+                                        "description": "Not after the date it ran out",
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-10-08"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Purchase updated"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Usage Cycle"
+                ],
+                "summary": "Delete a purchase",
+                "operationId": "b66facc0234e29e0615c6769f393bcba",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Purchase deleted"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                }
+            }
+        },
+        "/cycle-entries/{id}/finish": {
+            "put": {
+                "tags": [
+                    "Usage Cycle"
+                ],
+                "summary": "Mark a purchase as run out",
+                "operationId": "dcbcb0549a419a0d84302fe30865363e",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "finished_at"
+                                ],
+                                "properties": {
+                                    "finished_at": {
+                                        "description": "Not before the date it was bought",
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-11-05"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Purchase marked as finished"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                }
+            }
+        },
+        "/cycle-categories/{id}/types": {
+            "get": {
+                "tags": [
+                    "Usage Cycle"
+                ],
+                "summary": "List the item types of an expense category, paginated and searchable by name",
+                "description": "`category` (id, name, monthly) describes the whole category, not only this page.",
+                "operationId": "839d68182a63edfdfc089a985025fe00",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 12,
+                            "maximum": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A page of item types in data (id, category_id, name, icon, avg_days, monthly) with links and meta, plus category"
+                    },
+                    "404": {
+                        "description": "Not found, or not an expense category"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Usage Cycle"
+                ],
+                "summary": "Add an item type (e.g. Sabun Mandi) to an expense category",
+                "operationId": "db0c4a380d9aa5e1580cba2eddd72a26",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Sabun Mandi",
+                                        "maxLength": 40
+                                    },
+                                    "icon": {
+                                        "type": "string",
+                                        "example": "sparkles"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Item type created"
+                    },
+                    "404": {
+                        "description": "Not found, or not an expense category"
+                    },
+                    "422": {
+                        "description": "Validation error (the name must be unique within the category)"
+                    }
+                }
+            }
+        },
+        "/cycle-categories/{id}/types/generate": {
+            "post": {
+                "tags": [
+                    "Usage Cycle"
+                ],
+                "summary": "Generate sample item names with purchase histories in an expense category (local environment only)",
+                "operationId": "64855be1b1ae26449da7ff65b1835b28",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "count"
+                                ],
+                                "properties": {
+                                    "count": {
+                                        "type": "integer",
+                                        "example": 3,
+                                        "maximum": 50,
+                                        "minimum": 1
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The generated item names in data"
+                    },
+                    "404": {
+                        "description": "Not found (outside the local environment, or not an expense category)"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                }
+            }
+        },
+        "/cycle-types/{id}": {
+            "get": {
+                "tags": [
+                    "Usage Cycle"
+                ],
+                "summary": "Show an item type with its category (the purchases are listed by GET /cycle-types/{id}/entries)",
+                "description": "`avg_days` is the average number of days a product lasted and `monthly` the cost per month; both are null until a purchase has finished.",
+                "operationId": "aa3ae1c725bc6072dad0994122ebd13b",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The item type with category, avg_days and monthly"
+                    },
+                    "404": {
+                        "description": "Not found"
                     }
                 }
             }
@@ -5239,6 +5922,10 @@
         {
             "name": "Sub Goals",
             "description": "Sub goal endpoints (the steps needed to reach a goal)"
+        },
+        {
+            "name": "Usage Cycle",
+            "description": "Usage Cycle endpoints (how long routine products last and what they cost per month)"
         },
         {
             "name": "Debts",

@@ -6,8 +6,8 @@ use OpenApi\Attributes as OA;
 
 #[OA\Info(
     version: '1.0.0',
-    title: 'Laravel 13 Boilerplate API',
-    description: 'Session-based JSON API covering the application\'s auth flows (Register, Login, Logout, Forgot Password, Reset Password).'
+    title: 'Finance Tracker API',
+    description: 'Session-based JSON API of the Finance Tracker app: auth, accounts, records, categories, goals, debts, webhooks and Usage Cycle.'
 )]
 #[OA\Server(
     url: '/api',
@@ -22,6 +22,7 @@ use OpenApi\Attributes as OA;
 #[OA\Tag(name: 'Debt Payments', description: 'Records that pay a debt or receivable off')]
 #[OA\Tag(name: 'Sub Debts', description: 'Sub debt endpoints (the instalments of a debt or receivable)')]
 #[OA\Tag(name: 'Sub Goals', description: 'Sub goal endpoints (the steps needed to reach a goal)')]
+#[OA\Tag(name: 'Usage Cycle', description: 'Usage Cycle endpoints (how long routine products last and what they cost per month)')]
 #[OA\Schema(
     schema: 'User',
     properties: [

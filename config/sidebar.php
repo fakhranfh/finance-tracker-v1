@@ -7,6 +7,7 @@ return [
         ['label' => 'dashboard.nav.records', 'route' => 'records.index', 'active' => 'records.*', 'icon' => 'cube', 'role' => 'user', 'description' => 'dashboard.welcome.features.records'],
         ['label' => 'dashboard.nav.categories', 'route' => 'categories.index', 'active' => 'categories.*', 'icon' => 'tag', 'role' => 'user', 'description' => 'dashboard.welcome.features.categories'],
         ['label' => 'dashboard.nav.goals', 'route' => 'goals.index', 'active' => 'goals.*', 'icon' => 'cube', 'role' => 'user', 'description' => 'dashboard.welcome.features.goals'],
+        ['label' => 'dashboard.nav.cycles', 'route' => 'cycles.index', 'active' => 'cycles.*', 'icon' => 'cube', 'role' => 'user', 'description' => 'dashboard.welcome.features.cycles'],
         ['label' => 'dashboard.nav.webhooks', 'route' => 'webhooks.index', 'active' => 'webhooks.*', 'icon' => 'cube', 'role' => 'user', 'description' => 'dashboard.welcome.features.webhooks'],
         ['label' => 'dashboard.nav.debts', 'route' => 'debts.index', 'active' => ['debts.*', 'receivables.*'], 'icon' => 'cube', 'role' => 'user', 'description' => 'dashboard.welcome.features.debts'],
         ['label' => 'dashboard.nav.users', 'route' => 'users.index', 'active' => 'users.*', 'icon' => 'users', 'role' => 'admin', 'description' => 'dashboard.welcome.features.users'],

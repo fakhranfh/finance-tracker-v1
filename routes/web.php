@@ -3,6 +3,7 @@
 use App\Http\Controllers\AccountPageController;
 use App\Http\Controllers\Auth\AuthPageController;
 use App\Http\Controllers\CategoryPageController;
+use App\Http\Controllers\CyclePageController;
 use App\Http\Controllers\DebtPageController;
 use App\Http\Controllers\DebtPaymentPageController;
 use App\Http\Controllers\GoalPageController;
@@ -107,6 +108,13 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
                 Route::get('/{id}/edit', [SubGoalPageController::class, 'editItem'])->whereNumber('id')->name('goals.sub-goals.edit-item');
                 Route::get('/{id}', [SubGoalPageController::class, 'show'])->whereNumber('id')->name('goals.sub-goals.show');
             });
+        });
+
+        Route::prefix('cycles')->group(function (): void {
+            Route::get('/', [CyclePageController::class, 'index'])->name('cycles.index');
+            Route::get('/{group}', [CyclePageController::class, 'group'])->whereNumber('group')->name('cycles.group');
+            Route::get('/{group}/{type}', [CyclePageController::class, 'type'])->whereNumber(['group', 'type'])->name('cycles.type');
+            Route::get('/{group}/{type}/{id}', [CyclePageController::class, 'show'])->whereNumber(['group', 'type', 'id'])->name('cycles.show');
         });
 
         Route::prefix('webhooks')->group(function (): void {
