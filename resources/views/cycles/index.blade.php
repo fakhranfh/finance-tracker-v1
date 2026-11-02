@@ -78,20 +78,20 @@
                 <x-molecules.pagination data-pagination class="!mt-0" />
             </div>
 
-            @if ($level === 'entries')
-                <div id="cycles-select-bar" class="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-outline-variant bg-surface px-4 py-2">
-                    <label class="flex min-h-11 cursor-pointer items-center gap-3 font-body text-body-md text-on-surface">
-                        <input type="checkbox" id="cycles-select-all" class="size-5 cursor-pointer rounded border-outline-variant text-primary focus:outline-none focus:ring-2 focus:ring-primary/20">
-                        {{ __('cycles.entries.select_all') }}
-                    </label>
-                    <div class="flex items-center gap-3">
-                        <span id="cycles-selected-count" class="hidden font-body text-body-sm text-on-surface-variant" data-template="{{ __('cycles.entries.selected', ['n' => ':n']) }}"></span>
-                        <x-atoms.button type="button" id="cycles-bulk-delete" variant="danger" class="hidden">
-                            {{ __('cycles.entries.delete_selected') }}
-                        </x-atoms.button>
-                    </div>
+            <div id="cycles-select-bar" class="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-outline-variant bg-surface px-4 py-2">
+                <label class="flex min-h-11 cursor-pointer items-center gap-3 font-body text-body-md text-on-surface">
+                    <input type="checkbox" id="cycles-select-all" class="size-5 cursor-pointer rounded border-outline-variant text-primary focus:outline-none focus:ring-2 focus:ring-primary/20">
+                    {{ __('cycles.entries.select_all') }}
+                </label>
+                <div class="flex items-center gap-3">
+                    <span id="cycles-selected-count" class="hidden font-body text-body-sm text-on-surface-variant" data-template="{{ __('cycles.entries.selected', ['n' => ':n']) }}"></span>
+                    <x-atoms.button type="button" id="cycles-bulk-delete" variant="danger" class="hidden">
+                        {{ __('cycles.entries.delete_selected') }}
+                    </x-atoms.button>
                 </div>
+            </div>
 
+            @if ($level === 'entries')
                 <ol id="cycles-timeline" class="space-y-4"></ol>
             @else
                 <div id="cycles-grid" class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4"></div>
@@ -124,7 +124,7 @@
         <x-organisms.cycle-entry-modals />
     @else
         <x-organisms.modal id="cycle-tile-modal" :title="$tileTitle">
-            <form id="cycle-tile-form" novalidate class="space-y-5">
+            <form id="cycle-tile-form" novalidate class="space-y-5" data-add-title="{{ $tileTitle }}" data-edit-title="{{ $tileCopy['edit_title'] }}">
                 <x-molecules.form-group name="tile_name" type="text" :label="__('cycles.form.tile_name')" maxlength="40" required />
 
                 <fieldset class="space-y-2">
@@ -152,6 +152,30 @@
                     </x-atoms.button>
                 </div>
             </form>
+        </x-organisms.modal>
+
+        <x-organisms.modal id="cycle-tile-delete-modal" :title="$tileCopy['delete_title']">
+            <p class="mb-6 font-body text-body-md text-on-surface-variant">{{ $tileCopy['delete_text'] }}</p>
+            <div class="flex justify-end gap-3">
+                <x-atoms.button type="button" variant="secondary" data-modal-close>
+                    {{ __('cycles.form.cancel') }}
+                </x-atoms.button>
+                <x-atoms.button type="button" id="confirm-delete-tile" variant="danger">
+                    {{ __('cycles.form.delete') }}
+                </x-atoms.button>
+            </div>
+        </x-organisms.modal>
+
+        <x-organisms.modal id="cycle-tile-bulk-delete-modal" :title="$tileCopy['bulk_title']">
+            <p class="mb-6 font-body text-body-md text-on-surface-variant">{{ $tileCopy['bulk_text'] }}</p>
+            <div class="flex justify-end gap-3">
+                <x-atoms.button type="button" variant="secondary" data-modal-close>
+                    {{ __('cycles.form.cancel') }}
+                </x-atoms.button>
+                <x-atoms.button type="button" id="confirm-bulk-delete-tiles" variant="danger">
+                    {{ __('cycles.form.delete') }}
+                </x-atoms.button>
+            </div>
         </x-organisms.modal>
     @endif
 @endsection

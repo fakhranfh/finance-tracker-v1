@@ -164,10 +164,13 @@ Route::middleware('web')->name('api.')->group(function (): void {
                 Route::get('/', [CycleCategoryController::class, 'index'])->name('cycle-categories.index');
                 Route::get('/{category}', [CycleCategoryController::class, 'show'])->whereNumber('category')->name('cycle-categories.show');
                 Route::get('/{category}/types', [CycleTypeController::class, 'index'])->whereNumber('category')->name('cycle-categories.types.index');
+                Route::delete('/{category}/types', [CycleTypeController::class, 'bulkDestroy'])->whereNumber('category')->name('cycle-categories.types.bulk-destroy');
                 Route::post('/{category}/types', [CycleTypeController::class, 'store'])->whereNumber('category')->name('cycle-categories.types.store');
             });
             Route::prefix('cycle-types/{type}')->whereNumber('type')->group(function (): void {
                 Route::get('/', [CycleTypeController::class, 'show'])->name('cycle-types.show');
+                Route::put('/', [CycleTypeController::class, 'update'])->name('cycle-types.update');
+                Route::delete('/', [CycleTypeController::class, 'destroy'])->name('cycle-types.destroy');
                 Route::post('/entries/generate', [CycleEntryController::class, 'generate'])
                     ->middleware(EnsureLocalEnvironment::class)
                     ->name('cycle-types.entries.generate');

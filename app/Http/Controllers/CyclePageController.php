@@ -32,6 +32,22 @@ class CyclePageController extends Controller
     }
 
     /**
+     * The wording of the edit and delete dialogs for a category (`group`) or an item name (`type`).
+     *
+     * @return array<string, string>
+     */
+    private function tileCopy(string $kind): array
+    {
+        return [
+            'edit_title' => __("cycles.form.edit_{$kind}"),
+            'delete_title' => __("cycles.form.delete_{$kind}_title"),
+            'delete_text' => __("cycles.form.delete_{$kind}_text"),
+            'bulk_title' => __("cycles.form.bulk_delete_{$kind}_title"),
+            'bulk_text' => __("cycles.form.bulk_delete_{$kind}_text"),
+        ];
+    }
+
+    /**
      * @param  array<string, string>  $icons
      * @param  array<string, int>  $params
      */
@@ -47,6 +63,7 @@ class CyclePageController extends Controller
             'generateCount' => $level === 'entries' ? 6 : 3,
             'perPageOptions' => $level === 'entries' ? [10, 25, 50, 100] : [12, 24, 48, 96],
             'tileTitle' => __($level === 'groups' ? 'cycles.form.add_group' : 'cycles.form.add_type'),
+            'tileCopy' => $this->tileCopy($level === 'groups' ? 'group' : 'type'),
         ]);
     }
 }

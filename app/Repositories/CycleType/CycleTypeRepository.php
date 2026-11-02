@@ -35,6 +35,23 @@ class CycleTypeRepository implements CycleTypeRepositoryInterface
         return CycleType::query()->create([...$data, 'category_id' => $categoryId]);
     }
 
+    public function update(CycleType $type, array $data): CycleType
+    {
+        $type->update($data);
+
+        return $type;
+    }
+
+    public function delete(CycleType $type): void
+    {
+        $type->delete();
+    }
+
+    public function deleteMany(int $categoryId, array $ids): void
+    {
+        CycleType::query()->where('category_id', $categoryId)->whereIn('id', $ids)->delete();
+    }
+
     public function loadDetail(CycleType $type): CycleType
     {
         return $type->load([

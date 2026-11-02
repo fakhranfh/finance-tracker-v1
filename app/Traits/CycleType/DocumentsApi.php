@@ -70,6 +70,61 @@ trait DocumentsApi
     )]
     private function documentGenerateEndpoint(): void {}
 
+    #[OA\Put(
+        path: '/cycle-types/{id}',
+        summary: 'Rename an item name or change its icon',
+        tags: ['Usage Cycle'],
+        parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['name'],
+                properties: [
+                    new OA\Property(property: 'name', type: 'string', maxLength: 40, example: 'Sabun Mandi'),
+                    new OA\Property(property: 'icon', type: 'string', example: 'sparkles'),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: 'Item name updated'),
+            new OA\Response(response: 404, description: 'Not found'),
+            new OA\Response(response: 422, description: 'Validation error (the name must be unique within the category)'),
+        ]
+    )]
+    private function documentUpdateEndpoint(): void {}
+
+    #[OA\Delete(
+        path: '/cycle-types/{id}',
+        summary: 'Delete an item name together with all of its purchases',
+        tags: ['Usage Cycle'],
+        parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],
+        responses: [
+            new OA\Response(response: 204, description: 'Item name deleted'),
+            new OA\Response(response: 404, description: 'Not found'),
+        ]
+    )]
+    private function documentDestroyEndpoint(): void {}
+
+    #[OA\Delete(
+        path: '/cycle-categories/{id}/types',
+        summary: 'Delete several item names of a category at once, with their purchases',
+        tags: ['Usage Cycle'],
+        parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['ids'],
+                properties: [new OA\Property(property: 'ids', type: 'array', items: new OA\Items(type: 'integer'), example: [1, 2, 3])]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 204, description: 'Item names deleted'),
+            new OA\Response(response: 404, description: 'Not found'),
+            new OA\Response(response: 422, description: 'Validation error (every id must be an item name of this category)'),
+        ]
+    )]
+    private function documentBulkDestroyEndpoint(): void {}
+
     #[OA\Get(
         path: '/cycle-types/{id}',
         summary: 'Show an item type with its category (the purchases are listed by GET /cycle-types/{id}/entries)',
